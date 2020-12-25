@@ -53,6 +53,13 @@
             </el-select>
             <div class="mar-left"><el-checkbox v-model="devideChecked">显示器</el-checkbox></div>
           </div>
+          <div class="data-list">
+            <div class="data-item" v-for="(item, index) in templateList" :key="index">
+              <span class="index-text">{{index + 1}}</span>
+              <div class="icon-view"></div>
+              <span>{{item.row}} x {{item.col}} ({{separation == 2 ? (1920 * item.col) : (3840 * item.col)}} x {{separation == 2 ? (1080 * item.row) : (2160 * item.row)}})</span>
+            </div>
+          </div>
         </div>
         <div v-if="typeIndex == 1">显示器列表</div>
         <div v-if="typeIndex == 2">显示系统信息</div>
@@ -82,7 +89,67 @@ export default {
       templateList: [
         {
           row: 1,
-          col: 1,
+          col: 1
+        },
+        {
+          row: 1,
+          col: 2
+        },
+        {
+          row: 1,
+          col: 3
+        },
+        {
+          row: 1,
+          col: 4
+        },
+        {
+          row: 2,
+          col: 1
+        },
+        {
+          row: 2,
+          col: 2
+        },
+        {
+          row: 2,
+          col: 3
+        },
+        {
+          row: 2,
+          col: 4
+        },
+        {
+          row: 3,
+          col: 1
+        },
+        {
+          row: 3,
+          col: 2
+        },
+        {
+          row: 3,
+          col: 3
+        },
+        {
+          row: 3,
+          col: 4
+        },
+        {
+          row: 4,
+          col: 1
+        },
+        {
+          row: 4,
+          col: 2
+        },
+        {
+          row: 4,
+          col: 3
+        },
+        {
+          row: 4,
+          col: 4
         }
       ], // 模板列表
     }
@@ -223,6 +290,28 @@ export default {
             }
             /deep/ .el-checkbox__input.is-checked+.el-checkbox__label {
               color: rgb(26,188,156);
+            }
+          }
+        }
+        .data-list {
+          .data-item {
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            .index-text {
+              width: 16px;
+            }
+            .icon-view {
+              width: 24px;
+              height: 24px;
+              background: #999;
+              border-radius: 4px;
+              margin-left: 24px;
+              margin-right: 48px;
             }
           }
         }

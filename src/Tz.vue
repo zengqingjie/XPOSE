@@ -46,115 +46,115 @@
 // import {Message} from 'element-ui'
 import draggable from "vuedraggable"
  export default {
- components: {
- draggable
- },
- data() {
- return {
-  dialogVisible: true,
-  selectedTheme: [{
-  type: 1,
-  name: '选项1'
-  }, {
-  type: 2,
-  name: '选项2'
-  }, {
-  type: 3,
-  name: '选项3'
-  }, {
-  type: 4,
-  name: '选项4'
-  }], // 已选主题列表
-  unSelectTheme: [{
-  type: 5,
-  name: '选项5'
-  }, {
-  type: 6,
-  name: '选项6'
-  }], // 未选主题列表
-  backSelectedTheme: [], // 选主题列表备份
-  backUnSelectTheme: [], // 未选主题列表备份用于恢复默认设置
-  relatedListLast: {}, // 已选主题列表最后一项
-  isShowDel: false
- }
- },
+  components: {
+    draggable
+  },
+  data() {
+    return {
+      dialogVisible: true,
+      selectedTheme: [{
+      type: 1,
+      name: '选项1'
+      }, {
+      type: 2,
+      name: '选项2'
+      }, {
+      type: 3,
+      name: '选项3'
+      }, {
+      type: 4,
+      name: '选项4'
+      }], // 已选主题列表
+      unSelectTheme: [{
+      type: 5,
+      name: '选项5'
+      }, {
+      type: 6,
+      name: '选项6'
+      }], // 未选主题列表
+      backSelectedTheme: [], // 选主题列表备份
+      backUnSelectTheme: [], // 未选主题列表备份用于恢复默认设置
+      relatedListLast: {}, // 已选主题列表最后一项
+      isShowDel: false
+    }
+  },
  methods: {
- showDrag() {
-  this.dialogVisible = true
+  showDrag() {
+    this.dialogVisible = true
+  },
+  onMove({ relatedContext, draggedContext, to }) {
+    const relatedElement = relatedContext.element
+    const draggedElement = draggedContext.element
+    let dragInEl = to['className']
+    if (dragInEl == 'selected-list') {
+    this.isShowDel = false
+    if (this.selectedTheme.length === 4) { 
+    // 判断往已选列表拖时，如果已经满足4项，则记录已选列表的最后一项
+    // 拖拽结束时将此项清除到未选列表中
+    this.relatedListLast = this.selectedTheme[this.selectedTheme.length-1]
+    }
+    } else {
+    this.isShowDel = true // 判断如果是往未选列表里拖的话显示垃圾桶
+    }
+    return (
+    (!relatedElement || !relatedElement.fixed) && !draggedElement.fixed
+    )
+  },
+  onEnd(dragObj) {
+    let dragInEl = dragObj.to['className']
+    if (dragInEl == 'selected-list') {
+    if (this.selectedTheme.length > 4) {
+    // 判断已选列表大于4项，将记录的最后一项过滤出来，并push到未选列表数组
+    this.selectedTheme = this.selectedTheme.filter(item => {
+    return item.type != this.relatedListLast.type
+    })
+    this.unSelectTheme.push(this.relatedListLast)
+    }
+    }
+    if (dragInEl === 'theme-right-list') {
+    // 判断是往未选列表拖时，拖拽结束时将垃圾桶隐藏
+    this.isShowDel = false
+    }
+  },
+  // 保存设置
+  saveThemeSet() {
+    // const params = {
+    // taskTopicList: this.selectedTheme
+    // }
+    // if (this.selectedTheme.length !== 4) {
+    // Message({
+    //  type: 'error',
+    //  message: '需设置4个选项 !'
+    // })
+    // return false
+    // }
+    // $ajax.save(params).then(data => {
+    // this.dialogVisible = false
+    // Message({
+    //  type: 'success',
+    //  message: '保存成功！'
+    // })
+    // this.$parent.refresh()
+    // }).catch(err => {
+    // console.log(err)
+    // })
+  },
+  // 恢复默认设置
+  restoreDefault() {
+    this.selectedTheme = this.backSelectedTheme
+    this.unSelectTheme = this.backUnSelectTheme
+  }
  },
- onMove({ relatedContext, draggedContext, to }) {
-  const relatedElement = relatedContext.element
-  const draggedElement = draggedContext.element
-  let dragInEl = to['className']
-  if (dragInEl == 'selected-list') {
-  this.isShowDel = false
-  if (this.selectedTheme.length === 4) { 
-   // 判断往已选列表拖时，如果已经满足4项，则记录已选列表的最后一项
-   // 拖拽结束时将此项清除到未选列表中
-   this.relatedListLast = this.selectedTheme[this.selectedTheme.length-1]
+  computed: {
+    dragOptions() {
+      return {
+        animation: 0,
+        group: "description",
+        disabled: false,
+        ghostClass: "ghost"
+      }
+    }
   }
-  } else {
-  this.isShowDel = true // 判断如果是往未选列表里拖的话显示垃圾桶
-  }
-  return (
-  (!relatedElement || !relatedElement.fixed) && !draggedElement.fixed
-  )
- },
- onEnd(dragObj) {
-  let dragInEl = dragObj.to['className']
-  if (dragInEl == 'selected-list') {
-  if (this.selectedTheme.length > 4) {
-   // 判断已选列表大于4项，将记录的最后一项过滤出来，并push到未选列表数组
-   this.selectedTheme = this.selectedTheme.filter(item => {
-   return item.type != this.relatedListLast.type
-   })
-   this.unSelectTheme.push(this.relatedListLast)
-  }
-  }
-  if (dragInEl === 'theme-right-list') {
-  // 判断是往未选列表拖时，拖拽结束时将垃圾桶隐藏
-  this.isShowDel = false
-  }
- },
- // 保存设置
- saveThemeSet() {
-  // const params = {
-  // taskTopicList: this.selectedTheme
-  // }
-  // if (this.selectedTheme.length !== 4) {
-  // Message({
-  //  type: 'error',
-  //  message: '需设置4个选项 !'
-  // })
-  // return false
-  // }
-  // $ajax.save(params).then(data => {
-  // this.dialogVisible = false
-  // Message({
-  //  type: 'success',
-  //  message: '保存成功！'
-  // })
-  // this.$parent.refresh()
-  // }).catch(err => {
-  // console.log(err)
-  // })
- },
- // 恢复默认设置
- restoreDefault() {
-  this.selectedTheme = this.backSelectedTheme
-  this.unSelectTheme = this.backUnSelectTheme
- }
- },
- computed: {
- dragOptions() {
-  return {
-  animation: 0,
-  group: "description",
-  disabled: false,
-  ghostClass: "ghost"
-  }
- }
- }
  };
 </script>
 <style lang="less" scoped>

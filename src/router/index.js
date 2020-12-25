@@ -21,6 +21,12 @@ const routes = [
     path: '/index',
     name: 'Index',
     component: () => import('@/views/Index.vue')
+  },
+  // 拖拽组件
+  {
+    path: '/tz',
+    name: 'Tz',
+    component: () => import('../Tz.vue')
   }
 ]
 

@@ -48,7 +48,7 @@ export default {
     flex-direction: column;
     align-items: center;
     width: 64px;
-    height: 100vh;
+    min-height: 100vh;
     padding-top: 32px;
     background: rgb(22,28,44);
     box-sizing: border-box;

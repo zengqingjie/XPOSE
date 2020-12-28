@@ -61,7 +61,28 @@
             </div>
           </div>
         </div>
-        <div v-if="typeIndex == 1">显示器列表</div>
+        <div v-if="typeIndex == 1">
+          <div class="displayer">
+            <div
+              class="displayer-item"
+              :class="[index % 2 ? 'deep' :'shallow', item.status == 'disable' ? 'disable' : '', clickItemId == item.id ? 'show' : '']"
+              :key = item.id
+              v-for="(item, index) in displayerList"
+              @click="displayerClick(item)"
+            >
+              <div class="item-left">
+                <span class="id-text">{{item.id}}</span>
+                <div class="icon-view"></div>
+                <span>{{item.name}}</span>
+              </div>
+              <div class="item-right">
+                <span>W:{{item.width}}</span>
+                <span>H:{{item.height}}</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
         <div v-if="typeIndex == 2">显示系统信息</div>
         <div v-if="typeIndex == 3">参数</div>
       </div>
@@ -75,17 +96,17 @@ export default {
     return {
       containerList: [], // 容器列表
       typeIndex: 0, // 参数类型
-      modelList: [ // 模式列表
+      modelList: [
         { type: 1, label: '演示模式' },
         { type: 2, label: '预监模式' }
-      ], 
+      ],  // 模式列表
       modelVal: 1, // 模式
-      separationList: [ // 分辨率列表
+      separationList: [
         { type: 2, label: '2k' },
         { type: 4, label: '4k' }
-      ],
+      ], // 分辨率列表
       separation: 2, // 分辨率
-      devideChecked: true,
+      devideChecked: true, // 容器是否创建显示器
       templateList: [
         {
           row: 1,
@@ -152,6 +173,39 @@ export default {
           col: 4
         }
       ], // 模板列表
+      displayerList: [
+        { id: 1, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
+        { id: 2, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
+        { id: 3, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
+        { id: 4, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
+        { id: 5, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
+        { id: 6, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
+        { id: 7, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
+        { id: 8, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
+        { id: 9, name: 'HDMI', type: 'HDMI', width: 1920, height:1080, status: 'usable' },
+        { id: 10, name: 'HDMI', type: 'HDMI', width: 1920, height:1080, status: 'usable' },
+        { id: 11, name: 'HDMI', type: 'HDMI', width: 1920, height:1080, status: 'usable' },
+        { id: 12, name: 'HDMI', type: 'HDMI', width: 1920, height:1080, status: 'usable' },
+        { id: 13, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
+        { id: 14, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
+        { id: 15, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
+        { id: 16, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
+        { id: 17, name: 'HDMI 2.0', type: 'HDMI2.0', width: 1920, height:1080, status: 'disable' },
+        { id: 19, name: 'HDMI 2.0', type: 'HDMI2.0', width: 1920, height:1080, status: 'disable' },
+        { id: 21, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable' },
+        { id: 22, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable' },
+        { id: 23, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable' },
+        { id: 24, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable' },
+        { id: 25, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
+        { id: 26, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
+        { id: 27, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
+        { id: 28, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
+        { id: 29, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
+        { id: 30, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
+        { id: 31, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
+        { id: 32, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
+      ], // 显示器列表
+      clickItemId: ''
     }
   },
   props: ['showInfo', 'nowMenuId'],
@@ -164,8 +218,14 @@ export default {
 
   },
   methods: {
+    // 容器参数类型切换
     typeSelect(num) {
       this.typeIndex = num;
+    },
+    // 点击显示器
+    displayerClick(obj) {
+      if (obj.status == 'disable') return;
+      this.clickItemId = obj.id;
     }
   }
 }
@@ -314,6 +374,53 @@ export default {
               margin-right: 48px;
             }
           }
+        }
+        .displayer-item {
+          padding: 0 16px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          height: 24px;
+          color: #999;
+          font-size: 12px;
+          > div {
+            display: flex;
+            align-items: center;
+            .id-text {
+              width: 20px;
+            }
+            .icon-view {
+              width: 42px;
+              height: 16px;
+              border-radius: 4px;
+              background: #999;
+              margin: 0 16px;
+            }
+          }
+        }
+        .deep {
+          background: rgb(22,28,44);
+        }
+        .shallow {
+          background: rgb(24,31,48);
+        }
+        .disable {
+          background: rgb(16,21,35);
+        }
+        .show {
+          color: #fff;
+          background: rgb(23,76,78);
+        }
+        .displayer-item:hover {
+          color: #fff;
+          background: rgb(22,48,58);
+        }
+        .disable:hover {
+          color: #999;
+          background: rgb(16,21,35);
+        }
+        .show:hover {
+          background: rgb(23,76,78);
         }
       }
     }

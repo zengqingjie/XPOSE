@@ -14,11 +14,18 @@ export default new Vuex.Store({
     // 设置拖出的设备列表
     setDevices(state, list) {
       state.containers = list;
+    },
+    // 设置容器列表
+    setContainerList(state, list) {
+      state.showVessels = list;
     }
   },
   actions: {
     setDevices(context, list) {
-      context.commit('setChatHistory', list);
+      context.commit('setDevices', list);
+    },
+    setContainerList(context, list) {
+      context.commit('setContainerList', list);
     }
   },
   modules: {

@@ -1,24 +1,50 @@
 <template>
   <div class="manageShow-wrap">
-    <div class="default-view" v-if="getContainers.length == 0">
-      <div class="title">创建一个容器</div>
-      <div class="tips-box">
-        <div class="tips-item">
-          <div>*<span>打开设置界面，选择模板设置选项</span></div>
-          <em>-<span>选择容器模式</span></em>
-          <em>-<span>选择容器分辨率</span> </em>
-          <em>-<span>选择自动创建显示器</span> </em>
-          <em>-<span>选择容器的行和列数</span> </em>
-        </div>
-        <div class="tips-item">
-          <div>*<span>拖拉出容器列表到此处</span></div>
-        </div>
-        <div class="tips-item">
-          <div>*<span>移动、配置这些显示器参数</span></div>
+    <draggable
+      class="container-view"
+      v-model="containerList"
+      group="container"
+      sort="false"
+      animation="300"
+      ghostClass="ghost"
+      filter=".default-view"
+      :move="onMove"
+      @end="onEnd"
+    >
+      <div
+        class="default-view"
+        v-if="containerList.length == 0"
+      >
+        <div class="title">创建一个容器</div>
+        <div class="tips-box">
+          <div class="tips-item">
+            <div>*<span>打开设置界面，选择模板设置选项</span></div>
+            <em>-<span>选择容器模式</span></em>
+            <em>-<span>选择容器分辨率</span> </em>
+            <em>-<span>选择自动创建显示器</span> </em>
+            <em>-<span>选择容器的行和列数</span> </em>
+          </div>
+          <div class="tips-item">
+            <div>*<span>拖拉出容器列表到此处</span></div>
+          </div>
+          <div class="tips-item">
+            <div>*<span>移动、配置这些显示器参数</span></div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="container-view" v-if="getContainers.length > 0"></div>
+      <div
+        class="container-box"
+        v-if="containerList.length > 0"
+      >
+        <Container
+          v-for="(item, index) in containerList"
+          :key="item.id"
+          :item="item"
+          :index="index"
+        />
+      </div>
+
+    </draggable>
     <div class="right-view" v-if="!showInfo && nowMenuId == '003'">
       <div class="params-type" v-dragscroll>
         <div class="flex-box">
@@ -53,13 +79,20 @@
             </el-select>
             <div class="mar-left"><el-checkbox v-model="devideChecked">显示器</el-checkbox></div>
           </div>
-          <div class="data-list">
+          <draggable
+            class="data-list"
+            v-model="templateList"
+            v-bind="options"
+            animation="300"
+            :move="onMove"
+            @end="onEnd"
+          >
             <div class="data-item" v-for="(item, index) in templateList" :key="index">
               <span class="index-text">{{index + 1}}</span>
               <div class="icon-view"></div>
               <span>{{item.row}} x {{item.col}} ({{separation == 2 ? (1920 * item.col) : (3840 * item.col)}} x {{separation == 2 ? (1080 * item.row) : (2160 * item.row)}})</span>
             </div>
-          </div>
+          </draggable>
         </div>
         <div v-if="typeIndex == 1">
           <div class="displayer">
@@ -91,6 +124,8 @@
 </template>
 
 <script>
+import draggable from "vuedraggable";
+import Container from '@/components/container/Container'
 export default {
   data() {
     return {
@@ -205,17 +240,36 @@ export default {
         { id: 31, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
         { id: 32, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
       ], // 显示器列表
-      clickItemId: ''
+      clickItemId: '',
+      templateItem: null, // 当前所选模板
     }
+  },
+  components: {
+    draggable,
+    Container
   },
   props: ['showInfo', 'nowMenuId'],
   computed: {
-    getContainers() {
-      return this.$store.state.showVessels;
+    dragOptions() {
+      return {
+        animation: 0,
+        group: "container",
+        disabled: false,
+        ghostClass: "ghost"
+      }
+    },
+    options() {
+      return {
+        group:{name:'container',pull:'clone'},
+        sort: false
+      }
     }
   },
   created() {
 
+  },
+  mounted() {
+    this.containerList = this.$store.state.showVessels;
   },
   methods: {
     // 容器参数类型切换
@@ -226,6 +280,32 @@ export default {
     displayerClick(obj) {
       if (obj.status == 'disable') return;
       this.clickItemId = obj.id;
+    },
+    onMove({ relatedContext, draggedContext, to }) {
+      const relatedElement = relatedContext.element;
+      const draggedElement = draggedContext.element;
+      let dragInEl = to['className'];
+      if (dragInEl == 'container-view') {
+        this.templateItem = draggedElement;
+      }
+      return (
+        (!relatedElement || !relatedElement.fixed) && !draggedElement.fixed
+      );
+    },
+    onEnd(dragObj) {
+      console.log(dragObj);
+      let dragInEl = dragObj.to['className']
+      if (dragInEl == 'container-view') {
+        const newContainer = {
+          id: Date.parse(new Date()) / 1000,
+          type: this.modelVal,
+          displayerChecked: this.devideChecked,
+          separation: this.separation,
+          templateVal: this.templateItem
+        }
+        this.containerList = [newContainer, ...this.containerList];
+        this.$store.dispatch('setContainerList', [newContainer, ...this.containerList]);
+      }
     }
   }
 }
@@ -241,37 +321,43 @@ export default {
     display: flex;
     background: rgb(27,36,54);
     color: #fff;
-    .default-view {
-      height: 100%;
+    .container-view {
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: #999;
-      .title {
-        width: 320px;
-        text-align: center;
-        margin-bottom: 20px;
+      > .ghost {
+        display: none !important;
       }
-      .tips-box {
-        padding-top: 12px;
-        border-top: 1px solid #999;
-        .tips-item {
-          display: flex;
-          flex-direction: column;
-          margin-top: 12px;
-          div {
-            span {
-              margin-left: 20px;
+      .default-view {
+        height: 100%;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: #999;
+        .title {
+          width: 320px;
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        .tips-box {
+          padding-top: 12px;
+          border-top: 1px solid #999;
+          .tips-item {
+            display: flex;
+            flex-direction: column;
+            margin-top: 12px;
+            div {
+              span {
+                margin-left: 20px;
+              }
             }
-          }
-          em {
-            padding-left: 28px;
-            font-style: normal;
-            margin-top: 8px;
-            span {
-              margin-left: 16px;
+            em {
+              padding-left: 28px;
+              font-style: normal;
+              margin-top: 8px;
+              span {
+                margin-left: 16px;
+              }
             }
           }
         }

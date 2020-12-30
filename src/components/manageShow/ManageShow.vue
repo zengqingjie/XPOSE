@@ -32,16 +32,14 @@
           </div>
         </div>
       </div>
-      <div
-        class="container-box"
-        v-if="containerList.length > 0"
-      >
-        <Container
-          v-for="(item, index) in containerList"
-          :key="item.id"
-          :item="item"
-          :index="index"
-        />
+      <div class="container-box" v-if="containerList.length > 0"> 
+        <div v-for="(item, index) in containerList" :key="index" class="default-view">
+          <Container
+            :item="item"
+            :index="index"
+            :displayerChecked="item.displayerChecked"
+          />
+        </div>
       </div>
 
     </draggable>
@@ -266,10 +264,9 @@ export default {
     }
   },
   created() {
-
+    this.containerList = this.$store.state.showVessels;
   },
   mounted() {
-    this.containerList = this.$store.state.showVessels;
   },
   methods: {
     // 容器参数类型切换
@@ -297,14 +294,17 @@ export default {
       let dragInEl = dragObj.to['className']
       if (dragInEl == 'container-view') {
         const newContainer = {
-          id: Date.parse(new Date()) / 1000,
+          id: Date.parse(new Date()),
           type: this.modelVal,
           displayerChecked: this.devideChecked,
           separation: this.separation,
           templateVal: this.templateItem
         }
-        this.containerList = [newContainer, ...this.containerList];
-        this.$store.dispatch('setContainerList', [newContainer, ...this.containerList]);
+        const newData = [newContainer, ...this.containerList];
+        const newList =  newData.filter(item => item.id); // 过滤掉从模板clone过来的对象
+        console.log(newList);
+        this.containerList = newList;
+        this.$store.dispatch('setContainerList', [...newList]);
       }
     }
   }
@@ -321,12 +321,15 @@ export default {
     display: flex;
     background: rgb(27,36,54);
     color: #fff;
+    height: calc(100% - 96px);
     .container-view {
+      padding: 24px;
+      overflow: auto;
       flex: 1;
       > .ghost {
         display: none !important;
       }
-      .default-view {
+      > .default-view {
         height: 100%;
         flex: 1;
         display: flex;
@@ -361,6 +364,9 @@ export default {
             }
           }
         }
+      }
+      > .container-box {
+        box-sizing: border-box;
       }
     }
     .right-view {

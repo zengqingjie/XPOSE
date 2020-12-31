@@ -13,39 +13,43 @@
       group="displayers"
       animation="1000"
       forceFallback="true"
-    >
-      <div class="displayer-item" v-for="dItem in item.displayerList" :key="dItem.id" :style="setDisplayerStyle">
-        <div>显示器{{dItem.id}}</div>
-        <div>x:{{dItem.x}} y:{{dItem.y}}</div>
-        <div>w:{{dItem.width}} h:{{dItem.height}}</div>
-        <div>r:0</div>
-        <div>{{dItem.name}}</div>
-      </div>
+    > 
+      
+      <Displayer
+        v-for="dItem in item.displayerList"
+        :key="dItem.id"
+        :dMsg="dItem"
+      />
+      <!-- <div class="displayer-item" >
+      </div> -->
     </draggable>
   </div>
 </template>
 
 <script>
 import draggable from "vuedraggable";
+import Displayer from '@/components/displayer/Displayer';
 // import vdr from 'vue-draggable-resizable-gorkys';
 export default {
   props: ["item", "index"],
   components: {
     draggable,
+    Displayer
     // vdr,
   },
   data() {
     return {
-      wBase: 240,
+      wBase: 200,
       hBase: 120
     }
   },
   computed: {
     // 容器尺寸
     setContainerStyle() {
+      console.log(this.item);
       const itemInfo = this.item;
-      const width = (itemInfo.templateVal.col * this.wBase) + 'px';
-      const height = (itemInfo.templateVal.row * this.hBase + 24) + 'px';
+      const width = (itemInfo.templateVal.col * itemInfo.wBase) + 'px';
+      const height = (itemInfo.templateVal.row * itemInfo.hBase + 24) + 'px';
       return {
         width: width,
         height: height
@@ -90,7 +94,7 @@ export default {
         font-weight: bold;
       }
       .right-view {
-        width: 100px;
+        width: 72px;
         display: flex;
         align-items: center;
         font-size: 16px;

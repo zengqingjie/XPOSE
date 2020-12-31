@@ -75,20 +75,16 @@
             </el-select>
             <div class="mar-left"><el-checkbox v-model="devideChecked">显示器</el-checkbox></div>
           </div>
-          <draggable
+          <div
             class="data-list"
-            v-model="templateList"
-            v-bind="options"
-            animation="300"
-            :move="onMove"
-            @end="onEnd"
           >
             <div class="data-item" v-for="(item, index) in templateList" :key="index">
               <span class="index-text">{{index + 1}}</span>
               <div class="icon-view"></div>
               <span>{{item.row}} x {{item.col}} ({{separation == 2 ? (1920 * item.col) : (3840 * item.col)}} x {{separation == 2 ? (1080 * item.row) : (2160 * item.row)}})</span>
+              <span class="create-container" @click="createContainer(item)">创建</span>
             </div>
-          </draggable>
+          </div>
         </div>
         <div v-if="typeIndex == 1">
           <div class="displayer">
@@ -279,6 +275,33 @@ export default {
       if (obj.status == 'disable') return;
       this.clickItemId = obj.id;
     },
+    createContainer(templateItem) {
+      const displayers = this.displayerList.filter(item => item.status == 'usable').filter((sItem, index) => index < templateItem.row * templateItem.col);
+      this.displayerList.map(item => {
+        displayers.map((dItem, index) => {
+          if (dItem.id == item.id) {
+            item.status = 'disable';
+          }
+          this.$set(dItem, 'x', (index % templateItem.col) * 1920);
+          this.$set(dItem, 'y', (index % templateItem.row)  * 1080);
+          this.$set(dItem, 'width', 200);
+          this.$set(dItem, 'height', 120);
+        });
+      });
+      const newContainer = {
+        id: Date.parse(new Date()),
+        type: this.modelVal,
+        displayerChecked: this.devideChecked,
+        separation: this.separation,
+        templateVal: templateItem,
+        displayerList: this.devideChecked ? displayers : [],
+        wBase: 200,
+        hBase: 120 
+      }
+      const newList = [newContainer, ...this.containerList];
+      this.containerList = newList;
+      this.$store.dispatch('setContainerList', [...newList]);
+    },
     onMove({ relatedContext, draggedContext, from, to }) {
       const relatedElement = relatedContext.element;
       const draggedElement = draggedContext.element;
@@ -304,6 +327,8 @@ export default {
             }
             this.$set(dItem, 'x', (index % this.templateItem.col) * 1920);
             this.$set(dItem, 'y', (index % this.templateItem.row)  * 1080);
+            this.$set(dItem, 'width', '240px');
+            this.$set(dItem, 'height', '120px');
           });
         });
         console.log(displayers);
@@ -313,7 +338,9 @@ export default {
           displayerChecked: this.devideChecked,
           separation: this.separation,
           templateVal: this.templateItem,
-          displayerList: this.devideChecked ? displayers : []
+          displayerList: this.devideChecked ? displayers : [],
+          wBase: 200,
+          hBase: 120 
         }
         const newList = [newContainer, ...this.containerList];
         this.containerList = newList;
@@ -467,7 +494,6 @@ export default {
             color: #999;
             font-size: 12px;
             margin-bottom: 12px;
-            cursor: pointer;
             .index-text {
               width: 16px;
             }
@@ -478,6 +504,14 @@ export default {
               border-radius: 4px;
               margin-left: 24px;
               margin-right: 48px;
+            }
+            .create-container {
+              margin-left: 16px;
+              padding: 2px 12px;
+              border-radius: 4px;
+              background: rgb(26,188,156);
+              color: #fff;
+              cursor: pointer;
             }
           }
         }

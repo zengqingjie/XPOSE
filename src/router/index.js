@@ -27,6 +27,12 @@ const routes = [
     path: '/tz',
     name: 'Tz',
     component: () => import('../Tz.vue')
+  },
+  // 自由拖拽
+  {
+    path: '/free',
+    name: 'Free',
+    component: () => import('../FreeDom.vue')
   }
 ]
 

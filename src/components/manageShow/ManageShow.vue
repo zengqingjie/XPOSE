@@ -32,12 +32,12 @@
         </div>
       </div>
       <div class="container-box" v-if="containerList.length > 0"> 
-        <div v-for="(item, index) in containerList" :key="index" class="default-view">
-          <Container
-            :item="item"
-            :index="index"
-          />
-        </div>
+          <div v-for="(item, index) in containerList" :key="index" class="default-view">
+              <Container
+                :item="item"
+                :index="index"
+              />
+          </div>
       </div>
 
     </draggable>
@@ -121,7 +121,8 @@
 
 <script>
 import draggable from "vuedraggable";
-import Container from '@/components/container/Container'
+// import vdr from 'vue-draggable-resizable-gorkys';
+import Container from '@/components/container/Container';
 export default {
   data() {
     return {
@@ -243,7 +244,8 @@ export default {
   },
   components: {
     draggable,
-    Container
+    Container,
+    // vdr
   },
   props: ['showInfo', 'nowMenuId'],
   computed: {
@@ -300,24 +302,8 @@ export default {
             if (dItem.id == item.id) {
               item.status = 'disable';
             }
-            if(this.templateItem.row == 1) {
-              this.$set(dItem, 'x', index % this.templateItem.col * 1920);
-              this.$set(dItem, 'y', 0);
-            }
-            if(this.templateItem.row == 2) {
-              this.$set(dItem, 'x', index % this.templateItem.col * 1920);
-              this.$set(dItem, 'y', index > this.templateItem.row ? (this.templateItem.row - 1) * 1080 : 0);
-            }
-            if(this.templateItem.row == 3) {
-              this.$set(dItem, 'x', index % this.templateItem.col * 1920);
-              this.$set(dItem, 'y', index > this.templateItem.row ? (this.templateItem.row - 1) * 1080 : 0);
-            }
-            if(this.templateItem.row == 4) {
-              this.$set(dItem, 'x', index % this.templateItem.col * 1920);
-              this.$set(dItem, 'y', index > this.templateItem.row ? (this.templateItem.row - 1) * 1080 : 0);
-            }
-            // this.$set(dItem, 'x', index % this.templateItem.col * 1920);
-            // this.$set(dItem, 'y', index / this.templateItem.row >= 1 ? parseInt(index / this.templateItem.row) * 1080 : 0);
+            this.$set(dItem, 'x', (index % this.templateItem.col) * 1920);
+            this.$set(dItem, 'y', (index % this.templateItem.row)  * 1080);
           });
         });
         console.log(displayers);
@@ -393,6 +379,7 @@ export default {
         }
       }
       > .container-box {
+        position: relative;
         box-sizing: border-box;
       }
     }

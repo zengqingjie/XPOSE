@@ -17,9 +17,9 @@
       <div class="displayer-item" v-for="dItem in item.displayerList" :key="dItem.id" :style="setDisplayerStyle">
         <div>显示器{{dItem.id}}</div>
         <div>x:{{dItem.x}} y:{{dItem.y}}</div>
-        <div></div>
-        <div></div>
-        <div></div>
+        <div>w:{{dItem.width}} h:{{dItem.height}}</div>
+        <div>r:0</div>
+        <div>{{dItem.name}}</div>
       </div>
     </draggable>
   </div>
@@ -27,10 +27,12 @@
 
 <script>
 import draggable from "vuedraggable";
+// import vdr from 'vue-draggable-resizable-gorkys';
 export default {
   props: ["item", "index"],
   components: {
-    draggable
+    draggable,
+    // vdr,
   },
   data() {
     return {
@@ -105,9 +107,11 @@ export default {
       display: flex;
       flex-wrap: wrap;
       .displayer-item {
+        padding: 12px;
         background: rgb(120,190,252);
         border: 1px solid #333;
         box-sizing: border-box;
+        font-size: 12px;
       }
     }
   }

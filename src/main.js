@@ -18,6 +18,7 @@ new Vue({
   }
 }).$mount('#app');
 
+// 容器右侧菜单栏滑动
 Vue.directive('dragscroll', function (el) {
   el.onmousedown = function (ev) {
     const disX = ev.clientX;
@@ -42,4 +43,52 @@ Vue.directive('dragscroll', function (el) {
       el.style['pointer-events'] = originalPointerEvents;
     }
   }
-})
+});
+
+// 鼠标长按事件
+Vue.directive('longpress', {
+  bind: (e, binding, vNode) => {
+    if (vNode.elm.className == 'delete-container') {
+      let pressTimer = null;
+      let start = (e) => {
+        if(e.type === 'click') return;
+        if(pressTimer === null) {
+          pressTimer = setTimeout(() => {
+            // 执行函数
+            handler();
+          }, 3000);
+        }
+      }
+
+      let cancel = () => {
+        if(pressTimer !== null) {
+          clearTimeout(pressTimer);
+        }
+        pressTimer = null;
+      }
+
+      // const animation = (num) => {
+      //   e.style['background'] = 'red';
+      //   clearInterval(e.tid);
+      //   let opac = num;
+      //   e.tid = setInterval(() => {
+      //     opac = opac < 0 ? opac + 0.3 : 1;
+      //     e.style['opacity'] = opac;
+      //     if (opac > 1) {
+      //       opac = 1;
+      //       e.style['opacity'] = opac;
+      //       clearInterval(e.tid);
+      //     }
+      //   }, 3000);
+        
+      // }
+
+      const handler = (e) => {
+        binding.value(e);
+      }
+      e.addEventListener("mousedown", start);
+      e.addEventListener("mouseout", cancel);
+      e.addEventListener("click", cancel);
+    }
+  }
+});

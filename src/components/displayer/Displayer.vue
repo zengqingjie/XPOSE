@@ -22,6 +22,6 @@ export default {
     background: rgb(120,190,252);
     border: 1px solid #333;
     box-sizing: border-box;
-    font-size: 12px;
+    font-size: 60%;
   }
 </style>

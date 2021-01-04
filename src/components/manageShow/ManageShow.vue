@@ -1,14 +1,7 @@
 <template>
   <div class="manageShow-wrap">
-    <draggable
+    <div
       class="container-view"
-      group="container"
-      sort="false"
-      animation="300"
-      ghostClass="ghost"
-      filter=".default-view"
-      :move="onMove"
-      @end="onEnd"
     >
       <div
         class="default-view"
@@ -32,15 +25,15 @@
         </div>
       </div>
       <div class="container-box" v-if="containerList.length > 0"> 
-          <div v-for="(item, index) in containerList" :key="index" class="default-view">
-              <Container
-                :item="item"
-                :index="index"
-              />
-          </div>
+        <div v-for="(item, index) in containerList" :key="index" class="default-view">
+          <Container
+            :item="item"
+            :index="index"
+          />
+        </div>
       </div>
 
-    </draggable>
+    </div>
     <div class="right-view" v-if="!showInfo && nowMenuId == '003'">
       <div class="params-type" v-dragscroll>
         <div class="flex-box">
@@ -87,7 +80,7 @@
           </div>
         </div>
         <div v-if="typeIndex == 1">
-          <div class="displayer">
+          <draggable class="displayer">
             <div
               class="displayer-item"
               :class="[index % 2 ? 'deep' :'shallow', item.status == 'disable' ? 'disable' : '', clickItemId == item.id ? 'show' : '']"
@@ -106,7 +99,7 @@
               </div>
 
             </div>
-          </div>
+          </draggable>
         </div>
         <div v-if="typeIndex == 2">显示系统信息</div>
         <div v-if="typeIndex == 3">参数</div>
@@ -118,6 +111,7 @@
 <script>
 import draggable from "vuedraggable";
 // import vdr from 'vue-draggable-resizable-gorkys';
+// import Displayer from '@/components/displayer/Displayer';
 import Container from '@/components/container/Container';
 export default {
   data() {
@@ -240,6 +234,7 @@ export default {
   },
   components: {
     draggable,
+    // Displayer,
     Container,
     // vdr
   },
@@ -264,6 +259,25 @@ export default {
     this.containerList = this.$store.state.showVessels;
   },
   mounted() {
+    // 监听容器大小，位置变化
+    this.$root.bus.$off('setContainerItem');
+    this.$root.bus.$on('setContainerItem', (data) => {
+      this.containerList.map(item => {
+        if(item.id == data.id) {
+          item = data;
+        }
+      })
+    });
+    // 监听删除容器事件
+    this.$root.bus.$off('deleteContainer');
+    this.$root.bus.$on('deleteContainer', (container) => {
+      const newDataList = this.containerList.filter(item => item.id != container.id);
+      this.containerList = newDataList;
+      this.$message({
+          type: 'success',
+          message: '已删除'
+        });
+    })
   },
   methods: {
     // 容器参数类型切换
@@ -298,55 +312,10 @@ export default {
         wBase: 200,
         hBase: 120 
       }
-      const newList = [newContainer, ...this.containerList];
+      const newList = [ ...this.containerList, newContainer];
       this.containerList = newList;
       this.$store.dispatch('setContainerList', [...newList]);
     },
-    onMove({ relatedContext, draggedContext, from, to }) {
-      const relatedElement = relatedContext.element;
-      const draggedElement = draggedContext.element;
-      let fromEl = from['className'];
-      let dragInEl = to['className'];
-      if (fromEl == 'data-list' && dragInEl == 'container-view') {
-        this.templateItem = draggedElement;
-      }
-      return (
-        (!relatedElement || !relatedElement.fixed) && !draggedElement.fixed
-      );
-    },
-    onEnd(dragObj) {
-      console.log(dragObj);
-      let dragInEl = dragObj.to['className']
-      let dragOutEl = dragObj.from['className']
-      if (dragOutEl == 'data-list' && dragInEl == 'container-view') {
-        const displayers = this.displayerList.filter(item => item.status == 'usable').filter((sItem, index) => index < this.templateItem.row * this.templateItem.col);
-        this.displayerList.map(item => {
-          displayers.map((dItem, index) => {
-            if (dItem.id == item.id) {
-              item.status = 'disable';
-            }
-            this.$set(dItem, 'x', (index % this.templateItem.col) * 1920);
-            this.$set(dItem, 'y', (index % this.templateItem.row)  * 1080);
-            this.$set(dItem, 'width', '240px');
-            this.$set(dItem, 'height', '120px');
-          });
-        });
-        console.log(displayers);
-        const newContainer = {
-          id: Date.parse(new Date()),
-          type: this.modelVal,
-          displayerChecked: this.devideChecked,
-          separation: this.separation,
-          templateVal: this.templateItem,
-          displayerList: this.devideChecked ? displayers : [],
-          wBase: 200,
-          hBase: 120 
-        }
-        const newList = [newContainer, ...this.containerList];
-        this.containerList = newList;
-        this.$store.dispatch('setContainerList', [...newList]);
-      }
-    }
   }
 }
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <div class="displayer-view" :style="{width:dMsg.width+'px', height:dMsg.height+'px'}">
+  <div class="displayer-view" :style="{width:dMsg.baseW+'px', height:dMsg.baseH+'px'}">
     <div>显示器{{dMsg.id}}</div>
   </div>
 </template>

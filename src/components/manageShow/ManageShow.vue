@@ -80,13 +80,14 @@
           </div>
         </div>
         <div v-if="typeIndex == 1">
-          <draggable class="displayer">
+          <div class="displayer">
             <div
               class="displayer-item"
               :class="[index % 2 ? 'deep' :'shallow', item.status == 'disable' ? 'disable' : '', clickItemId == item.id ? 'show' : '']"
               :key = item.id
               v-for="(item, index) in displayerList"
               @click="displayerClick(item)"
+              v-dragging="{list: displayerList, item: item, group: 'displayerList'}"
             >
               <div class="item-left">
                 <span class="id-text">{{item.id}}</span>
@@ -99,7 +100,7 @@
               </div>
 
             </div>
-          </draggable>
+          </div>
         </div>
         <div v-if="typeIndex == 2">显示系统信息</div>
         <div v-if="typeIndex == 3">参数</div>
@@ -109,7 +110,7 @@
 </template>
 
 <script>
-import draggable from "vuedraggable";
+// import draggable from "vuedraggable";
 // import vdr from 'vue-draggable-resizable-gorkys';
 // import Displayer from '@/components/displayer/Displayer';
 import Container from '@/components/container/Container';
@@ -233,7 +234,7 @@ export default {
     }
   },
   components: {
-    draggable,
+    // draggable,
     // Displayer,
     Container,
     // vdr
@@ -259,6 +260,13 @@ export default {
     this.containerList = this.$store.state.showVessels;
   },
   mounted() {
+    // 拖拽监听
+    this.$dragging.$on('dragged', (value) => {
+      console.log(value);
+    });
+    this.$dragging.$on('dragend', () => {
+
+    });
     // 监听容器大小，位置变化
     this.$root.bus.$off('setContainerItem');
     this.$root.bus.$on('setContainerItem', (data) => {
@@ -298,8 +306,9 @@ export default {
           }
           this.$set(dItem, 'x', (index % templateItem.col) * 1920);
           this.$set(dItem, 'y', (index % templateItem.row)  * 1080);
-          this.$set(dItem, 'width', 200);
-          this.$set(dItem, 'height', 120);
+          this.$set(dItem, 'baseW', 200);
+          this.$set(dItem, 'baseH', 120);
+          this.$set(dItem, 'useStatus', true);
         });
       });
       const newContainer = {

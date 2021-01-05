@@ -85,6 +85,7 @@ import draggable from "vuedraggable"
   onMove({ relatedContext, draggedContext, to }) {
     const relatedElement = relatedContext.element
     const draggedElement = draggedContext.element
+    // console.log(relatedElement, draggedElement);
     let dragInEl = to['className']
     if (dragInEl == 'selected-list') {
     this.isShowDel = false
@@ -101,6 +102,7 @@ import draggable from "vuedraggable"
     )
   },
   onEnd(dragObj) {
+    console.log(dragObj);
     let dragInEl = dragObj.to['className']
     if (dragInEl == 'selected-list') {
     if (this.selectedTheme.length > 4) {

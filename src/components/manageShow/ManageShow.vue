@@ -80,14 +80,18 @@
           </div>
         </div>
         <div v-if="typeIndex == 1">
-          <div class="displayer">
+          <draggable
+            class="displayer"
+            :sort="false"
+            :move="onMove"
+            @end="onEnd"
+          >
             <div
               class="displayer-item"
               :class="[index % 2 ? 'deep' :'shallow', item.status == 'disable' ? 'disable' : '', clickItemId == item.id ? 'show' : '']"
               :key = item.id
               v-for="(item, index) in displayerList"
               @click="displayerClick(item)"
-              v-dragging="{list: displayerList, item: item, group: 'displayerList'}"
             >
               <div class="item-left">
                 <span class="id-text">{{item.id}}</span>
@@ -100,17 +104,23 @@
               </div>
 
             </div>
-          </div>
+          </draggable>
         </div>
         <div v-if="typeIndex == 2">显示系统信息</div>
         <div v-if="typeIndex == 3">参数</div>
+      </div>
+      <div class="params-footer">
+        <div v-if="typeIndex == 0">自定义</div>
+        <div v-if="typeIndex == 2">清空全部</div>
+        <div v-if="typeIndex == 3">设置</div>
+        <div @click="hideRightView">返回</div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-// import draggable from "vuedraggable";
+import draggable from "vuedraggable";
 // import vdr from 'vue-draggable-resizable-gorkys';
 // import Displayer from '@/components/displayer/Displayer';
 import Container from '@/components/container/Container';
@@ -197,44 +207,14 @@ export default {
           col: 4
         }
       ], // 模板列表
-      displayerList: [
-        { id: 1, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-        { id: 2, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-        { id: 3, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-        { id: 4, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-        { id: 5, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-        { id: 6, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-        { id: 7, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-        { id: 8, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-        { id: 9, name: 'HDMI', type: 'HDMI', width: 1920, height:1080, status: 'usable' },
-        { id: 10, name: 'HDMI', type: 'HDMI', width: 1920, height:1080, status: 'usable' },
-        { id: 11, name: 'HDMI', type: 'HDMI', width: 1920, height:1080, status: 'usable' },
-        { id: 12, name: 'HDMI', type: 'HDMI', width: 1920, height:1080, status: 'usable' },
-        { id: 13, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
-        { id: 14, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
-        { id: 15, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
-        { id: 16, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
-        { id: 17, name: 'HDMI 2.0', type: 'HDMI2.0', width: 1920, height:1080, status: 'disable' },
-        { id: 19, name: 'HDMI 2.0', type: 'HDMI2.0', width: 1920, height:1080, status: 'disable' },
-        { id: 21, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable' },
-        { id: 22, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable' },
-        { id: 23, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable' },
-        { id: 24, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable' },
-        { id: 25, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
-        { id: 26, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
-        { id: 27, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
-        { id: 28, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
-        { id: 29, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
-        { id: 30, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
-        { id: 31, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
-        { id: 32, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
-      ], // 显示器列表
+      displayerList: [], // 显示器列表
+      drageDisplayerList: [],
       clickItemId: '',
       templateItem: null, // 当前所选模板
     }
   },
   components: {
-    // draggable,
+    draggable,
     // Displayer,
     Container,
     // vdr
@@ -258,11 +238,16 @@ export default {
   },
   created() {
     this.containerList = this.$store.state.showVessels;
+    this.displayerList = this.$store.state.displayerList;
   },
   mounted() {
     // 拖拽监听
     this.$dragging.$on('dragged', (value) => {
       console.log(value);
+      if(value.draged.status == 'usable' && value.to.used){
+        // todo
+
+      }
     });
     this.$dragging.$on('dragend', () => {
 
@@ -297,6 +282,7 @@ export default {
       if (obj.status == 'disable') return;
       this.clickItemId = obj.id;
     },
+    // 创建容器
     createContainer(templateItem) {
       const displayers = this.displayerList.filter(item => item.status == 'usable').filter((sItem, index) => index < templateItem.row * templateItem.col);
       this.displayerList.map(item => {
@@ -308,9 +294,10 @@ export default {
           this.$set(dItem, 'y', (index % templateItem.row)  * 1080);
           this.$set(dItem, 'baseW', 200);
           this.$set(dItem, 'baseH', 120);
-          this.$set(dItem, 'useStatus', true);
+          this.$set(dItem, 'used', true);
         });
       });
+      this.$store.dispatch('setDisplayerList', this.displayerList);
       const newContainer = {
         id: Date.parse(new Date()),
         type: this.modelVal,
@@ -324,6 +311,14 @@ export default {
       const newList = [ ...this.containerList, newContainer];
       this.containerList = newList;
       this.$store.dispatch('setContainerList', [...newList]);
+      this.$store.dispatch('setShareContainerList', [...newList]);
+    },
+    onMove() {},
+    onEnd(dragObj) {
+      console.log(dragObj);
+    },
+    hideRightView() {
+      this.$root.bus.$emit('hideRightView');
     },
   }
 }
@@ -389,6 +384,7 @@ export default {
       }
     }
     .right-view {
+      position: relative;
       width: 320px;
       height: 100%;
       background: rgb(22,28,44);
@@ -545,6 +541,29 @@ export default {
         }
         .show:hover {
           background: rgb(23,76,78);
+        }
+      }
+      .params-footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-top: 1px solid #333;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        > div {
+          width: 100px;
+          height: 24px;
+          margin-right: 12px;
+          border-radius: 12px;
+          line-height: 24px;
+          text-align: center;
+          background: rgb(26,188,156);
+          color: #fff;
+          font-size: 12px;
+          cursor: pointer;
         }
       }
     }

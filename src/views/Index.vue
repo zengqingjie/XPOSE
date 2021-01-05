@@ -18,9 +18,13 @@
       />
       <Layer
         v-if="menuInfo && menuInfo.id == '004'"
+        :showInfo="floatStatus"
+        :nowMenuId="menuInfo && menuInfo.id"
       />
       <Scene
         v-if="menuInfo && menuInfo.id == '005'"
+        :showInfo="floatStatus"
+        :nowMenuId="menuInfo && menuInfo.id"
       />
       <BottomParams/>
     </div>
@@ -69,6 +73,11 @@ export default {
       this.$root.bus.$off('titleInfo');
       this.$root.bus.$on('titleInfo', (data) => {
         this.menuInfo = data;
+        this.floatStatus = true;
+      });
+      // 隐藏右侧视图
+      this.$root.bus.$off('hideRightView');
+      this.$root.bus.$on('hideRightView', () => {
         this.floatStatus = true;
       });
     },

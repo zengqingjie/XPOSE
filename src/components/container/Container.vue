@@ -22,29 +22,29 @@
       </div>
     </vdr>
 
-    <div
+    <draggable
       class="displayer-box"
       :style="displayerBoxStyle"
       v-if="itemObj.displayerList"
+      animation="1000"
     > 
       <Displayer
         v-for="dItem in itemObj.displayerList"
         :key="dItem.id"
         :dMsg="dItem"
-        v-dragging="{list: itemObj.displayerList, item: dItem, group: 'displayerList'}"
       />
-    </div>
+    </draggable>
   </div>
 </template>
 
 <script>
-// import draggable from "vuedraggable";
+import draggable from "vuedraggable";
 import Displayer from '@/components/displayer/Displayer';
 import vdr from 'vue-draggable-resizable-gorkys';
 export default {
   props: ["item", "index"],
   components: {
-    // draggable,
+    draggable,
     Displayer,
     vdr,
   },
@@ -120,7 +120,7 @@ export default {
       if(x <= 0 || y <= 0) {
         this.positionX = x <= 0 ? 0 : x;
         this.positionY = y <= 0 ? 0 : y;
-        return;
+        return false;
       }
       this.positionX = x;
       this.positionY = y;
@@ -154,15 +154,16 @@ export default {
     this.init();
   },
   mounted() {
-    this.$dragging.$on('dragged', (value) => {
-      console.log(value);
-    });
-    this.$dragging.$on('dragend', () => {
+    // this.$dragging.$on('dragged', (value) => {
+    //   console.log(value);
+    // });
+    // this.$dragging.$on('dragend', () => {
 
-    });
+    // });
   },
   watch: {
     item(){
+      console.log(11);
       this.init();
     }
   }

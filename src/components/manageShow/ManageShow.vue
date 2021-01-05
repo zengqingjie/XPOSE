@@ -2,7 +2,6 @@
   <div class="manageShow-wrap">
     <draggable
       class="container-view"
-      v-model="containerList"
       group="container"
       sort="false"
       animation="300"
@@ -33,13 +32,12 @@
         </div>
       </div>
       <div class="container-box" v-if="containerList.length > 0"> 
-        <div v-for="(item, index) in containerList" :key="index" class="default-view">
-          <Container
-            :item="item"
-            :index="index"
-            :displayerChecked="item.displayerChecked"
-          />
-        </div>
+          <div v-for="(item, index) in containerList" :key="index" class="default-view">
+              <Container
+                :item="item"
+                :index="index"
+              />
+          </div>
       </div>
 
     </draggable>
@@ -123,10 +121,12 @@
 
 <script>
 import draggable from "vuedraggable";
-import Container from '@/components/container/Container'
+// import vdr from 'vue-draggable-resizable-gorkys';
+import Container from '@/components/container/Container';
 export default {
   data() {
     return {
+      cloneList: [],
       containerList: [], // 容器列表
       typeIndex: 0, // 参数类型
       modelList: [
@@ -244,7 +244,8 @@ export default {
   },
   components: {
     draggable,
-    Container
+    Container,
+    // vdr
   },
   props: ['showInfo', 'nowMenuId'],
   computed: {
@@ -278,11 +279,12 @@ export default {
       if (obj.status == 'disable') return;
       this.clickItemId = obj.id;
     },
-    onMove({ relatedContext, draggedContext, to }) {
+    onMove({ relatedContext, draggedContext, from, to }) {
       const relatedElement = relatedContext.element;
       const draggedElement = draggedContext.element;
+      let fromEl = from['className'];
       let dragInEl = to['className'];
-      if (dragInEl == 'container-view') {
+      if (fromEl == 'data-list' && dragInEl == 'container-view') {
         this.templateItem = draggedElement;
       }
       return (
@@ -292,17 +294,28 @@ export default {
     onEnd(dragObj) {
       console.log(dragObj);
       let dragInEl = dragObj.to['className']
-      if (dragInEl == 'container-view') {
+      let dragOutEl = dragObj.from['className']
+      if (dragOutEl == 'data-list' && dragInEl == 'container-view') {
+        const displayers = this.displayerList.filter(item => item.status == 'usable').filter((sItem, index) => index < this.templateItem.row * this.templateItem.col);
+        this.displayerList.map(item => {
+          displayers.map((dItem, index) => {
+            if (dItem.id == item.id) {
+              item.status = 'disable';
+            }
+            this.$set(dItem, 'x', (index % this.templateItem.col) * 1920);
+            this.$set(dItem, 'y', (index % this.templateItem.row)  * 1080);
+          });
+        });
+        console.log(displayers);
         const newContainer = {
           id: Date.parse(new Date()),
           type: this.modelVal,
           displayerChecked: this.devideChecked,
           separation: this.separation,
-          templateVal: this.templateItem
+          templateVal: this.templateItem,
+          displayerList: this.devideChecked ? displayers : []
         }
-        const newData = [newContainer, ...this.containerList];
-        const newList =  newData.filter(item => item.id); // 过滤掉从模板clone过来的对象
-        console.log(newList);
+        const newList = [newContainer, ...this.containerList];
         this.containerList = newList;
         this.$store.dispatch('setContainerList', [...newList]);
       }
@@ -366,6 +379,7 @@ export default {
         }
       }
       > .container-box {
+        position: relative;
         box-sizing: border-box;
       }
     }
@@ -497,7 +511,13 @@ export default {
           background: rgb(24,31,48);
         }
         .disable {
+          color: rgb(40,42,49);
           background: rgb(16,21,35);
+          > div {
+            .icon-view {
+              background: rgb(40,42,49);
+            }
+          }
         }
         .show {
           color: #fff;

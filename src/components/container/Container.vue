@@ -9,65 +9,66 @@
       </div>
     </div>
     <draggable
-      v-model="displayerList"
+      class="displayerBox"
       group="displayers"
       animation="1000"
       forceFallback="true"
     >
-      <div class="displayer-item" v-for="item in displayerList" :key="item.id">显示器xxx</div>
-      <!-- <transition-group>
-      </transition-group> -->
+      <div class="displayer-item" v-for="dItem in item.displayerList" :key="dItem.id" :style="setDisplayerStyle">
+        <div>显示器{{dItem.id}}</div>
+        <div>x:{{dItem.x}} y:{{dItem.y}}</div>
+        <div>w:{{dItem.width}} h:{{dItem.height}}</div>
+        <div>r:0</div>
+        <div>{{dItem.name}}</div>
+      </div>
     </draggable>
   </div>
 </template>
 
 <script>
 import draggable from "vuedraggable";
+// import vdr from 'vue-draggable-resizable-gorkys';
 export default {
-  props: ["item", "index", "displayerChecked"],
+  props: ["item", "index"],
   components: {
-    draggable
+    draggable,
+    // vdr,
   },
   data() {
     return {
-      displayerList: [],
+      wBase: 240,
+      hBase: 120
     }
   },
   computed: {
     // 容器尺寸
     setContainerStyle() {
       const itemInfo = this.item;
-      console.log(itemInfo);
-      const width = (itemInfo.templateVal.col * 240) + 'px';
-      const height = (itemInfo.templateVal.row * 120) + 'px';
+      const width = (itemInfo.templateVal.col * this.wBase) + 'px';
+      const height = (itemInfo.templateVal.row * this.hBase + 24) + 'px';
       return {
         width: width,
         height: height
       }
     },
-  
-  },
-  mounted() {
-    console.log('走过生命周期');
-    console.log(this.item);
-    console.log(this.displayerChecked);
-    const itemData = this.item;
-    console.log(itemData);
-    if(this.displayerChecked) {
-      console.log(123456);
-      const row = this.item.templateVal.row;
-      const col = this.item.templateVal.col;
-      for(let i = 0; i < row * col; i++) {
-        const displayerInfo = {
-          x: i < col ? i * 1920 : 0,
-          y: i < row ? 0 : i * 1080,
-          w: this.item.separation == 2 ? 1920 : 3840,
-          h: this.item.separation == 2 ? 1080 : 2160,
-        }
-        this.displayerList.push(displayerInfo);
-        console.log(this.displayerList);
+    // 显示器尺寸
+    setDisplayerStyle() {
+      const width = this.wBase + 'px';
+      const height = this.hBase + 'px';
+      return {
+        width,
+        height
       }
     }
+  },
+  methods: {
+    
+  },
+  mounted() {
+    
+  },
+  watch: {
+    
   }
 }
 </script>
@@ -95,9 +96,22 @@ export default {
         font-size: 16px;
         font-weight: bold;
         div {
+          text-align: center;
           flex: 1;
-          flex-shrink: 0;
+          flex-shrink: 10;
         }
+      }
+    }
+    .displayerBox {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      .displayer-item {
+        padding: 12px;
+        background: rgb(120,190,252);
+        border: 1px solid #333;
+        box-sizing: border-box;
+        font-size: 12px;
       }
     }
   }

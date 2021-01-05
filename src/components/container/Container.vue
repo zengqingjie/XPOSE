@@ -23,6 +23,7 @@
     </vdr>
 
     <draggable
+      group="displayers"
       class="displayer-box"
       :style="displayerBoxStyle"
       v-if="itemObj.displayerList"
@@ -32,6 +33,7 @@
         v-for="dItem in itemObj.displayerList"
         :key="dItem.id"
         :dMsg="dItem"
+        :data-id="dItem.parentId"
       />
     </draggable>
   </div>

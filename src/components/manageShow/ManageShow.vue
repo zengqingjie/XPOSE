@@ -25,12 +25,12 @@
         </div>
       </div>
       <div class="container-box" v-if="containerList.length > 0"> 
-        <div v-for="(item, index) in containerList" :key="index" class="default-view">
-          <Container
-            :item="item"
-            :index="index"
-          />
-        </div>
+        <Container
+          v-for="(item, index) in containerList" :key="index"
+          :item="item"
+          :index="index"
+          :id="item.id"
+        />
       </div>
 
     </div>
@@ -81,6 +81,7 @@
         </div>
         <div v-if="typeIndex == 1">
           <draggable
+            group="displayers"
             class="displayer"
             :sort="false"
             :move="onMove"
@@ -284,29 +285,33 @@ export default {
     },
     // 创建容器
     createContainer(templateItem) {
-      const displayers = this.displayerList.filter(item => item.status == 'usable').filter((sItem, index) => index < templateItem.row * templateItem.col);
-      this.displayerList.map(item => {
-        displayers.map((dItem, index) => {
-          if (dItem.id == item.id) {
-            item.status = 'disable';
-          }
-          this.$set(dItem, 'x', (index % templateItem.col) * 1920);
-          this.$set(dItem, 'y', (index % templateItem.row)  * 1080);
-          this.$set(dItem, 'baseW', 200);
-          this.$set(dItem, 'baseH', 120);
-          this.$set(dItem, 'used', true);
-        });
-      });
-      this.$store.dispatch('setDisplayerList', this.displayerList);
       const newContainer = {
         id: Date.parse(new Date()),
         type: this.modelVal,
         displayerChecked: this.devideChecked,
         separation: this.separation,
         templateVal: templateItem,
-        displayerList: this.devideChecked ? displayers : [],
+        displayerList: [],
         wBase: 200,
         hBase: 120 
+      }
+      if (this.devideChecked) {
+        const displayers = this.displayerList.filter(item => item.status == 'usable').filter((sItem, index) => index < templateItem.row * templateItem.col);
+        this.displayerList.map(item => {
+          displayers.map((dItem, index) => {
+            if (dItem.id == item.id) {
+              item.status = 'disable';
+            }
+            this.$set(dItem, 'x', (index % templateItem.col) * 1920);
+            this.$set(dItem, 'y', (index % templateItem.row)  * 1080);
+            this.$set(dItem, 'baseW', 200);
+            this.$set(dItem, 'baseH', 120);
+            this.$set(dItem, 'used', true);
+            this.$set(dItem, 'parentId', newContainer.id);
+          });
+        });
+        this.$store.dispatch('setDisplayerList', this.displayerList);
+        newContainer.displayerList = displayers;
       }
       const newList = [ ...this.containerList, newContainer];
       this.containerList = newList;
@@ -316,6 +321,15 @@ export default {
     onMove() {},
     onEnd(dragObj) {
       console.log(dragObj);
+
+      let parentId = dragObj.to.children[0].getAttribute('data-id');
+      let index = dragObj.newIndex;
+      this.containerList.some(item => {
+        if (item.id === parentId) {
+          item.displayerList.splice()
+        }
+      })
+      console.log(this.$store);
     },
     hideRightView() {
       this.$root.bus.$emit('hideRightView');

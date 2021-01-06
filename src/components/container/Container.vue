@@ -10,28 +10,31 @@
       v-on:dragging="onDrag"
       v-on:resizing="onResize"
     >
-      <div class="container-component" v-if="itemObj && itemObj.templateVal" :style="setContainerStyle">
+      <div class="container-component" v-if="item && item.templateVal" :style="setContainerStyle">
         <div class="container-header">
-          <span>{{index + 1}}--(W:{{itemObj.templateVal.col * 1920}} H:{{itemObj.templateVal.row * 1080}})</span>
+          <span>{{index + 1}}--(W:{{item.templateVal.col * 1920}} H:{{item.templateVal.row * 1080}})</span>
           <div class="right-view">
             <div>-</div>
             <div>+</div>
-            <div v-longpress="deleteContainer" class="delete-container" @click="deleteContainerItem(itemObj)">x</div>
+            <div v-longpress="deleteContainer" class="delete-container" @click="deleteContainerItem(item)">x</div>
           </div>
         </div>
+        <div class="displayer-view"></div>
       </div>
     </vdr>
 
     <draggable
       class="displayer-box"
       :style="displayerBoxStyle"
-      v-if="itemObj.displayerList"
+      v-if="item.displayerList"
       animation="1000"
     > 
       <Displayer
-        v-for="dItem in itemObj.displayerList"
+        v-for="dItem in item.displayerList"
         :key="dItem.id"
         :dMsg="dItem"
+        :id="dItem.id"
+        :parentId="item.id"
       />
     </draggable>
   </div>
@@ -50,7 +53,6 @@ export default {
   },
   data() {
     return {
-      itemObj: null,
       sizeW: 0,
       sizeH: 0,
       positionX: 0,
@@ -66,7 +68,7 @@ export default {
   computed: {
     // 容器尺寸
     setContainerStyle() {
-      const itemInfo = this.itemObj;
+      const itemInfo = this.item;
       const width = (itemInfo.templateVal.col * itemInfo.wBase) + 'px';
       const height = (itemInfo.templateVal.row * itemInfo.hBase + 24) + 'px';
       return {
@@ -79,18 +81,17 @@ export default {
   methods: {
     // 初始化容器，显示器
     init() {
-      this.itemObj = this.item;
-      this.sizeW = this.itemObj.sizeW ? (this.itemObj.sizeW) : (this.itemObj.templateVal.col * this.itemObj.wBase + 6);
-      this.sizeH = this.itemObj.sizeH ? (this.itemObj.sizeH) : (this.itemObj.templateVal.row * this.itemObj.hBase + 28);
-      this.positionX = this.itemObj.positionX || 200;
-      this.positionY = this.itemObj.positionY || 300;
-      this.displayerBoxStyle.transform = this.itemObj.positionX ? 'translate('+ (this.itemObj.positionX + 3) +'px,'+ (this.itemObj.positionY + 25) +'px)' : 'translate(203px, 325px)';
-      this.displayerBoxStyle.width = this.itemObj.sizeW ? this.itemObj.sizeW + 'px' : this.itemObj.templateVal.col * this.itemObj.wBase + 'px';
-      this.$set(this.itemObj, 'sizeW', this.sizeW);
-      this.$set(this.itemObj, 'sizeH', this.sizeH);
-      this.$set(this.itemObj, 'positionX', this.positionX);
-      this.$set(this.itemObj, 'positionY', this.positionY);
-      this.$root.bus.$emit('setContainerItem', this.itemObj);
+      this.sizeW = this.item.sizeW ? (this.item.sizeW) : (this.item.templateVal.col * this.item.wBase + 6);
+      this.sizeH = this.item.sizeH ? (this.item.sizeH) : (this.item.templateVal.row * this.item.hBase + 28);
+      this.positionX = this.item.positionX || 200;
+      this.positionY = this.item.positionY || 300;
+      this.displayerBoxStyle.transform = this.item.positionX ? 'translate('+ (this.item.positionX + 3) +'px,'+ (this.item.positionY + 25) +'px)' : 'translate(203px, 325px)';
+      this.displayerBoxStyle.width = this.item.sizeW ? this.item.sizeW + 'px' : this.item.templateVal.col * this.item.wBase + 'px';
+      this.$set(this.item, 'sizeW', this.sizeW);
+      this.$set(this.item, 'sizeH', this.sizeH);
+      this.$set(this.item, 'positionX', this.positionX);
+      this.$set(this.item, 'positionY', this.positionY);
+      this.$root.bus.$emit('setContainerItem', this.item);
     },
     // 容器伸缩
     onResize: function (x, y, width, height) {
@@ -103,17 +104,17 @@ export default {
       this.sizeH = height;
       this.displayerBoxStyle.transform = 'translate('+ (x + 3) +'px,'+ (y + 25) +'px)';
       this.displayerBoxStyle.width = width + 'px';
-      this.itemObj.displayerList.map(item => {
-        item.baseW = (width-6) / this.itemObj.templateVal.col;
-        item.baseH = (height-28) / this.itemObj.templateVal.row;
+      this.item.displayerList.map(item => {
+        item.baseW = (width-6) / this.item.templateVal.col;
+        item.baseH = (height-28) / this.item.templateVal.row;
       });
-      this.itemObj.wBase = (width-6) / this.itemObj.templateVal.col;
-      this.itemObj.hBase = (height-28) / this.itemObj.templateVal.row;
-      this.$set(this.itemObj, 'sizeW', width);
-      this.$set(this.itemObj, 'sizeH', height);
-      this.$set(this.itemObj, 'positionX', x);
-      this.$set(this.itemObj, 'positionY', y);
-      this.$root.bus.$emit('setContainerItem', this.itemObj);
+      this.item.wBase = (width-6) / this.item.templateVal.col;
+      this.item.hBase = (height-28) / this.item.templateVal.row;
+      this.$set(this.item, 'sizeW', width);
+      this.$set(this.item, 'sizeH', height);
+      this.$set(this.item, 'positionX', x);
+      this.$set(this.item, 'positionY', y);
+      this.$root.bus.$emit('setContainerItem', this.item);
     },
     // 容器拖拽
     onDrag: function (x, y) {
@@ -125,9 +126,9 @@ export default {
       this.positionX = x;
       this.positionY = y;
       this.displayerBoxStyle.transform = 'translate('+ (x + 3) +'px,'+ (y + 25) +'px)';
-      this.$set(this.itemObj, 'positionX', x);
-      this.$set(this.itemObj, 'positionY', y);
-      this.$root.bus.$emit('setContainerItem', this.itemObj);
+      this.$set(this.item, 'positionX', x);
+      this.$set(this.item, 'positionY', y);
+      this.$root.bus.$emit('setContainerItem', this.item);
     },
     // 点击删除容器
     deleteContainerItem(obj) {
@@ -154,18 +155,10 @@ export default {
     this.init();
   },
   mounted() {
-    // this.$dragging.$on('dragged', (value) => {
-    //   console.log(value);
-    // });
-    // this.$dragging.$on('dragend', () => {
-
-    // });
+   
   },
   watch: {
-    item(){
-      console.log(11);
-      this.init();
-    }
+    
   }
 }
 </script>
@@ -177,7 +170,8 @@ export default {
       position: relative;
       border: 2px solid rgb(0,196,172);
       border-top: none;
-      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
       .container-header {
         height: 24px;
         background: rgb(0,196,172);
@@ -201,6 +195,10 @@ export default {
             cursor: pointer;
           }
         }
+      }
+      > .displayer-view {
+        flex: 1;
+        background: rgb(63,69,94)
       }
       .displayerBox {
         position: absolute;

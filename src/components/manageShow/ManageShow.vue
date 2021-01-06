@@ -3,6 +3,14 @@
     <div
       class="container-view"
     >
+      <!-- <div class="box" id="11" style="width:200px;height:200px;background:red"></div>
+      <div class="box" id="22" style="width:200px;height:200px;background:red"></div>
+      <div class="box" id="33" style="width:200px;height:200px;background:red"></div>
+      <div class="box" id="44" style="width:200px;height:200px;background:red"></div> -->
+      <!-- <div class="child" id="1" style="width:100px;height:100px;background:blue;z-index:99"></div>
+      <div class="child" id="2" style="width:100px;height:100px;background:blue;z-index:99"></div>
+      <div class="child" id="3" style="width:100px;height:100px;background:blue;z-index:99"></div>
+      <div class="child" id="4" style="width:100px;height:100px;background:blue;z-index:99"></div> -->
       <div
         class="default-view"
         v-if="containerList.length == 0"
@@ -34,7 +42,7 @@
       </div>
 
     </div>
-    <div class="right-view" v-if="!showInfo && nowMenuId == '003'">
+    <div class="right-view" v-show="!showInfo && nowMenuId == '003'">
       <div class="params-type" v-dragscroll>
         <div class="flex-box">
           <div :class="typeIndex == 0 ? 'show' : ''" @click="typeSelect(0)">模板</div>
@@ -44,7 +52,7 @@
         </div>
       </div>
       <div class="params-conts">
-        <div v-if="typeIndex == 0">
+        <div v-show="typeIndex == 0">
           <div class="input-view">
             <span>模式</span>
             <el-select v-model="modelVal" placeholder="请选择">
@@ -79,18 +87,14 @@
             </div>
           </div>
         </div>
-        <div v-if="typeIndex == 1">
-          <draggable
-            class="displayer"
-            :sort="false"
-            :move="onMove"
-            @end="onEnd"
-          >
+        <div v-show="typeIndex == 1" class="box">
+          <div class="displayer">
             <div
               class="displayer-item"
               :class="[index % 2 ? 'deep' :'shallow', item.status == 'disable' ? 'disable' : '', clickItemId == item.id ? 'show' : '']"
               :key = item.id
               v-for="(item, index) in displayerList"
+              :id="item.id"
               @click="displayerClick(item)"
             >
               <div class="item-left">
@@ -104,10 +108,10 @@
               </div>
 
             </div>
-          </draggable>
+          </div>
         </div>
-        <div v-if="typeIndex == 2">显示系统信息</div>
-        <div v-if="typeIndex == 3">参数</div>
+        <div v-show="typeIndex == 2">显示系统信息</div>
+        <div v-show="typeIndex == 3">参数</div>
       </div>
       <div class="params-footer">
         <div v-if="typeIndex == 0">自定义</div>
@@ -120,7 +124,8 @@
 </template>
 
 <script>
-import draggable from "vuedraggable";
+import $ from "jquery";
+// import draggable from "vuedraggable";
 // import vdr from 'vue-draggable-resizable-gorkys';
 // import Displayer from '@/components/displayer/Displayer';
 import Container from '@/components/container/Container';
@@ -214,7 +219,7 @@ export default {
     }
   },
   components: {
-    draggable,
+    // draggable,
     // Displayer,
     Container,
     // vdr
@@ -241,16 +246,45 @@ export default {
     this.displayerList = this.$store.state.displayerList;
   },
   mounted() {
-    // 拖拽监听
-    this.$dragging.$on('dragged', (value) => {
-      console.log(value);
-      if(value.draged.status == 'usable' && value.to.used){
-        // todo
-
-      }
+    const vm = this;
+    $(function() {
+      $(".displayer").find(".displayer-item").each(function() {
+        $(this).draggable({
+          connectToSortable : ".displayer-view",  //目标区域列表div的dom
+          helper : "clone", //拖拽时为原dom按钮的clone，而不是直接拖拽原dom按钮
+          revert : "invalid", //当未拖入到指定目标区域时，回到原位置
+        });
+      });
     });
-    this.$dragging.$on('dragend', () => {
-
+    // jq触发事件
+    $(".displayer-view").droppable({
+      drop: function(event, ui) {
+        const devId = $(this).attr('id');
+        const containerId = $(this).attr('parentId');
+        const dragId = ui.draggable[0].getAttribute('id');
+        console.log(event);
+        // 拖拽显示器进行替换
+        if (devId) {
+          const dragObg = vm.displayerList.filter(item => item.id == dragId)[0];
+          console.log(dragObg);
+          vm.$set(dragObg, 'baseW', 200);
+          vm.$set(dragObg, 'baseH', 120);
+          const getDevList = vm.containerList.filter(item => item.id == containerId)[0].displayerList;
+          getDevList.map((item, index) => {
+            if(item.id == devId) {
+              getDevList.splice(index, 1, dragObg);
+              vm.containerList.map(item => {
+                if (item.id == containerId) {
+                  item.displayerList = getDevList;
+                }
+              });
+              vm.$store.dispatch('setContainerList', vm.containerList);
+            }
+          })
+        }
+        // console.log(ui);
+        // console.log($(this).attr('id'),$(this).attr('parentId'));
+      }
     });
     // 监听容器大小，位置变化
     this.$root.bus.$off('setContainerItem');
@@ -270,7 +304,7 @@ export default {
           type: 'success',
           message: '已删除'
         });
-    })
+    });
   },
   methods: {
     // 容器参数类型切换
@@ -284,19 +318,7 @@ export default {
     },
     // 创建容器
     createContainer(templateItem) {
-      const displayers = this.displayerList.filter(item => item.status == 'usable').filter((sItem, index) => index < templateItem.row * templateItem.col);
-      this.displayerList.map(item => {
-        displayers.map((dItem, index) => {
-          if (dItem.id == item.id) {
-            item.status = 'disable';
-          }
-          this.$set(dItem, 'x', (index % templateItem.col) * 1920);
-          this.$set(dItem, 'y', (index % templateItem.row)  * 1080);
-          this.$set(dItem, 'baseW', 200);
-          this.$set(dItem, 'baseH', 120);
-          this.$set(dItem, 'used', true);
-        });
-      });
+      const vm = this;
       this.$store.dispatch('setDisplayerList', this.displayerList);
       const newContainer = {
         id: Date.parse(new Date()),
@@ -304,22 +326,65 @@ export default {
         displayerChecked: this.devideChecked,
         separation: this.separation,
         templateVal: templateItem,
-        displayerList: this.devideChecked ? displayers : [],
+        displayerList: [],
         wBase: 200,
         hBase: 120 
       }
+      if (this.devideChecked) {
+        const displayers = this.displayerList.filter(item => item.status == 'usable').filter((sItem, index) => index < templateItem.row * templateItem.col);
+        this.displayerList.map(item => {
+          displayers.map((dItem) => {
+            if (dItem.id == item.id) {
+              item.status = 'disable';
+            }
+            this.$set(dItem, 'baseW', 200);
+            this.$set(dItem, 'baseH', 120);
+          });
+        });
+        newContainer.displayerList = displayers;
+      }
       const newList = [ ...this.containerList, newContainer];
       this.containerList = newList;
+      this.$nextTick(() => {
+        // jq触发事件
+        $(".displayer-view").droppable({
+          drop: function(event, ui) {
+            const devId = $(this).attr('id');
+            const containerId = $(this).attr('parentId');
+            const dragId = ui.draggable[0].getAttribute('id');
+            console.log(event);
+            console.log(devId);
+            // 拖拽显示器进行替换
+            if (devId) {
+              const dragObg = vm.displayerList.filter(item => item.id == dragId)[0];
+              console.log(dragObg);
+              vm.$set(dragObg, 'baseW', 200);
+              vm.$set(dragObg, 'baseH', 120);
+              const getDevList = vm.containerList.filter(item => item.id == containerId)[0].displayerList;
+              getDevList.map((item, index) => {
+                if(item.id == devId) {
+                  getDevList.splice(index, 1, dragObg);
+                  vm.containerList.map(item => {
+                    if (item.id == containerId) {
+                      item.displayerList = getDevList;
+                    }
+                  });
+                  vm.$store.dispatch('setContainerList', vm.containerList);
+                }
+              })
+            }
+          }
+        });
+      })
       this.$store.dispatch('setContainerList', [...newList]);
       this.$store.dispatch('setShareContainerList', [...newList]);
-    },
-    onMove() {},
-    onEnd(dragObj) {
-      console.log(dragObj);
     },
     hideRightView() {
       this.$root.bus.$emit('hideRightView');
     },
+  },
+  watch: {
+    
   }
 }
 </script>

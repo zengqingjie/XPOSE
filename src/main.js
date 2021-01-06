@@ -6,6 +6,7 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import VueDND from 'awe-dnd';
+import 'jquery-ui-dist/jquery-ui';
 
 Vue.config.productionTip = false;
 Vue.use(ElementUI);

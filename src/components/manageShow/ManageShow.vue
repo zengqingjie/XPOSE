@@ -33,12 +33,11 @@
         </div>
       </div>
       <div class="container-box" v-if="containerList.length > 0"> 
-        <div v-for="(item, index) in containerList" :key="index" class="default-view">
-          <Container
-            :item="item"
-            :index="index"
-          />
-        </div>
+        <Container
+          v-for="(item, index) in containerList" :key="index"
+          :item="item"
+          :index="index"
+        />
       </div>
 
     </div>
@@ -246,46 +245,12 @@ export default {
     this.displayerList = this.$store.state.displayerList;
   },
   mounted() {
-    const vm = this;
-    $(function() {
-      $(".displayer").find(".displayer-item").each(function() {
-        $(this).draggable({
-          connectToSortable : ".displayer-view",  //目标区域列表div的dom
-          helper : "clone", //拖拽时为原dom按钮的clone，而不是直接拖拽原dom按钮
-          revert : "invalid", //当未拖入到指定目标区域时，回到原位置
-        });
-      });
+    $(".displayer .displayer-item").draggable({
+      connectToSortable : ".displayer-view",  //目标区域列表div的dom
+      helper : "clone", //拖拽时为原dom按钮的clone，而不是直接拖拽原dom按钮
+      revert : "invalid", //当未拖入到指定目标区域时，回到原位置
     });
-    // jq触发事件
-    $(".displayer-view").droppable({
-      drop: function(event, ui) {
-        const devId = $(this).attr('id');
-        const containerId = $(this).attr('parentId');
-        const dragId = ui.draggable[0].getAttribute('id');
-        console.log(event);
-        // 拖拽显示器进行替换
-        if (devId) {
-          const dragObg = vm.displayerList.filter(item => item.id == dragId)[0];
-          console.log(dragObg);
-          vm.$set(dragObg, 'baseW', 200);
-          vm.$set(dragObg, 'baseH', 120);
-          const getDevList = vm.containerList.filter(item => item.id == containerId)[0].displayerList;
-          getDevList.map((item, index) => {
-            if(item.id == devId) {
-              getDevList.splice(index, 1, dragObg);
-              vm.containerList.map(item => {
-                if (item.id == containerId) {
-                  item.displayerList = getDevList;
-                }
-              });
-              vm.$store.dispatch('setContainerList', vm.containerList);
-            }
-          })
-        }
-        // console.log(ui);
-        // console.log($(this).attr('id'),$(this).attr('parentId'));
-      }
-    });
+
     // 监听容器大小，位置变化
     this.$root.bus.$off('setContainerItem');
     this.$root.bus.$on('setContainerItem', (data) => {
@@ -307,6 +272,38 @@ export default {
     });
   },
   methods: {
+    // 初始化放置事件
+    inintDragge(){
+      const vm = this;
+      // jq触发事件
+      $(".displayer-view").droppable({
+        drop: function(event, ui) {
+          const devId = $(this).attr('id');
+          const containerId = $(this).attr('parentId');
+          const dragId = ui.draggable[0].getAttribute('id');
+          console.log(event);
+          // 拖拽显示器进行替换
+          if (devId) {
+            const dragObg = vm.displayerList.filter(item => item.id == dragId)[0];
+            console.log(dragObg);
+            vm.$set(dragObg, 'baseW', 200);
+            vm.$set(dragObg, 'baseH', 120);
+            const getDevList = vm.containerList.filter(item => item.id == containerId)[0].displayerList;
+            getDevList.map((item, index) => {
+              if(item.id == devId) {
+                getDevList.splice(index, 1, dragObg);
+                vm.containerList.map(item => {
+                  if (item.id == containerId) {
+                    item.displayerList = getDevList;
+                  }
+                });
+                vm.$store.dispatch('setContainerList', vm.containerList);
+              }
+            })
+          }
+        }
+      });
+    },
     // 容器参数类型切换
     typeSelect(num) {
       this.typeIndex = num;
@@ -318,7 +315,6 @@ export default {
     },
     // 创建容器
     createContainer(templateItem) {
-      const vm = this;
       this.$store.dispatch('setDisplayerList', this.displayerList);
       const newContainer = {
         id: Date.parse(new Date()),
@@ -345,40 +341,76 @@ export default {
       }
       const newList = [ ...this.containerList, newContainer];
       this.containerList = newList;
-      this.$nextTick(() => {
-        // jq触发事件
-        $(".displayer-view").droppable({
-          drop: function(event, ui) {
-            const devId = $(this).attr('id');
-            const containerId = $(this).attr('parentId');
-            const dragId = ui.draggable[0].getAttribute('id');
-            console.log(event);
-            console.log(devId);
-            // 拖拽显示器进行替换
-            if (devId) {
-              const dragObg = vm.displayerList.filter(item => item.id == dragId)[0];
-              console.log(dragObg);
-              vm.$set(dragObg, 'baseW', 200);
-              vm.$set(dragObg, 'baseH', 120);
-              const getDevList = vm.containerList.filter(item => item.id == containerId)[0].displayerList;
-              getDevList.map((item, index) => {
-                if(item.id == devId) {
-                  getDevList.splice(index, 1, dragObg);
-                  vm.containerList.map(item => {
-                    if (item.id == containerId) {
-                      item.displayerList = getDevList;
-                    }
-                  });
-                  vm.$store.dispatch('setContainerList', vm.containerList);
-                }
-              })
-            }
-          }
-        });
-      })
       this.$store.dispatch('setContainerList', [...newList]);
       this.$store.dispatch('setShareContainerList', [...newList]);
+
+      this.$nextTick(() => {
+        this.draggableInit();
+        this.sortableInit();
+        this.droppableInit();
+      })
     },
+    draggableInit() {
+      // $('.container-view .container-component').draggable('destroy');
+      $('.container-view .container-component').draggable({
+        connectToSortable: '.container-view',
+        containment: '.container-view',
+        scroll: false,
+        handle: '.container-header'
+      })
+    },
+    droppableInit() {
+      let vm = this;
+      $('.displayer-view').droppable({
+        accept: '.displayer-item',
+        drop: function(event, ui){
+          const id = $(this).attr('id');
+          const dataId = $(this).attr('data-id');
+          const targetId = $(ui.draggable[0]).attr('id');
+          const targetObj = vm.displayerList.find(
+            item => item.id == targetId
+          );
+          Object.assign(targetObj, {
+            baseW: 200,
+            baseH: 120
+          });
+          if (id) {
+            vm.containerList.some(item => {
+              if (item.id == dataId) {
+                item.displayerList.some((display, index) => {
+                  if (display.id == id) {
+                    item.displayerList.splice(index, 1, targetObj);
+                    vm.$nextTick(() => {
+                      vm.droppableInit();
+                    })
+                    return true;
+                  }
+                })
+                return true;
+              }
+            })
+            vm.displayerList.forEach(item => {
+              if (item.id == id) {
+                item.status = 'usable';
+              }
+              if (item.id == targetId) {
+                item.status = 'disable';
+              }
+            })
+            vm.$store.dispatch('setDisplayerList', vm.displayerList);
+          } else {
+            $(this).attr('id')
+          }
+        }
+      })
+    },
+    sortableInit() {
+      $('.displayer-box').sortable({
+        cursor: "move",
+        scroll: false,
+      })
+    },
+    
     hideRightView() {
       this.$root.bus.$emit('hideRightView');
     },

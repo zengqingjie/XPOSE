@@ -1,55 +1,32 @@
 <template>
-  <div class="container-el">
-    <vdr
-      :w="sizeW"
-      :h="sizeH"
-      :x="positionX"
-      :y="positionY"
-      :min-width="75"
-      :min-height="75"
-      v-on:dragging="onDrag"
-      v-on:resizing="onResize"
-    >
-      <div class="container-component" v-if="item && item.templateVal" :style="setContainerStyle">
-        <div class="container-header">
-          <span>{{index + 1}}--(W:{{item.templateVal.col * 1920}} H:{{item.templateVal.row * 1080}})</span>
-          <div class="right-view">
-            <div>-</div>
-            <div>+</div>
-            <div v-longpress="deleteContainer" class="delete-container" @click="deleteContainerItem(item)">x</div>
-          </div>
-        </div>
-        <div class="displayer-view"></div>
+  <div class="container-component" v-if="item && item.templateVal" :style="setContainerStyle">
+    <div class="container-header">
+      <span>{{index + 1}}--(W:{{item.templateVal.col * 1920}} H:{{item.templateVal.row * 1080}})</span>
+      <div class="right-view">
+        <div>-</div>
+        <div>+</div>
+        <div v-longpress="deleteContainer" class="delete-container" @click="deleteContainerItem(item)">x</div>
       </div>
-    </vdr>
-
-    <draggable
-      class="displayer-box"
-      :style="displayerBoxStyle"
-      v-if="item.displayerList"
-      animation="1000"
-    > 
+    </div>
+    <div class="displayer-box" :data-id="item.id">
       <Displayer
         v-for="dItem in item.displayerList"
         :key="dItem.id"
         :dMsg="dItem"
         :id="dItem.id"
-        :parentId="item.id"
+        :data-id="item.id"
       />
-    </draggable>
+    </div>
   </div>
 </template>
 
 <script>
-import draggable from "vuedraggable";
 import Displayer from '@/components/displayer/Displayer';
-import vdr from 'vue-draggable-resizable-gorkys';
+import $ from 'jquery';
 export default {
   props: ["item", "index"],
   components: {
-    draggable,
     Displayer,
-    vdr,
   },
   data() {
     return {
@@ -58,9 +35,7 @@ export default {
       positionX: 0,
       positionY: 0,
       displayerBoxStyle: {
-        transform: 'tanslate(0, 0)',
-        width: 0,
-        height: 0
+        width: 0
       },
       mouseDownTime: 0, // 鼠标按下时长
     }
@@ -76,7 +51,6 @@ export default {
         height: height
       }
     },
-    
   },
   methods: {
     // 初始化容器，显示器
@@ -85,7 +59,6 @@ export default {
       this.sizeH = this.item.sizeH ? (this.item.sizeH) : (this.item.templateVal.row * this.item.hBase + 28);
       this.positionX = this.item.positionX || 200;
       this.positionY = this.item.positionY || 300;
-      this.displayerBoxStyle.transform = this.item.positionX ? 'translate('+ (this.item.positionX + 3) +'px,'+ (this.item.positionY + 25) +'px)' : 'translate(203px, 325px)';
       this.displayerBoxStyle.width = this.item.sizeW ? this.item.sizeW + 'px' : this.item.templateVal.col * this.item.wBase + 'px';
       this.$set(this.item, 'sizeW', this.sizeW);
       this.$set(this.item, 'sizeH', this.sizeH);
@@ -155,7 +128,7 @@ export default {
     this.init();
   },
   mounted() {
-   
+   $('.container-el')
   },
   watch: {
     
@@ -164,61 +137,59 @@ export default {
 </script>
 
 <style scoped lang="less">
-  .container-el {
+  .container-component {
     position: relative;
-    .container-component {
-      position: relative;
-      border: 2px solid rgb(0,196,172);
-      border-top: none;
+    border: 2px solid rgb(0,196,172);
+    border-top: none;
+    display: flex;
+    flex-direction: column;
+    .container-header {
+      height: 24px;
+      background: rgb(0,196,172);
       display: flex;
-      flex-direction: column;
-      .container-header {
-        height: 24px;
-        background: rgb(0,196,172);
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+      cursor: move;
+      span {
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .right-view {
+        width: 72px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        color: #fff;
-        span {
-          font-size: 12px;
-          font-weight: bold;
-        }
-        .right-view {
-          width: 72px;
-          display: flex;
-          align-items: center;
-          font-size: 16px;
-          font-weight: bold;
-          div {
-            text-align: center;
-            flex: 1;
-            cursor: pointer;
-          }
-        }
-      }
-      > .displayer-view {
-        flex: 1;
-        background: rgb(63,69,94)
-      }
-      .displayerBox {
-        position: absolute;
-        top: 24px;
-        left: 0;
-        right: 0;
-        display: flex;
-        flex-wrap: wrap;
-        z-index: 99;
-        .displayer-item {
-          padding: 12px;
-          background: rgb(120,190,252);
-          border: 1px solid #333;
-          box-sizing: border-box;
-          font-size: 12px;
+        font-size: 16px;
+        font-weight: bold;
+        div {
+          text-align: center;
+          flex: 1;
+          cursor: pointer;
         }
       }
     }
-    .displayer-box {
+    > .displayer-view {
+      flex: 1;
+      background: rgb(63,69,94)
+    }
+    .displayerBox {
       position: absolute;
+      top: 24px;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-wrap: wrap;
+      z-index: 99;
+      .displayer-item {
+        padding: 12px;
+        background: rgb(120,190,252);
+        border: 1px solid #333;
+        box-sizing: border-box;
+        font-size: 12px;
+      }
+    }
+    .displayer-box {
+      flex: 1;
       display: flex;
       flex-wrap: wrap;
     }

@@ -1,20 +1,7 @@
 <template>
   <div class="manageShow-wrap">
-    <div
-      class="container-view"
-    >
-      <!-- <div class="box" id="11" style="width:200px;height:200px;background:red"></div>
-      <div class="box" id="22" style="width:200px;height:200px;background:red"></div>
-      <div class="box" id="33" style="width:200px;height:200px;background:red"></div>
-      <div class="box" id="44" style="width:200px;height:200px;background:red"></div> -->
-      <!-- <div class="child" id="1" style="width:100px;height:100px;background:blue;z-index:99"></div>
-      <div class="child" id="2" style="width:100px;height:100px;background:blue;z-index:99"></div>
-      <div class="child" id="3" style="width:100px;height:100px;background:blue;z-index:99"></div>
-      <div class="child" id="4" style="width:100px;height:100px;background:blue;z-index:99"></div> -->
-      <div
-        class="default-view"
-        v-if="containerList.length == 0"
-      >
+    <div class="container-view">
+      <div class="default-view" v-if="containerList.length == 0">
         <div class="title">创建一个容器</div>
         <div class="tips-box">
           <div class="tips-item">
@@ -32,11 +19,12 @@
           </div>
         </div>
       </div>
-      <div class="container-box" v-if="containerList.length > 0"> 
+      <div class="container-box" v-if="containerList.length > 0">
         <Container
           v-for="(item, index) in containerList" :key="index"
           :item="item"
           :index="index"
+          :id="item.id"
         />
       </div>
 
@@ -78,11 +66,11 @@
           <div
             class="data-list"
           >
-            <div class="data-item" v-for="(item, index) in templateList" :key="index">
+            <div class="data-item" v-for="(item, index) in templateList" :key="index" :id="item.id">
               <span class="index-text">{{index + 1}}</span>
               <div class="icon-view"></div>
               <span>{{item.row}} x {{item.col}} ({{separation == 2 ? (1920 * item.col) : (3840 * item.col)}} x {{separation == 2 ? (1080 * item.row) : (2160 * item.row)}})</span>
-              <span class="create-container" @click="createContainer(item)">创建</span>
+              <!-- <span class="create-container" @click="createContainer(item)">创建</span> -->
             </div>
           </div>
         </div>
@@ -124,9 +112,6 @@
 
 <script>
 import $ from "jquery";
-// import draggable from "vuedraggable";
-// import vdr from 'vue-draggable-resizable-gorkys';
-// import Displayer from '@/components/displayer/Displayer';
 import Container from '@/components/container/Container';
 export default {
   data() {
@@ -146,67 +131,83 @@ export default {
       separation: 2, // 分辨率
       devideChecked: true, // 容器是否创建显示器
       templateList: [
-        {
+        { 
+          id: '11',
           row: 1,
           col: 1
         },
         {
+          id: '12',
           row: 1,
           col: 2
         },
         {
+          id: '13',
           row: 1,
           col: 3
         },
         {
+          id: '14',
           row: 1,
           col: 4
         },
         {
+          id: '21',
           row: 2,
           col: 1
         },
         {
+          id: '22',
           row: 2,
           col: 2
         },
         {
+          id: '23',
           row: 2,
           col: 3
         },
         {
+          id: '24',
           row: 2,
           col: 4
         },
         {
+          id: '31',
           row: 3,
           col: 1
         },
         {
+          id: '32',
           row: 3,
           col: 2
         },
         {
+          id: '33',
           row: 3,
           col: 3
         },
         {
+          id: '34',
           row: 3,
           col: 4
         },
         {
+          id: '41',
           row: 4,
           col: 1
         },
         {
+          id: '42',
           row: 4,
           col: 2
         },
         {
+          id: '43',
           row: 4,
           col: 3
         },
         {
+          id: '44',
           row: 4,
           col: 4
         }
@@ -245,12 +246,41 @@ export default {
     this.displayerList = this.$store.state.displayerList;
   },
   mounted() {
+    const vm = this;
+    this.draggableInit();
+    this.sortableInit();
+    this.droppableInit();
+    this.resizableInit();
+    this.toggleInit();
     $(".displayer .displayer-item").draggable({
       connectToSortable : ".displayer-view",  //目标区域列表div的dom
       helper : "clone", //拖拽时为原dom按钮的clone，而不是直接拖拽原dom按钮
       revert : "invalid", //当未拖入到指定目标区域时，回到原位置
     });
-
+    $('.data-list .data-item').draggable({
+      connectToSortable: '.container-view',
+      scroll: false,
+      helper: 'clone',
+      revert : "invalid", //当未拖入到指定目标区域时，回到原位置
+    });
+    $('.container-view').droppable({
+      accept: '.data-item',
+      drop: function(event, ui) {
+        console.log(ui);
+        let templateObj = null;
+        vm.templateList.some(item => {
+          if (item.id == $(ui.draggable[0]).attr('id')) {
+            templateObj = item;
+            Object.assign(templateObj, {
+              left: ui.position.left,
+              top: ui.position.top
+            });
+            vm.createContainer(templateObj);
+            return true;
+          }
+        });
+      }
+    });
     // 监听容器大小，位置变化
     this.$root.bus.$off('setContainerItem');
     this.$root.bus.$on('setContainerItem', (data) => {
@@ -265,43 +295,41 @@ export default {
     this.$root.bus.$on('deleteContainer', (container) => {
       const newDataList = this.containerList.filter(item => item.id != container.id);
       this.containerList = newDataList;
+      this.$store.dispatch('setContainerList', newDataList);
       this.$message({
           type: 'success',
           message: '已删除'
         });
     });
+    // 删除显示器
+    this.$root.bus.$off('deleteDisplayer');
+    this.$root.bus.$on('deleteDisplayer', (data) => {
+      console.log(data);
+      this.containerList.some(item => {
+        if (item.id == data.cId) {
+          item.displayerList.some((display, index) => {
+            if (display.id == data.dId) {
+              item.displayerList.splice(index, 1);
+              return true;
+            }
+          })
+          return true;
+        }
+      });
+      this.displayerList.some(item => {
+        if (item.id == data.dId) {
+          item.status = 'usable';
+        }
+      });
+      this.$store.dispatch('setDisplayerList', this.displayerList);
+    });
   },
   methods: {
-    // 初始化放置事件
-    inintDragge(){
-      const vm = this;
-      // jq触发事件
-      $(".displayer-view").droppable({
-        drop: function(event, ui) {
-          const devId = $(this).attr('id');
-          const containerId = $(this).attr('parentId');
-          const dragId = ui.draggable[0].getAttribute('id');
-          console.log(event);
-          // 拖拽显示器进行替换
-          if (devId) {
-            const dragObg = vm.displayerList.filter(item => item.id == dragId)[0];
-            console.log(dragObg);
-            vm.$set(dragObg, 'baseW', 200);
-            vm.$set(dragObg, 'baseH', 120);
-            const getDevList = vm.containerList.filter(item => item.id == containerId)[0].displayerList;
-            getDevList.map((item, index) => {
-              if(item.id == devId) {
-                getDevList.splice(index, 1, dragObg);
-                vm.containerList.map(item => {
-                  if (item.id == containerId) {
-                    item.displayerList = getDevList;
-                  }
-                });
-                vm.$store.dispatch('setContainerList', vm.containerList);
-              }
-            })
-          }
-        }
+    toggleInit() {
+      $(".displayer-view").hover(function() {
+        $(this).find('.delete-displayer').show();
+      }, function() {
+        $(this).find('.delete-displayer').hide();
       });
     },
     // 容器参数类型切换
@@ -324,7 +352,7 @@ export default {
         templateVal: templateItem,
         displayerList: [],
         wBase: 200,
-        hBase: 120 
+        hBase: 120,
       }
       if (this.devideChecked) {
         const displayers = this.displayerList.filter(item => item.status == 'usable').filter((sItem, index) => index < templateItem.row * templateItem.col);
@@ -348,24 +376,46 @@ export default {
         this.draggableInit();
         this.sortableInit();
         this.droppableInit();
+        this.resizableInit();
+        this.toggleInit();
+        // $(".displayer-view").hover(function() {
+        //   $(this).find('.delete-displayer').toggle();
+        // });
       })
     },
+    resizableInit() {
+      $('#hhh').resizable({});
+    },
     draggableInit() {
-      // $('.container-view .container-component').draggable('destroy');
+      const vm = this;
       $('.container-view .container-component').draggable({
         connectToSortable: '.container-view',
-        containment: '.container-view',
+        containment: [64, 42, Infinity, Infinity],
         scroll: false,
-        handle: '.container-header'
+        handle: '.container-header',
+        zIndex: 100,
+        stop: function(event, ui) {
+          vm.containerList.some(item => {
+            if(item.id == $(this).attr('id')) {
+              Object.assign(item, {
+                top: ui.position.top,
+                left: ui.position.left
+              });
+              return true;
+            }
+          });
+          vm.$store.dispatch('setContainerList', vm.containerList);
+        }
       })
     },
     droppableInit() {
-      let vm = this;
-      $('.displayer-view').droppable({
+      const vm = this;
+      $('.displayer-view, .displayer-box').droppable({
         accept: '.displayer-item',
+        greedy: true,
         drop: function(event, ui){
           const id = $(this).attr('id');
-          const dataId = $(this).attr('data-id');
+          const dataId = $(this).attr('parentId');
           const targetId = $(ui.draggable[0]).attr('id');
           const targetObj = vm.displayerList.find(
             item => item.id == targetId
@@ -382,6 +432,7 @@ export default {
                     item.displayerList.splice(index, 1, targetObj);
                     vm.$nextTick(() => {
                       vm.droppableInit();
+                      vm.toggleInit();
                     })
                     return true;
                   }
@@ -399,10 +450,25 @@ export default {
             })
             vm.$store.dispatch('setDisplayerList', vm.displayerList);
           } else {
-            $(this).attr('id')
+            vm.containerList.some(item => {
+              if (item.id == dataId) {
+                item.displayerList.push(targetObj);
+                vm.$nextTick(() => {
+                  vm.droppableInit();
+                  vm.toggleInit();
+                });
+                return true;
+              }
+            });
+            vm.displayerList.some(item => {
+              if (item.id == targetId) {
+                item.status = 'disable';
+                return true;
+              }
+            })
           }
         }
-      })
+      });
     },
     sortableInit() {
       $('.displayer-box').sortable({
@@ -433,6 +499,7 @@ export default {
     color: #fff;
     height: calc(100% - 96px);
     .container-view {
+      position: relative;
       padding: 24px;
       overflow: auto;
       flex: 1;
@@ -565,6 +632,7 @@ export default {
             color: #999;
             font-size: 12px;
             margin-bottom: 12px;
+            cursor: move;
             .index-text {
               width: 16px;
             }

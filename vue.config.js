@@ -17,25 +17,14 @@ module.exports = {
     //改为下面这样的
     config.devtool = config.mode === "production" ? false : "source-map";
   },
-  // css相关配置
-  css: {
-    // 是否分离css（插件ExtractTextPlugin）
-    extract: true,
-    // 是否开启 CSS source maps
-    sourceMap: false,
-    // css预设器配置项
-    loaderOptions: {},
-    // 是否启用 CSS modules for all css / pre-processor files.
-    modules: false
-  },
   // 是否使用 thread-loader
   parallel: require('os').cpus().length > 1,
   // PWA 插件相关配置
   pwa: {},
   // webpack-dev-server 相关配置
   devServer: {
-    hot: true,
     open: true,
     port: 8080,
+    hotOnly: true,
   },
 }

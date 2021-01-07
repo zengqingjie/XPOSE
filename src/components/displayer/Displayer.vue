@@ -1,21 +1,49 @@
 <template>
-  <div class="displayer-view" :style="{width:dMsg.baseW+'px', height:dMsg.baseH+'px'}" :parentId="parentId">
+  <div class="displayer-view" :style="{width:dMsg.baseW * zooms.xRadio +'px', height:dMsg.baseH * zooms.yRadio +'px'}" :parentId="parentId">
     <div>显示器{{dMsg.id}}</div>
     <span class="delete-displayer" @click="deleteDisplayer(dMsg.id, parentId)">x</span>
   </div>
 </template>
 
 <script>
+import { mapState } from 'vuex';
 export default {
-  props: ['dMsg', 'parentId'],
+  props: {
+    dMsg: {
+      type: Object,
+    },
+    parentId: {
+      type: String | Number,
+      default: -1
+    },
+    zooms: {
+      type: Object,
+      default() {
+        return {
+          xRadio: 1,
+          yRadio: 1
+        }
+      }
+    }
+  },
   data() {
     return {
 
     }
   },
-  components: {},
+  watch: {
+    zooms(n, o) {
+      console.log(n);
+    }
+  },
+  computed: {
+    ...mapState([
+      'editContainer'
+    ])
+  },
   methods: {
     deleteDisplayer(dId, cId) {
+      console.log(this.zooms)
       const data = {
         dId,
         cId

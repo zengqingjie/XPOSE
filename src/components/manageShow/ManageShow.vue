@@ -1,7 +1,7 @@
 <template>
   <div class="manageShow-wrap">
     <div class="container-view">
-      <div class="default-view" v-if="containerList.length == 0">
+      <div class="default-view" v-if="showVessels.length == 0">
         <div class="title">创建一个容器</div>
         <div class="tips-box">
           <div class="tips-item">
@@ -19,12 +19,14 @@
           </div>
         </div>
       </div>
-      <div class="container-box" v-if="containerList.length > 0">
+      <div class="container-box" v-if="showVessels.length > 0">
         <Container
-          v-for="(item, index) in containerList" :key="index"
+          @click="setContainer(item)"
+          v-for="(item, index) in showVessels" :key="index"
           :item="item"
           :index="index"
           :id="item.id"
+          :style="{borderColor: item.id == editContainer.id ? 'red' : ''}"
         />
       </div>
 
@@ -113,11 +115,11 @@
 <script>
 import $ from "jquery";
 import Container from '@/components/container/Container';
+import { mapState } from 'vuex';
 export default {
   data() {
     return {
       cloneList: [],
-      containerList: [], // 容器列表
       typeIndex: 0, // 参数类型
       modelList: [
         { type: 1, label: '演示模式' },
@@ -226,24 +228,18 @@ export default {
   },
   props: ['showInfo', 'nowMenuId'],
   computed: {
-    dragOptions() {
-      return {
-        animation: 0,
-        group: "container",
-        disabled: false,
-        ghostClass: "ghost"
-      }
-    },
-    options() {
-      return {
-        group:{name:'container',pull:'clone'},
-        sort: false
-      }
+    getCurContainer() {
+      return manageData.curEditDisplay
     }
   },
   created() {
-    this.containerList = this.$store.state.showVessels;
     this.displayerList = this.$store.state.displayerList;
+  },
+  computed: {
+    ...mapState([
+      'editContainer',
+      'showVessels'
+    ])
   },
   mounted() {
     const vm = this;
@@ -252,6 +248,7 @@ export default {
     this.droppableInit();
     this.resizableInit();
     this.toggleInit();
+
     $(".displayer .displayer-item").draggable({
       connectToSortable : ".displayer-view",  //目标区域列表div的dom
       helper : "clone", //拖拽时为原dom按钮的clone，而不是直接拖拽原dom按钮
@@ -266,7 +263,6 @@ export default {
     $('.container-view').droppable({
       accept: '.data-item',
       drop: function(event, ui) {
-        console.log(ui);
         let templateObj = null;
         vm.templateList.some(item => {
           if (item.id == $(ui.draggable[0]).attr('id')) {
@@ -281,20 +277,11 @@ export default {
         });
       }
     });
-    // 监听容器大小，位置变化
-    this.$root.bus.$off('setContainerItem');
-    this.$root.bus.$on('setContainerItem', (data) => {
-      this.containerList.map(item => {
-        if(item.id == data.id) {
-          item = data;
-        }
-      })
-    });
     // 监听删除容器事件
     this.$root.bus.$off('deleteContainer');
     this.$root.bus.$on('deleteContainer', (container) => {
-      const newDataList = this.containerList.filter(item => item.id != container.id);
-      this.containerList = newDataList;
+      const newDataList = this.showVessels.filter(item => item.id != container.id);
+      this.showVessels = newDataList;
       this.$store.dispatch('setContainerList', newDataList);
       this.$message({
           type: 'success',
@@ -305,7 +292,7 @@ export default {
     this.$root.bus.$off('deleteDisplayer');
     this.$root.bus.$on('deleteDisplayer', (data) => {
       console.log(data);
-      this.containerList.some(item => {
+      this.showVessels.some(item => {
         if (item.id == data.cId) {
           item.displayerList.some((display, index) => {
             if (display.id == data.dId) {
@@ -353,6 +340,10 @@ export default {
         displayerList: [],
         wBase: 200,
         hBase: 120,
+        zoom: {
+          xRadio: 1,
+          yRadio: 1
+        }
       }
       if (this.devideChecked) {
         const displayers = this.displayerList.filter(item => item.status == 'usable').filter((sItem, index) => index < templateItem.row * templateItem.col);
@@ -367,8 +358,8 @@ export default {
         });
         newContainer.displayerList = displayers;
       }
-      const newList = [ ...this.containerList, newContainer];
-      this.containerList = newList;
+      this.$store.commit('setEditContainer', newContainer)
+      const newList = [ ...this.showVessels, newContainer];
       this.$store.dispatch('setContainerList', [...newList]);
       this.$store.dispatch('setShareContainerList', [...newList]);
 
@@ -378,13 +369,52 @@ export default {
         this.droppableInit();
         this.resizableInit();
         this.toggleInit();
-        // $(".displayer-view").hover(function() {
-        //   $(this).find('.delete-displayer').toggle();
-        // });
       })
     },
     resizableInit() {
-      $('#hhh').resizable({});
+      let vm = this;
+      $('.container-component').resizable({
+        minWidth: 200,
+        minHeight: 144,
+        resize: function(event, ui) {
+          const { size } = ui;
+          const list = JSON.parse(JSON.stringify(vm.showVessels));
+          const container = list.find(item => item.id == $(this).attr('id'));
+          const { wBase, hBase, templateVal } = container;
+          const xRadio = size.width / (wBase * templateVal.col);
+          const yRadio = (size.height - 24) / (hBase * templateVal.row);
+          const obj = {};
+          Object.assign(obj, container, {
+            zoom: { xRadio,  yRadio }
+          });
+          list.some(item => {
+            if (item.id === obj.id) {
+              Object.assign(item, obj);
+              return true;
+            }
+          });
+          vm.$store.dispatch('setContainerList', list);
+        },
+        stop: function(event, ui) {
+          const { size } = ui;
+          const list = JSON.parse(JSON.stringify(vm.showVessels));
+          const container = list.find(item => item.id == $(this).attr('id'));
+          const { wBase, hBase, templateVal } = container;
+          const xRadio = size.width / (wBase * templateVal.col);
+          const yRadio = (size.height - 24) / (hBase * templateVal.row);
+          const obj = {};
+          Object.assign(obj, container, {
+            zoom: { xRadio,  yRadio }
+          });
+          list.some(item => {
+            if (item.id === obj.id) {
+              Object.assign(item, obj);
+              return true;
+            }
+          });
+          vm.$store.dispatch('setContainerList', list);
+        }
+      });
     },
     draggableInit() {
       const vm = this;
@@ -395,7 +425,7 @@ export default {
         handle: '.container-header',
         zIndex: 100,
         stop: function(event, ui) {
-          vm.containerList.some(item => {
+          vm.showVessels.some(item => {
             if(item.id == $(this).attr('id')) {
               Object.assign(item, {
                 top: ui.position.top,
@@ -404,7 +434,7 @@ export default {
               return true;
             }
           });
-          vm.$store.dispatch('setContainerList', vm.containerList);
+          vm.$store.dispatch('setContainerList', vm.showVessels);
         }
       })
     },
@@ -425,7 +455,7 @@ export default {
             baseH: 120
           });
           if (id) {
-            vm.containerList.some(item => {
+            vm.showVessels.some(item => {
               if (item.id == dataId) {
                 item.displayerList.some((display, index) => {
                   if (display.id == id) {
@@ -450,7 +480,7 @@ export default {
             })
             vm.$store.dispatch('setDisplayerList', vm.displayerList);
           } else {
-            vm.containerList.some(item => {
+            vm.showVessels.some(item => {
               if (item.id == dataId) {
                 item.displayerList.push(targetObj);
                 vm.$nextTick(() => {

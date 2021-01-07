@@ -5,7 +5,12 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    editContainer: {}, // 当前编辑的容器
+    editContainer: {
+      zoom: {
+        xRadio: 1,
+        yRadio: 1
+      }
+    }, // 当前编辑的容器
     containers: ['defaultDevice'], // 拓扑图拖出的设备
     showVessels: [], // 显示容器
     shareVessels: [], // 共享容器 （图层管理 && 场景管理）
@@ -61,6 +66,9 @@ export default new Vuex.Store({
     // 设置显示器列表
     setDisplayerList(state, list) {
       state.displayerList = list;
+    },
+    setEditContainer(state, edit) {
+      state.editContainer = edit;
     }
   },
   actions: {
@@ -79,5 +87,11 @@ export default new Vuex.Store({
   },
   modules: {
   },
-  getters: {}
+  getters: {
+    getCurEditContainer(state) {
+      return state.showVessels.find(
+        item => item.id === state.editContainer.id
+      )
+    }
+  }
 })

@@ -3,17 +3,16 @@
     class="container-component" 
     v-if="item && item.templateId"
     :style="setContainerStyle"
-    @click="setContainer"
   >
     <div class="container-header">
       <span>{{index + 1}}--(W:{{item.customFeature.col * 1920}} H:{{item.customFeature.row * 1080}})</span>
       <div class="right-view">
         <div>-</div>
         <div>+</div>
-        <div v-longpress="deleteContainer" class="delete-container" @click="deleteContainerItem(item)">x</div>
+        <div v-longpress="deleteContainer" class="delete-container" @click="deleteContainerItem(cItem)">x</div>
       </div>
     </div>
-    <div class="displayer-box" :parentId="item.id">
+    <div class="displayer-box" :parentId="cItem.id">
       <Displayer
         v-for="dItem in item.content"
         :key="dItem.id"
@@ -29,7 +28,6 @@
 <script>
 import Displayer from '@/components/displayer/Displayer';
 import $ from 'jquery';
-import { mapState, mapGetters } from 'vuex';
 export default {
   props: {
     item: {
@@ -52,13 +50,6 @@ export default {
     }
   },
   computed: {
-    ...mapState([
-      'editContainer',
-      'showVessels'
-    ]),
-    ...mapGetters([
-      'getCurEditContainer',
-    ]),
     // 容器尺寸
     setContainerStyle() {
       const { position } = this.item;
@@ -74,9 +65,6 @@ export default {
     },
   },
   methods: {
-    setContainer() {
-      this.$store.commit('setEditContainer', this.item);
-    },
     // 点击删除容器
     deleteContainerItem(obj) {
       const vm = this;

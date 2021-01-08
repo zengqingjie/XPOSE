@@ -1,7 +1,7 @@
 <template>
   <div class="manageShow-wrap">
     <div class="container-view">
-      <div class="default-view" v-if="showVessels.length == 0">
+      <div class="default-view" v-if="containerList.length == 0">
         <div class="title">创建一个容器</div>
         <div class="tips-box">
           <div class="tips-item">
@@ -19,11 +19,10 @@
           </div>
         </div>
       </div>
-      <div class="container-box" v-if="showVessels.length > 0">
+      <div class="container-box" v-if="containerList.length > 0">
         <Container
-          @click="setContainer(item)"
-          v-for="(item, index) in showVessels" :key="index"
-          :item="item"
+          v-for="(item, index) in containerList" :key="index"
+          :cItem="item"
           :index="index"
           :id="item.id"
           :style="{borderColor: item.id == getCurContainer.id ? 'red' : ''}"
@@ -122,7 +121,7 @@ import { customActive } from '../../utils/custom_active';
 export default {
   data() {
     return {
-      cloneList: [],
+      containerList: [],
       typeIndex: 0, // 参数类型
       modelList: [
         { type: 1, label: '演示模式' },
@@ -275,8 +274,8 @@ export default {
     // 监听删除容器事件
     this.$root.bus.$off('deleteContainer');
     this.$root.bus.$on('deleteContainer', (container) => {
-      const newDataList = this.showVessels.filter(item => item.id != container.id);
-      this.showVessels = newDataList;
+      const newDataList = this.containerList.filter(item => item.id != container.id);
+      this.containerList = newDataList;
       this.$store.dispatch('setContainerList', newDataList);
       this.$message({
           type: 'success',
@@ -287,7 +286,7 @@ export default {
     this.$root.bus.$off('deleteDisplayer');
     this.$root.bus.$on('deleteDisplayer', (data) => {
       console.log(data);
-      this.showVessels.some(item => {
+      this.containerList.some(item => {
         if (item.id == data.cId) {
           item.displayerList.some((display, index) => {
             if (display.id == data.dId) {
@@ -331,7 +330,7 @@ export default {
         minHeight: 144,
         resize: function(event, ui) {
           const { size } = ui;
-          const list = JSON.parse(JSON.stringify(vm.showVessels));
+          const list = vm.containerList;
           const container = list.find(item => item.id == $(this).attr('id'));
           const { wBase, hBase, templateVal } = container;
           const xRadio = size.width / (wBase * templateVal.col);
@@ -350,7 +349,7 @@ export default {
         },
         stop: function(event, ui) {
           const { size } = ui;
-          const list = JSON.parse(JSON.stringify(vm.showVessels));
+          const list = vm.containerList;
           const container = list.find(item => item.id == $(this).attr('id'));
           const { wBase, hBase, templateVal } = container;
           const xRadio = size.width / (wBase * templateVal.col);
@@ -378,7 +377,7 @@ export default {
         handle: '.container-header',
         zIndex: 100,
         stop: function(event, ui) {
-          vm.showVessels.some(item => {
+          vm.containerList.some(item => {
             if(item.id == $(this).attr('id')) {
               Object.assign(item, {
                 top: ui.position.top,
@@ -387,7 +386,7 @@ export default {
               return true;
             }
           });
-          vm.$store.dispatch('setContainerList', vm.showVessels);
+          vm.$store.dispatch('setContainerList', vm.containerList);
         }
       })
     },

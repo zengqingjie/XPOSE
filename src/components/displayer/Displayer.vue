@@ -32,9 +32,7 @@ export default {
     }
   },
   watch: {
-    zooms(n, o) {
-      console.log(n);
-    }
+    
   },
   computed: {
     ...mapState([

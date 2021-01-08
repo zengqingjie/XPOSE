@@ -1,26 +1,25 @@
 <template>
   <div
     class="container-component" 
-    v-if="item && item.templateVal"
+    v-if="cItem && cItem.templateVal"
     :style="setContainerStyle"
-    @click="setContainer"
   >
     <div class="container-header">
-      <span>{{index + 1}}--(W:{{item.templateVal.col * 1920}} H:{{item.templateVal.row * 1080}})</span>
+      <span>{{index + 1}}--(W:{{cItem.templateVal.col * 1920}} H:{{cItem.templateVal.row * 1080}})</span>
       <div class="right-view">
         <div>-</div>
         <div>+</div>
-        <div v-longpress="deleteContainer" class="delete-container" @click="deleteContainerItem(item)">x</div>
+        <div v-longpress="deleteContainer" class="delete-container" @click="deleteContainerItem(cItem)">x</div>
       </div>
     </div>
-    <div class="displayer-box" :parentId="item.id">
+    <div class="displayer-box" :parentId="cItem.id">
       <Displayer
-        v-for="dItem in item.displayerList"
+        v-for="dItem in cItem.displayerList"
         :key="dItem.id"
         :dMsg="dItem"
         :id="dItem.id"
-        :parentId="item.id"
-        :zooms="item.zoom"
+        :parentId="cItem.id"
+        :zooms="cItem.zoom"
       />
     </div>
   </div>
@@ -29,9 +28,8 @@
 <script>
 import Displayer from '@/components/displayer/Displayer';
 import $ from 'jquery';
-import { mapState, mapGetters } from 'vuex';
 export default {
-  props: ["item", "index"],
+  props: ["cItem", "index"],
   components: {
     Displayer,
   },
@@ -44,30 +42,21 @@ export default {
     }
   },
   computed: {
-    ...mapState([
-      'editContainer',
-      'showVessels'
-    ]),
-    ...mapGetters([
-      'getCurEditContainer',
-    ]),
     // 容器尺寸
     setContainerStyle() {
-      const itemInfo = this.item;
-      const width = (this.item.templateVal.col * this.item.wBase * this.item.zoom.xRadio) + 'px';
-      const height = (this.item.templateVal.row * this.item.hBase * this.item.zoom.yRadio + 24) + 'px';
+      const width = (this.cItem.templateVal.col * this.cItem.wBase * this.cItem.zoom.xRadio) + 'px';
+      const height = (this.cItem.templateVal.row * this.cItem.hBase * this.cItem.zoom.yRadio + 24) + 'px';
+      const top = this.cItem.top ? this.cItem.top + 'px' : 0;
+      const left = this.cItem.left ? this.cItem.left + 'px' : 0;
       return {
         width: width,
         height: height,
-        top: this.item.top ? this.item.top + 'px' : 0,
-        left: this.item.left ? this.item.left + 'px' : 0
+        top,
+        left
       }
     },
   },
   methods: {
-    setContainer() {
-      this.$store.commit('setEditContainer', this.item);
-    },
     // 点击删除容器
     deleteContainerItem(obj) {
       const vm = this;

@@ -26,7 +26,7 @@
           :item="item"
           :index="index"
           :id="item.id"
-          :style="{borderColor: item.id == editContainer.id ? 'red' : ''}"
+          :style="{borderColor: item.id == getCurContainer.id ? 'red' : ''}"
         />
       </div>
 
@@ -116,6 +116,9 @@
 import $ from "jquery";
 import Container from '@/components/container/Container';
 import { mapState } from 'vuex';
+import { dataFormat } from '../../utils/dataFormat';
+import { customActive } from '../../utils/custom_active';
+
 export default {
   data() {
     return {
@@ -214,32 +217,24 @@ export default {
           col: 4
         }
       ], // 模板列表
-      displayerList: [], // 显示器列表
       drageDisplayerList: [],
       clickItemId: '',
       templateItem: null, // 当前所选模板
     }
   },
   components: {
-    // draggable,
-    // Displayer,
     Container,
-    // vdr
   },
   props: ['showInfo', 'nowMenuId'],
   computed: {
-    getCurContainer() {
-      return manageData.curEditDisplay
-    }
-  },
-  created() {
-    this.displayerList = this.$store.state.displayerList;
-  },
-  computed: {
     ...mapState([
       'editContainer',
-      'showVessels'
-    ])
+      'showVessels',
+      'displayerList'
+    ]),
+    getCurContainer() {
+      return dataFormat.curWindow || {};
+    }
   },
   mounted() {
     const vm = this;
@@ -249,34 +244,34 @@ export default {
     this.resizableInit();
     this.toggleInit();
 
-    $(".displayer .displayer-item").draggable({
-      connectToSortable : ".displayer-view",  //目标区域列表div的dom
-      helper : "clone", //拖拽时为原dom按钮的clone，而不是直接拖拽原dom按钮
-      revert : "invalid", //当未拖入到指定目标区域时，回到原位置
+    customActive.Draggable('.displayer .displayer-item', {
+      connectToSortable : ".displayer-view",
     });
-    $('.data-list .data-item').draggable({
+    customActive.Draggable('.data-list .data-item', {
       connectToSortable: '.container-view',
-      scroll: false,
-      helper: 'clone',
-      revert : "invalid", //当未拖入到指定目标区域时，回到原位置
     });
-    $('.container-view').droppable({
+    customActive.Droppable('.container-view', {
       accept: '.data-item',
+    }, {
       drop: function(event, ui) {
-        let templateObj = null;
-        vm.templateList.some(item => {
-          if (item.id == $(ui.draggable[0]).attr('id')) {
-            templateObj = item;
-            Object.assign(templateObj, {
-              left: ui.position.left,
-              top: ui.position.top
-            });
-            vm.createContainer(templateObj);
-            return true;
-          }
-        });
+        let item = vm.templateList.find(
+          value => value.id === $(ui.draggable[0]).attr('id')
+        )
+        if (item) {
+          let windows = dataFormat.addContainer(true, ui.offset, item, vm.displayerList);  
+          vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
+          vm.$nextTick(() => {
+            vm.draggableInit();
+            vm.sortableInit();
+            vm.droppableInit();
+            vm.resizableInit();
+            vm.toggleInit();
+            console.log(vm.showVessels);
+          })
+        }
       }
-    });
+    })
+
     // 监听删除容器事件
     this.$root.bus.$off('deleteContainer');
     this.$root.bus.$on('deleteContainer', (container) => {
@@ -328,49 +323,7 @@ export default {
       if (obj.status == 'disable') return;
       this.clickItemId = obj.id;
     },
-    // 创建容器
-    createContainer(templateItem) {
-      this.$store.dispatch('setDisplayerList', this.displayerList);
-      const newContainer = {
-        id: Date.parse(new Date()),
-        type: this.modelVal,
-        displayerChecked: this.devideChecked,
-        separation: this.separation,
-        templateVal: templateItem,
-        displayerList: [],
-        wBase: 200,
-        hBase: 120,
-        zoom: {
-          xRadio: 1,
-          yRadio: 1
-        }
-      }
-      if (this.devideChecked) {
-        const displayers = this.displayerList.filter(item => item.status == 'usable').filter((sItem, index) => index < templateItem.row * templateItem.col);
-        this.displayerList.map(item => {
-          displayers.map((dItem) => {
-            if (dItem.id == item.id) {
-              item.status = 'disable';
-            }
-            this.$set(dItem, 'baseW', 200);
-            this.$set(dItem, 'baseH', 120);
-          });
-        });
-        newContainer.displayerList = displayers;
-      }
-      this.$store.commit('setEditContainer', newContainer)
-      const newList = [ ...this.showVessels, newContainer];
-      this.$store.dispatch('setContainerList', [...newList]);
-      this.$store.dispatch('setShareContainerList', [...newList]);
-
-      this.$nextTick(() => {
-        this.draggableInit();
-        this.sortableInit();
-        this.droppableInit();
-        this.resizableInit();
-        this.toggleInit();
-      })
-    },
+    
     resizableInit() {
       let vm = this;
       $('.container-component').resizable({
@@ -444,59 +397,70 @@ export default {
         accept: '.displayer-item',
         greedy: true,
         drop: function(event, ui){
+          console.log(vm.showVessels);
           const id = $(this).attr('id');
-          const dataId = $(this).attr('parentId');
+          const parentId = $(this).attr('parentId');
           const targetId = $(ui.draggable[0]).attr('id');
-          const targetObj = vm.displayerList.find(
+          let windows = dataFormat.getWidget(parentId);
+          console.log('windows' + windows);
+          let targetObj = vm.displayerList.find(
             item => item.id == targetId
           );
-          Object.assign(targetObj, {
-            baseW: 200,
-            baseH: 120
-          });
+          let display = dataFormat.addWidget('display', {
+            parentId: windows.id,
+          })
+          console.log('display' + display);
           if (id) {
-            vm.showVessels.some(item => {
-              if (item.id == dataId) {
-                item.displayerList.some((display, index) => {
-                  if (display.id == id) {
-                    item.displayerList.splice(index, 1, targetObj);
-                    vm.$nextTick(() => {
-                      vm.droppableInit();
-                      vm.toggleInit();
-                    })
-                    return true;
-                  }
-                })
-                return true;
-              }
-            })
-            vm.displayerList.forEach(item => {
-              if (item.id == id) {
-                item.status = 'usable';
-              }
-              if (item.id == targetId) {
-                item.status = 'disable';
-              }
-            })
-            vm.$store.dispatch('setDisplayerList', vm.displayerList);
-          } else {
-            vm.showVessels.some(item => {
-              if (item.id == dataId) {
-                item.displayerList.push(targetObj);
-                vm.$nextTick(() => {
-                  vm.droppableInit();
-                  vm.toggleInit();
-                });
-                return true;
-              }
-            });
-            vm.displayerList.some(item => {
-              if (item.id == targetId) {
-                item.status = 'disable';
-                return true;
-              }
-            })
+            windows.setContent(display);
+            console.log('new windows' + windows);
           }
+          // Object.assign(targetObj, {
+          //   baseW: 200,
+          //   baseH: 120
+          // });
+          // if (id) {
+          //   vm.showVessels.some(item => {
+          //     if (item.id == dataId) {
+          //       item.displayerList.some((display, index) => {
+          //         if (display.id == id) {
+          //           item.displayerList.splice(index, 1, targetObj);
+          //           vm.$nextTick(() => {
+          //             vm.droppableInit();
+          //             vm.toggleInit();
+          //           })
+          //           return true;
+          //         }
+          //       })
+          //       return true;
+          //     }
+          //   })
+          //   vm.displayerList.forEach(item => {
+          //     if (item.id == id) {
+          //       item.status = 'usable';
+          //     }
+          //     if (item.id == targetId) {
+          //       item.status = 'disable';
+          //     }
+          //   })
+          //   vm.$store.dispatch('setDisplayerList', vm.displayerList);
+          // } else {
+          //   vm.showVessels.some(item => {
+          //     if (item.id == dataId) {
+          //       item.displayerList.push(targetObj);
+          //       vm.$nextTick(() => {
+          //         vm.droppableInit();
+          //         vm.toggleInit();
+          //       });
+          //       return true;
+          //     }
+          //   });
+          //   vm.displayerList.some(item => {
+          //     if (item.id == targetId) {
+          //       item.status = 'disable';
+          //       return true;
+          //     }
+          //   })
+          // }
         }
       });
     },

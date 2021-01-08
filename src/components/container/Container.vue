@@ -5,7 +5,7 @@
     :style="setContainerStyle"
   >
     <div class="container-header">
-      <span>{{index + 1}}--(W:{{cItem.templateVal.col * 1920}} H:{{cItem.templateVal.row * 1080}})</span>
+      <span>{{index + 1}} - (W:{{cItem.templateVal.col * 1920}} H:{{cItem.templateVal.row * 1080}})</span>
       <div class="right-view">
         <div>-</div>
         <div>+</div>
@@ -106,6 +106,9 @@ export default {
       color: #fff;
       cursor: move;
       span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         font-size: 12px;
         font-weight: bold;
       }

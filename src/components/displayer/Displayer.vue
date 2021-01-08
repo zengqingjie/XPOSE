@@ -1,5 +1,11 @@
 <template>
-  <div class="displayer-view" :style="{width:dMsg.baseW * zooms.xRadio +'px', height:dMsg.baseH * zooms.yRadio +'px'}" :parentId="parentId">
+  <div
+    class="displayer-view"
+    :class="dMsg.selected ? 'light' : ''"
+    :style="{width:dMsg.baseW * zooms.xRadio +'px', height:dMsg.baseH * zooms.yRadio +'px'}"
+    :parentId="parentId"
+    @click="clickDisplayer(dMsg.id, parentId)"
+  >
     <div>显示器{{dMsg.id}}</div>
     <span class="delete-displayer" @click="deleteDisplayer(dMsg.id, parentId)">x</span>
   </div>
@@ -40,13 +46,18 @@ export default {
     ])
   },
   methods: {
+    // 删除单个显示器
     deleteDisplayer(dId, cId) {
-      console.log(this.zooms)
       const data = {
         dId,
         cId
       }
       this.$root.bus.$emit('deleteDisplayer', data);
+    },
+    // 选中单个显示器
+    clickDisplayer(dId, cId) {
+      const data = { dId, cId };
+      this.$root.bus.$emit('clickDisplayer', data);
     }
   }
 }
@@ -75,5 +86,8 @@ export default {
       font-weight: bold;
       cursor: pointer;
     }
+  }
+  .light {
+    border: 3px solid rgb(0,252,255);
   }
 </style>

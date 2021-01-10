@@ -1,7 +1,7 @@
 <template>
   <div class="manageShow-wrap">
     <div class="container-view">
-      <div class="default-view" v-if="containerList.length == 0">
+      <div class="default-view" v-if="showVessels.length == 0">
         <div class="title">创建一个容器</div>
         <div class="tips-box">
           <div class="tips-item">
@@ -19,9 +19,9 @@
           </div>
         </div>
       </div>
-      <div class="container-box" v-if="containerList.length > 0">
+      <div class="container-box" v-if="showVessels.length > 0">
         <Container
-          v-for="(item, index) in containerList" :key="index"
+          v-for="(item, index) in showVessels" :key="index"
           :cItem="item"
           :index="index"
           :id="item.id"
@@ -295,7 +295,9 @@ export default {
           value => value.id === $(ui.draggable[0]).attr('id')
         )
         if (item) {
-          let windows = dataFormat.addContainer(true, ui.offset, item, vm.displayerList);  
+          let hasUse = dataFormat.getHasUseDisplayIds();
+          let dList = vm.displayerList.filter(item => !hasUse.includes(item.id));
+          let windows = dataFormat.addContainer(vm.devideChecked, ui.offset, item, dList);  
           vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
           vm.$nextTick(() => {
             vm.draggableInit();
@@ -303,7 +305,6 @@ export default {
             vm.droppableInit();
             vm.resizableInit();
             vm.toggleInit();
-            console.log(vm.showVessels);
           })
         }
       }
@@ -312,9 +313,8 @@ export default {
     // 监听删除容器事件
     this.$root.bus.$off('deleteContainer');
     this.$root.bus.$on('deleteContainer', (container) => {
-      const newDataList = this.containerList.filter(item => item.id != container.id);
-      this.containerList = newDataList;
-      this.$store.dispatch('setContainerList', newDataList);
+      dataFormat.removeWidgetId(container.id);
+      this.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
       this.$message({
           type: 'success',
           message: '已删除'
@@ -401,20 +401,19 @@ export default {
       $('.container-component').resizable({
         minWidth: 200,
         minHeight: 144,
+        aspectRatio: true,
         resize: function(event, ui) {
+          console.log(ui);
           const { size } = ui;
-          const list = vm.containerList;
-          const container = list.find(item => item.id == $(this).attr('id'));
-          const { wBase, hBase, templateVal } = container;
-          const xRadio = size.width / (wBase * templateVal.col);
-          const yRadio = (size.height - 24) / (hBase * templateVal.row);
-          const obj = {};
-          Object.assign(obj, container, {
-            zoom: { xRadio,  yRadio }
-          });
+          const container = dataFormat.getWidget($(this).attr('id'));
+          const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
+          zoom.xRadio = size.width / (wBase * col);
+          zoom.yRadio = (size.height - 24) / (hBase * row);
+          console.log(container);
+          const list = vm.showVessels;
           list.some(item => {
-            if (item.id === obj.id) {
-              Object.assign(item, obj);
+            if (item.id === container.id) {
+              Object.assign(item, container);
               return true;
             }
           });
@@ -422,18 +421,14 @@ export default {
         },
         stop: function(event, ui) {
           const { size } = ui;
-          const list = vm.containerList;
-          const container = list.find(item => item.id == $(this).attr('id'));
-          const { wBase, hBase, templateVal } = container;
-          const xRadio = size.width / (wBase * templateVal.col);
-          const yRadio = (size.height - 24) / (hBase * templateVal.row);
-          const obj = {};
-          Object.assign(obj, container, {
-            zoom: { xRadio,  yRadio }
-          });
+          const container = dataFormat.getWidget($(this).attr('id'));
+          const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
+          zoom.xRadio = size.width / (wBase * col);
+          zoom.yRadio = (size.height - 24) / (hBase * row);
+          const list = vm.showVessels;
           list.some(item => {
-            if (item.id === obj.id) {
-              Object.assign(item, obj);
+            if (item.id === container.id) {
+              Object.assign(item, container);
               return true;
             }
           });
@@ -445,94 +440,40 @@ export default {
       const vm = this;
       $('.container-view .container-component').draggable({
         connectToSortable: '.container-view',
-        containment: [64, 42, Infinity, Infinity],
+        containment: '.container-view',
         scroll: false,
         handle: '.container-header',
         zIndex: 100,
         stop: function(event, ui) {
-          vm.containerList.some(item => {
-            if(item.id == $(this).attr('id')) {
-              Object.assign(item, {
-                top: ui.position.top,
-                left: ui.position.left
-              });
-              return true;
-            }
-          });
-          vm.$store.dispatch('setContainerList', vm.containerList);
+          let container = dataFormat.widgetMap[$(this).attr('id')];
+          container.position = ui.position;
+          dataFormat.setWidget(container);
+          vm.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
         }
       })
     },
     droppableInit() {
       const vm = this;
-      $('.displayer-view, .displayer-box').droppable({
+      $('.displayer-box-child').droppable({
         accept: '.displayer-item',
-        greedy: true,
         drop: function(event, ui){
-          console.log(vm.showVessels);
           const id = $(this).attr('id');
           const parentId = $(this).attr('parentId');
           const targetId = $(ui.draggable[0]).attr('id');
-          let windows = dataFormat.getWidget(parentId);
-          console.log('windows' + windows);
+          // 整个容器实例
+          let container = dataFormat.getWidget(id);
           let targetObj = vm.displayerList.find(
             item => item.id == targetId
           );
           let display = dataFormat.addWidget('display', {
-            parentId: windows.id,
+            parentId: id,
+            displayId: targetObj.id,
+            name: targetObj.name,
           })
-          console.log('display' + display);
-          if (id) {
-            windows.setContent(display);
-            console.log('new windows' + windows);
-          }
-          // Object.assign(targetObj, {
-          //   baseW: 200,
-          //   baseH: 120
-          // });
-          // if (id) {
-          //   vm.showVessels.some(item => {
-          //     if (item.id == dataId) {
-          //       item.displayerList.some((display, index) => {
-          //         if (display.id == id) {
-          //           item.displayerList.splice(index, 1, targetObj);
-          //           vm.$nextTick(() => {
-          //             vm.droppableInit();
-          //             vm.toggleInit();
-          //           })
-          //           return true;
-          //         }
-          //       })
-          //       return true;
-          //     }
-          //   })
-          //   vm.displayerList.forEach(item => {
-          //     if (item.id == id) {
-          //       item.status = 'usable';
-          //     }
-          //     if (item.id == targetId) {
-          //       item.status = 'disable';
-          //     }
-          //   })
-          //   vm.$store.dispatch('setDisplayerList', vm.displayerList);
-          // } else {
-          //   vm.showVessels.some(item => {
-          //     if (item.id == dataId) {
-          //       item.displayerList.push(targetObj);
-          //       vm.$nextTick(() => {
-          //         vm.droppableInit();
-          //         vm.toggleInit();
-          //       });
-          //       return true;
-          //     }
-          //   });
-          //   vm.displayerList.some(item => {
-          //     if (item.id == targetId) {
-          //       item.status = 'disable';
-          //       return true;
-          //     }
-          //   })
-          // }
+          container.content = display;
+          let main = dataFormat.widgetMap[parentId];
+          main.setContent(container);
+          vm.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
         }
       });
     },

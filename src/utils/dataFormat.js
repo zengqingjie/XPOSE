@@ -43,10 +43,13 @@ export const dataFormat = {
   },
 
   setWidget(widget) {
-    let widgetItem = this.widgetList.find(
+    let widgetIndex = this.widgetList.findIndex(
       item => item.id === widget.id
     )
-    if (!widgetItem) {
+    if (widgetIndex >= 0) {
+      this.setWidgetMap(widget);
+      this.widgetList.splice(widgetIndex, 1, widget);
+    } else {
       this.setWidgetMap(widget);
       this.widgetList.push(widget);
     }
@@ -56,7 +59,11 @@ export const dataFormat = {
     this.widgetMap[widget.id] = widget;
   },
 
-  _removeWidgetMap(widgetId) {
+  removeWidgetId(widgetId) {
+    let index = this.widgetList.findIndex(item => item.id == widgetId);
+    if (index >= 0) {
+      this.widgetList.splice(index, 1);
+    }
     delete this.widgetMap[widgetId];
   },
 
@@ -67,28 +74,40 @@ export const dataFormat = {
    * @param {object} templateObj 拖拽模板
    */
   addContainer(addDisplay = true, position, templateObj, usableDisplay = []) {
+    let content = [];
+    const { col, row } = templateObj;
+    let addNum = col * row;
     let windows = this.addWidget('windows', {
       position,
       templateId: templateObj.id,
       customFeature: templateObj,
-    })
-    // 需要过滤出显示器id放置
-    if (addDisplay) {
-      let content = [];
-      let addNum = templateObj.col * templateObj.row;
-      for (let index = 0; index < addNum; index++) {
-        let display = this.addWidget('display', {
-          parentId: windows.id,
+    });
+    for (let index = 0; index < addNum; index++) {
+      let childWindow = this.addWidget('windows', {
+        parentId: windows.id,
+      });
+      if (addDisplay) {
+        let childrenContent = [];
+        let display = this.addDisplay({
+          parentId: childWindow.id,
           name: usableDisplay[index].name,
           displayId: usableDisplay[index].id,
         });
-        content.push(display);
+        childWindow.content = display;
       }
-      windows.content = content;
-    };
-
+      content.push(childWindow);
+    }
+    windows.content = content;
     this.curWindow = windows;
     return windows;
+  },
+
+  addDisplay(config) {
+    let display = this.addWidget('display', {
+      ...config,
+      content: []
+    });
+    return display;
   },
 
   getHasUseDisplayIds() {
@@ -100,6 +119,13 @@ export const dataFormat = {
     return hasUseDisplay.map(
       item => item.displayId
     )
+  },
+
+  getWidgetType(type, isParent = false) {
+    if (isParent) {
+      return this.widgetList.filter(item => item.type === type && !item.parentId);
+    }
+    return this.widgetList.filter(item => item.type === type);
   },
 
   /**

@@ -14,7 +14,7 @@ export class Windows extends Widget {
       wBase: 200,
       hBase: 120,
       zoom: {
-        wRadio: 1,
+        xRadio: 1,
         yRadio: 1
       },
       col: 1,

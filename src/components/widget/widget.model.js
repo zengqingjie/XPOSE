@@ -3,6 +3,7 @@ export class Widget {
   type = '';
   constructor(config) {
     this.id = config.id;
+    this.parentId = config.parentId;
     this.content = config.content;  //  放置子元素（例如：容器内的显示器）
     this.customFeature = config.customFeature || {};
   }

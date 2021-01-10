@@ -1,11 +1,9 @@
 <template>
-  <div
-    class="displayer-view"
-    :class="dMsg.selected ? 'light' : ''"
-    :style="{width:dMsg.baseW * zooms.xRadio +'px', height:dMsg.baseH * zooms.yRadio +'px'}"
-    :parentId="parentId"
-    @click="clickDisplayer(dMsg.id, parentId)"
-  >
+  <div 
+      class="displayer-view" 
+      :style="{width:dMsg.baseW * zooms.xRadio +'px', height:dMsg.baseH * zooms.yRadio +'px'}" 
+      :parentId="parentId"
+    >
     <div>显示器{{dMsg.id}}</div>
     <span class="delete-displayer" @click="deleteDisplayer(dMsg.id, parentId)">x</span>
   </div>

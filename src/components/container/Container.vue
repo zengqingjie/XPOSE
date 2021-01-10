@@ -1,11 +1,11 @@
 <template>
   <div
     class="container-component" 
-    v-if="cItem && cItem.templateVal"
+    v-if="item && item.templateId"
     :style="setContainerStyle"
   >
     <div class="container-header">
-      <span>{{index + 1}} - (W:{{cItem.templateVal.col * 1920}} H:{{cItem.templateVal.row * 1080}})</span>
+      <span>{{index + 1}}--(W:{{item.customFeature.col * 1920}} H:{{item.customFeature.row * 1080}})</span>
       <div class="right-view">
         <div>-</div>
         <div>+</div>
@@ -14,12 +14,12 @@
     </div>
     <div class="displayer-box" :parentId="cItem.id">
       <Displayer
-        v-for="dItem in cItem.displayerList"
+        v-for="dItem in item.content"
         :key="dItem.id"
         :dMsg="dItem"
         :id="dItem.id"
-        :parentId="cItem.id"
-        :zooms="cItem.zoom"
+        :parentId="item.id"
+        :zooms="item.customFeature.zoom"
       />
     </div>
   </div>
@@ -29,7 +29,15 @@
 import Displayer from '@/components/displayer/Displayer';
 import $ from 'jquery';
 export default {
-  props: ["cItem", "index"],
+  props: {
+    item: {
+      type: Object,
+    },
+    index: {
+      type: Number | String,
+      default: -1
+    }
+  },
   components: {
     Displayer,
   },
@@ -44,15 +52,15 @@ export default {
   computed: {
     // 容器尺寸
     setContainerStyle() {
-      const width = (this.cItem.templateVal.col * this.cItem.wBase * this.cItem.zoom.xRadio) + 'px';
-      const height = (this.cItem.templateVal.row * this.cItem.hBase * this.cItem.zoom.yRadio + 24) + 'px';
-      const top = this.cItem.top ? this.cItem.top + 'px' : 0;
-      const left = this.cItem.left ? this.cItem.left + 'px' : 0;
+      const { position } = this.item;
+      const { col, row, wBase, hBase, zoom } = this.item.customFeature;
+      const width = (col * wBase * zoom.xRadio) + 'px';
+      const height = (row * hBase * zoom.yRadio + 24) + 'px';
       return {
         width: width,
         height: height,
-        top,
-        left
+        top: position.top ? position.top + 'px' : 0,
+        left: position.left ? position.left + 'px' : 0
       }
     },
   },

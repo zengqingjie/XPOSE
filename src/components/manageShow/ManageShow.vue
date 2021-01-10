@@ -98,7 +98,29 @@
             </div>
           </div>
         </div>
-        <div v-show="typeIndex == 2">显示系统信息</div>
+        <div v-show="typeIndex == 2">
+          <div
+            class="system-info"
+            v-for="(item, index) in containerList"
+            :key="item.id"
+          >
+            <div class="sys-name">
+              <div class="left-view">
+                <span>{{index + 1}}</span>
+                <span class="text-view">{{item.templateVal.name}}</span>
+                <input type="text" :value="item.templateVal.name" @change="editSysName" class="name-input">
+              </div>
+              <div class="right-view" @click="clickEdit"><i class="iconfont iconedit_name_icon" /></div>
+              <div class="right-view-sure" @click="(e) => sureEdit(e, item)"><i class="iconfont iconsure_edit" /></div>
+            </div>
+            <div class="info-box">
+              <span>X:{{item.left}}</span>
+              <span>Y:{{item.top}}</span>
+              <span>W:{{item.templateVal.col*1920}}</span>
+              <span>H:{{item.templateVal.row*1080}}</span>
+            </div>
+          </div>
+        </div>
         <div v-show="typeIndex == 3">参数</div>
       </div>
       <div class="params-footer">
@@ -137,81 +159,97 @@ export default {
       templateList: [
         { 
           id: '11',
+          name: '显示容器1',
           row: 1,
           col: 1
         },
         {
           id: '12',
+          name: '显示容器2',
           row: 1,
           col: 2
         },
         {
           id: '13',
+          name: '显示容器3',
           row: 1,
           col: 3
         },
         {
           id: '14',
+          name: '显示容器4',
           row: 1,
           col: 4
         },
         {
           id: '21',
+          name: '显示容器5',
           row: 2,
           col: 1
         },
         {
           id: '22',
+          name: '显示容器6',
           row: 2,
           col: 2
         },
         {
           id: '23',
+          name: '显示容器7',
           row: 2,
           col: 3
         },
         {
           id: '24',
+          name: '显示容器8',
           row: 2,
           col: 4
         },
         {
           id: '31',
+          name: '显示容器9',
           row: 3,
           col: 1
         },
         {
           id: '32',
+          name: '显示容器10',
           row: 3,
           col: 2
         },
         {
           id: '33',
+          name: '显示容器11',
           row: 3,
           col: 3
         },
         {
           id: '34',
+          name: '显示容器12',
           row: 3,
           col: 4
         },
         {
           id: '41',
+          name: '显示容器13',
           row: 4,
           col: 1
         },
         {
           id: '42',
+          name: '显示容器14',
           row: 4,
           col: 2
         },
         {
           id: '43',
+          name: '显示容器15',
           row: 4,
           col: 3
         },
         {
           id: '44',
+          name: '显示容器16',
           row: 4,
           col: 4
         }
@@ -304,6 +342,26 @@ export default {
       });
       this.$store.dispatch('setDisplayerList', this.displayerList);
     });
+    // 点击显示器
+    this.$root.bus.$off('clickDisplayer');
+    this.$root.bus.$on('clickDisplayer', (data) => {
+      this.containerList.some(item => {
+        if (item.id == data.cId) {
+          item.displayerList.map((display, index) => {
+            if (display.id == data.dId) {
+              this.$set(display, 'selected', true);
+            } else {
+              this.$set(display, 'selected', false);
+            }
+          });
+        } else {
+          item.displayerList.forEach(display => {
+            this.$set(display, 'selected', false);
+          })
+        }
+        this.$store.dispatch('setContainerList', this.containerList);
+      });
+    });
   },
   methods: {
     toggleInit() {
@@ -316,6 +374,21 @@ export default {
     // 容器参数类型切换
     typeSelect(num) {
       this.typeIndex = num;
+    },
+    // 点击显示系统编辑图标
+    clickEdit(e) {
+      $(e.target).parents('.system-info').find('.name-input').show();
+      $(e.target).parents('.system-info').find('.text-view').hide();
+      $(e.target).parents('.system-info').find('.right-view-sure').show();
+      $(e.target).parents('.system-info').find('.right-view').hide();
+    },
+    // 点击显示系统确认编辑图标
+    sureEdit(e, cObj) {
+      $(e.target).parents('.system-info').find('.name-input').hide();
+      $(e.target).parents('.system-info').find('.text-view').show();
+      $(e.target).parents('.system-info').find('.right-view-sure').hide();
+      $(e.target).parents('.system-info').find('.right-view').show();
+      console.log();
     },
     // 点击显示器
     displayerClick(obj) {
@@ -473,6 +546,10 @@ export default {
     hideRightView() {
       this.$root.bus.$emit('hideRightView');
     },
+    // 编辑容器名字
+    editSysName(e) {
+      console.log(e.target.value);
+    }
   },
   watch: {
     
@@ -699,6 +776,72 @@ export default {
         }
         .show:hover {
           background: rgb(23,76,78);
+        }
+        .system-info {
+          padding: 10px 0;
+          font-size: 12px;
+          color: #999;
+          background: rgb(24,31,48);
+          > div {
+            display: flex;
+            align-items: center;
+          }
+          .sys-name {
+            justify-content: space-between;
+            padding: 0 12px;
+            margin-bottom: 8px;
+            height: 24px;
+            .left-view {
+              flex: 1;
+              display: flex;
+              align-items: center;
+              span {
+                margin-right: 10px;
+              }
+              input {
+                display: none;
+                width: 106px;
+                padding: 4px 0;
+                border: 1px solid springgreen;
+                background: rgb(22,28,44);
+                border-radius: 4px;
+                appearance: none;
+                outline: none;
+                color: #fff;
+                text-indent: 1em;
+                font-size: 12px;
+              }
+            }
+            .right-view,
+            .right-view-sure {
+              width: 20px;
+              height: 20px;
+              line-height: 20px;
+              text-align: center;
+              background: rgb(0,196,172);
+              border-radius: 4px;
+              cursor: pointer;
+              i {
+                color: #fff;
+                font-size: 12px;
+              }
+            }
+            .right-view-sure {
+              display: none;
+            }
+          }
+          .info-box {
+            span {
+              display: flex;
+              flex: 1;
+              justify-content: center;
+              align-items: center;
+            }
+          }
+        }
+        .system-info:hover {
+          background: rgb(22,48,58);
+          color: #fff;
         }
       }
       .params-footer {

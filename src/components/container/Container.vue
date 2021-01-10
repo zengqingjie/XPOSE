@@ -114,6 +114,9 @@ export default {
       color: #fff;
       cursor: move;
       span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         font-size: 12px;
         font-weight: bold;
       }

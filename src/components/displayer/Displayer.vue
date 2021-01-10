@@ -44,13 +44,18 @@ export default {
     ])
   },
   methods: {
+    // 删除单个显示器
     deleteDisplayer(dId, cId) {
-      console.log(this.zooms)
       const data = {
         dId,
         cId
       }
       this.$root.bus.$emit('deleteDisplayer', data);
+    },
+    // 选中单个显示器
+    clickDisplayer(dId, cId) {
+      const data = { dId, cId };
+      this.$root.bus.$emit('clickDisplayer', data);
     }
   }
 }
@@ -79,5 +84,8 @@ export default {
       font-weight: bold;
       cursor: pointer;
     }
+  }
+  .light {
+    border: 3px solid rgb(0,252,255);
   }
 </style>

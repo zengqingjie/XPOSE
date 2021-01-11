@@ -295,10 +295,16 @@ export default {
           value => value.id === $(ui.draggable[0]).attr('id')
         )
         if (item) {
-          let hasUse = dataFormat.getHasUseDisplayIds();
+          let hasUse = dataFormat.getHasUseDisplayIds(); // 使用过的显示器
           let dList = vm.displayerList.filter(item => !hasUse.includes(item.id));
-          let windows = dataFormat.addContainer(vm.devideChecked, ui.offset, item, dList);  
+          let windows = dataFormat.addContainer(vm.devideChecked, ui.offset, item, dList);
           vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
+          vm.displayerList.map(item => {
+            if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
+              item.status = 'disable'
+            }
+          }); // 生成容器后改变显示器是否可用状态
+          vm.$store.commit('setDisplayerList', vm.displayerList);
           vm.$nextTick(() => {
             vm.draggableInit();
             vm.sortableInit();
@@ -440,7 +446,7 @@ export default {
       const vm = this;
       $('.container-view .container-component').draggable({
         connectToSortable: '.container-view',
-        containment: '.container-view',
+        containment: [0,0,Infinity,Infinity],
         scroll: false,
         handle: '.container-header',
         zIndex: 100,
@@ -465,15 +471,28 @@ export default {
           let targetObj = vm.displayerList.find(
             item => item.id == targetId
           );
+          const oldWidgetId = container.content && container.content.displayId;
+          // 满足条件则替换显示器
+          if (oldWidgetId) {
+            dataFormat.replaceDisplay(container.content.id);
+          }
           let display = dataFormat.addWidget('display', {
             parentId: id,
             displayId: targetObj.id,
             name: targetObj.name,
-          })
+          });
           container.content = display;
           let main = dataFormat.widgetMap[parentId];
           main.setContent(container);
           vm.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
+          vm.displayerList.forEach(item => {
+            if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
+              item.status = 'disable'
+            } else if(item.orChange != 0) {
+              item.status = 'useable'
+            }
+          });
+          vm.$store.dispatch('setDisplayerList', vm.displayerList);
         }
       });
     },

@@ -68,21 +68,6 @@ Vue.directive('longpress', {
         pressTimer = null;
       }
 
-      // const animation = (num) => {
-      //   e.style['background'] = 'red';
-      //   clearInterval(e.tid);
-      //   let opac = num;
-      //   e.tid = setInterval(() => {
-      //     opac = opac < 0 ? opac + 0.3 : 1;
-      //     e.style['opacity'] = opac;
-      //     if (opac > 1) {
-      //       opac = 1;
-      //       e.style['opacity'] = opac;
-      //       clearInterval(e.tid);
-      //     }
-      //   }, 3000);
-
-      // }
 
       const handler = (e) => {
         binding.value(e);

@@ -110,6 +110,13 @@ export const dataFormat = {
     return display;
   },
 
+  replaceDisplay(oldId) {
+    if(oldId) {
+      const index = this.widgetList.findIndex(item => item.id == oldId);
+      this.widgetList.splice(index, 1);
+    }
+  },
+
   getHasUseDisplayIds() {
     let hasUseDisplay = [];
     this.widgetList.forEach(item => {

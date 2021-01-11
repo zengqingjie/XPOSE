@@ -25,13 +25,12 @@
     <div class="displayer-box">
       <div
         class="displayer-box-child"
-        v-for="(dItem, index) in cItem.content"
+        v-for="(dItem) in cItem.content"
         :key="dItem.id"
         :id="dItem.id"
         :parentId="dItem.parentId"
         :style="setContainerItem"
       >
-        <p v-if="!dItem.content">{{index}}</p>
         <Displayer :dMsg="dItem.content" />
       </div>
     </div>
@@ -108,15 +107,7 @@ export default {
     },
     // 长按删除容器
     deleteContainer() {},
-    // setContainerItem(item) {
-    //   const { col, row, wBase, hBase, zoom } = item.customFeature;
-    //   const width = col * wBase * zoom.xRadio + "px";
-    //   const height = row * hBase * zoom.yRadio + "px";
-    //   return {
-    //     width: width,
-    //     height: height,
-    //   };
-    // }
+    
   },
   created() {},
   mounted() {},
@@ -166,9 +157,7 @@ export default {
     flex: 1;
     display: flex;
     flex-wrap: wrap;
-
     .displayer-box-child {
-      border: 1px dashed yellow;
       box-sizing: border-box;
     }
   }

@@ -1,6 +1,6 @@
 <template>
   <div class="displayer-view" :parentId="dMsg.parentId" v-if="dMsg">
-    <div>显示器{{ dMsg.id }}</div>
+    <div>显示器{{ dMsg.displayId }}</div>
     <div>{{dMsg.name}}</div>
     <span
       class="delete-displayer"
@@ -47,6 +47,7 @@ export default {
   height: 100%;
   padding: 12px;
   background: rgb(120, 190, 252);
+  border: 1px dashed #666;
   box-sizing: border-box;
   font-size: 12px;
   .delete-displayer {

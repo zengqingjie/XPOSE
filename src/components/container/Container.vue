@@ -3,6 +3,7 @@
     class="container-component"
     v-if="cItem && cItem.templateId"
     :style="setContainerStyle"
+    @mousedown="emitSetContainer(cItem)"
   >
     <div class="container-header">
       <span
@@ -31,7 +32,7 @@
         :parentId="dItem.parentId"
         :style="setContainerItem"
       >
-        <Displayer :dMsg="dItem.content" />
+        <Displayer :dMsg="dItem.content" :deviceId="deviceId"/>
       </div>
     </div>
   </div>
@@ -49,6 +50,10 @@ export default {
       type: Number | String,
       default: -1,
     },
+    deviceId: {
+      type: Number | String,
+      default: ''
+    }
   },
   components: {
     Displayer,
@@ -87,6 +92,9 @@ export default {
     },
   },
   methods: {
+    emitSetContainer(container) {
+      this.$root.bus.$emit('setSelectedContainer', container);
+    },
     // 点击删除容器
     deleteContainerItem(obj) {
       const vm = this;
@@ -106,7 +114,9 @@ export default {
         });
     },
     // 长按删除容器
-    deleteContainer() {},
+    deleteContainer() {
+
+    },
     
   },
   created() {},

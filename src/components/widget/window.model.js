@@ -1,7 +1,7 @@
 import { Widget } from './widget.model';
 
 export class Windows extends Widget {
-  name = '容器';
+  name = '';
   type = 'windows';
   constructor(config) {
     super(config);

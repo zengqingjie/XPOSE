@@ -1,5 +1,11 @@
 <template>
-  <div class="displayer-view" :parentId="dMsg.parentId" v-if="dMsg">
+  <div
+    class="displayer-view"
+    :class="deviceId == dMsg.id ? 'light' : ''"
+    :parentId="dMsg.parentId"
+    v-if="dMsg"
+    @click="clickDisplayer(dMsg.id)"
+  >
     <div>显示器{{ dMsg.displayId }}</div>
     <div>{{dMsg.name}}</div>
     <span
@@ -16,9 +22,16 @@ export default {
     dMsg: {
       type: Object,
     },
+    deviceId: {
+      type: Number | String,
+      default: ''
+    }
   },
   data() {
     return {};
+  },
+  mounted() {
+    
   },
   watch: {},
   computed: {},
@@ -32,9 +45,10 @@ export default {
       this.$root.bus.$emit("deleteDisplayer", data);
     },
     // 选中单个显示器
-    clickDisplayer(dId, cId) {
-      const data = { dId, cId };
-      this.$root.bus.$emit("clickDisplayer", data);
+    clickDisplayer(id) {
+      console.log(id);
+      this.$root.bus.$emit("clickDisplayer", id);
+      console.log(this.deviceId);
     },
   },
 };
@@ -47,7 +61,7 @@ export default {
   height: 100%;
   padding: 12px;
   background: rgb(120, 190, 252);
-  border: 1px dashed #666;
+  border: 1px solid #666;
   box-sizing: border-box;
   font-size: 12px;
   .delete-displayer {

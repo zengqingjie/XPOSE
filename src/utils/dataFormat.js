@@ -81,6 +81,7 @@ export const dataFormat = {
       position,
       templateId: templateObj.id,
       customFeature: templateObj,
+      name: ''
     });
     for (let index = 0; index < addNum; index++) {
       let childWindow = this.addWidget('windows', {

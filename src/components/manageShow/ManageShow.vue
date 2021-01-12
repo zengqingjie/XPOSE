@@ -25,7 +25,8 @@
           :cItem="item"
           :index="index"
           :id="item.id"
-          :style="{borderColor: item.id == getCurContainer.id ? 'red' : ''}"
+          :style="{borderColor: item.id == (selectedContainer && selectedContainer.id) ? 'red' : ''}"
+          :deviceId="selectedDisplayerId"
         />
       </div>
 
@@ -101,23 +102,23 @@
         <div v-show="typeIndex == 2">
           <div
             class="system-info"
-            v-for="(item, index) in containerList"
+            v-for="(item, index) in showVessels"
             :key="item.id"
           >
             <div class="sys-name">
               <div class="left-view">
                 <span>{{index + 1}}</span>
-                <span class="text-view">{{item.templateVal.name}}</span>
-                <input type="text" :value="item.templateVal.name" @change="editSysName" class="name-input">
+                <span class="text-view">{{item.name ? item.name : '显示容器'+ (index + 1)}}</span>
+                <input type="text" v-model="containerName" class="name-input">
               </div>
               <div class="right-view" @click="clickEdit"><i class="iconfont iconedit_name_icon" /></div>
               <div class="right-view-sure" @click="(e) => sureEdit(e, item)"><i class="iconfont iconsure_edit" /></div>
             </div>
             <div class="info-box">
-              <span>X:{{item.left}}</span>
-              <span>Y:{{item.top}}</span>
-              <span>W:{{item.templateVal.col*1920}}</span>
-              <span>H:{{item.templateVal.row*1080}}</span>
+              <span>X:{{item.position.left}}</span>
+              <span>Y:{{item.position.top}}</span>
+              <span>W:{{item.customFeature.col*1920}}</span>
+              <span>H:{{item.customFeature.row*1080}}</span>
             </div>
           </div>
         </div>
@@ -257,6 +258,9 @@ export default {
       drageDisplayerList: [],
       clickItemId: '',
       templateItem: null, // 当前所选模板
+      selectedContainer: null,
+      selectedDisplayerId: '',
+      containerName: ''
     }
   },
   components: {
@@ -280,7 +284,8 @@ export default {
     this.droppableInit();
     this.resizableInit();
     this.toggleInit();
-
+    
+    // 
     customActive.Draggable('.displayer .displayer-item', {
       connectToSortable : ".displayer-view",
     });
@@ -298,6 +303,7 @@ export default {
           let hasUse = dataFormat.getHasUseDisplayIds(); // 使用过的显示器
           let dList = vm.displayerList.filter(item => !hasUse.includes(item.id));
           let windows = dataFormat.addContainer(vm.devideChecked, ui.offset, item, dList);
+          vm.selectedContainer = dataFormat.curWindow;
           vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
           vm.displayerList.map(item => {
             if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
@@ -329,44 +335,33 @@ export default {
     // 删除显示器
     this.$root.bus.$off('deleteDisplayer');
     this.$root.bus.$on('deleteDisplayer', (data) => {
-      console.log(data);
-      this.containerList.some(item => {
-        if (item.id == data.cId) {
-          item.displayerList.some((display, index) => {
-            if (display.id == data.dId) {
-              item.displayerList.splice(index, 1);
-              return true;
-            }
-          })
-          return true;
+      let displayerBox = dataFormat.getWidget(data.cId);
+      const contaienr = dataFormat.widgetMap[displayerBox.parentId];
+      displayerBox.content = undefined;
+      contaienr.setContent(displayerBox);
+      dataFormat.replaceDisplay(data.dId);
+      console.log(dataFormat.getHasUseDisplayIds());
+      this.displayerList.forEach(item => {
+        if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
+          item.status = 'disable'
+        } else if(item.orChange != 0) {
+          item.status = 'useable'
         }
-      });
-      this.displayerList.some(item => {
-        if (item.id == data.dId) {
-          item.status = 'usable';
-        }
-      });
+      })
       this.$store.dispatch('setDisplayerList', this.displayerList);
     });
+
+    // 标识当前操作的容器
+    this.$root.bus.$off('setSelectedContainer');
+    this.$root.bus.$on('setSelectedContainer', (data) => {
+      this.selectedContainer = data;
+    });
+
     // 点击显示器
     this.$root.bus.$off('clickDisplayer');
     this.$root.bus.$on('clickDisplayer', (data) => {
-      this.containerList.some(item => {
-        if (item.id == data.cId) {
-          item.displayerList.map((display, index) => {
-            if (display.id == data.dId) {
-              this.$set(display, 'selected', true);
-            } else {
-              this.$set(display, 'selected', false);
-            }
-          });
-        } else {
-          item.displayerList.forEach(display => {
-            this.$set(display, 'selected', false);
-          })
-        }
-        this.$store.dispatch('setContainerList', this.containerList);
-      });
+    console.log(data);
+      this.selectedDisplayerId = data;
     });
   },
   methods: {
@@ -394,7 +389,12 @@ export default {
       $(e.target).parents('.system-info').find('.text-view').show();
       $(e.target).parents('.system-info').find('.right-view-sure').hide();
       $(e.target).parents('.system-info').find('.right-view').show();
-      console.log();
+      if (this.containerName) {
+        let container = dataFormat.getWidget(cObj.id);
+        container.name = this.containerName;
+        dataFormat.setWidget(container);
+        this.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
+      }
     },
     // 点击显示器
     displayerClick(obj) {
@@ -497,22 +497,28 @@ export default {
       });
     },
     sortableInit() {
-      $('.displayer-box').sortable({
-        cursor: "move",
+      $('.displayer-box .displayer-box-child').draggable({
+        // connectToSortable: '.container-component',
+        // containment: 'parent',
         scroll: false,
+        zIndex: 100,
+        stop: function(event, ui) {
+          console.log($(this));
+        }
       })
     },
-    
+    setSelectedContainer(container) {
+      this.selectedContainer = container;
+    },
     hideRightView() {
       this.$root.bus.$emit('hideRightView');
     },
-    // 编辑容器名字
-    editSysName(e) {
-      console.log(e.target.value);
-    }
+    
   },
   watch: {
-    
+    getCurContainer(oVal) {
+      console.log(oVal);
+    }
   }
 }
 </script>

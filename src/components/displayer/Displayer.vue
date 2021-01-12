@@ -10,7 +10,7 @@
     <div>{{dMsg.name}}</div>
     <span
       class="delete-displayer"
-      @click="deleteDisplayer(dMsg.id, dMsg.parentId)"
+      @click.stop="deleteDisplayer(dMsg.id, dMsg.parentId)"
       >x</span
     >
   </div>

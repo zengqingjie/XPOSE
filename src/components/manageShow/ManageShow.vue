@@ -496,10 +496,12 @@ export default {
         }
       });
     },
+    // 显示器在容器内拖拽
     sortableInit() {
-      $('.displayer-box .displayer-box-child').draggable({
-        // connectToSortable: '.container-component',
-        // containment: 'parent',
+      $('.displayer-box .displayer-view').draggable({
+        snap: ".displayer-box",
+        snapMode: 'inner',
+        snapTolerance: 5,
         scroll: false,
         zIndex: 100,
         stop: function(event, ui) {

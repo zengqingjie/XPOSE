@@ -75,6 +75,7 @@ export const dataFormat = {
    */
   addContainer(addDisplay = true, position, templateObj, usableDisplay = []) {
     let content = [];
+    let childrenContent = [];
     const { col, row } = templateObj;
     let addNum = col * row;
     let windows = this.addWidget('windows', {
@@ -88,13 +89,13 @@ export const dataFormat = {
         parentId: windows.id,
       });
       if (addDisplay) {
-        let childrenContent = [];
         let display = this.addDisplay({
           parentId: childWindow.id,
           name: usableDisplay[index].name,
           displayId: usableDisplay[index].id,
         });
-        childWindow.content = display;
+
+        childWindow.content = [display];
       }
       content.push(childWindow);
     }

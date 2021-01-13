@@ -32,7 +32,12 @@
         :parentId="dItem.parentId"
         :style="setContainerItem"
       >
-        <Displayer :dMsg="dItem.content" :deviceId="deviceId"/>
+        <Displayer
+          v-for="displayer in dItem.content"
+          :key="displayer.id"
+          :dMsg="displayer"
+          :deviceId="deviceId"
+        />
       </div>
     </div>
   </div>
@@ -168,6 +173,7 @@ export default {
     display: flex;
     flex-wrap: wrap;
     .displayer-box-child {
+      position: relative;
       box-sizing: border-box;
     }
   }

@@ -260,7 +260,8 @@ export default {
       templateItem: null, // 当前所选模板
       selectedContainer: null,
       selectedDisplayerId: '',
-      containerName: ''
+      containerName: '',
+      areaEle: [], // 显示器放置区域判断条件
     }
   },
   components: {
@@ -302,7 +303,11 @@ export default {
         if (item) {
           let hasUse = dataFormat.getHasUseDisplayIds(); // 使用过的显示器
           let dList = vm.displayerList.filter(item => !hasUse.includes(item.id));
-          let windows = dataFormat.addContainer(vm.devideChecked, ui.offset, item, dList);
+          const offset = {
+            top: event.clientY - 66,
+            left: event.clientX - 88
+          }
+          let windows = dataFormat.addContainer(vm.devideChecked, offset, item, dList);
           vm.selectedContainer = dataFormat.curWindow;
           vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
           vm.displayerList.map(item => {
@@ -337,7 +342,11 @@ export default {
     this.$root.bus.$on('deleteDisplayer', (data) => {
       let displayerBox = dataFormat.getWidget(data.cId);
       const contaienr = dataFormat.widgetMap[displayerBox.parentId];
-      displayerBox.content = undefined;
+      displayerBox.content.forEach((item, index) => {
+        if(item.id == data.dId) {
+          displayerBox.content.splice(index, 1);
+        }
+      })
       contaienr.setContent(displayerBox);
       dataFormat.replaceDisplay(data.dId);
       console.log(dataFormat.getHasUseDisplayIds());
@@ -360,7 +369,6 @@ export default {
     // 点击显示器
     this.$root.bus.$off('clickDisplayer');
     this.$root.bus.$on('clickDisplayer', (data) => {
-    console.log(data);
       this.selectedDisplayerId = data;
     });
   },
@@ -460,52 +468,121 @@ export default {
     },
     droppableInit() {
       const vm = this;
-      $('.displayer-box-child').droppable({
+      $('.displayer-box-child, .displayer-view').droppable({
         accept: '.displayer-item',
+        greedy: true,
+        over: function() {},
         drop: function(event, ui){
           const id = $(this).attr('id');
           const parentId = $(this).attr('parentId');
           const targetId = $(ui.draggable[0]).attr('id');
-          // 整个容器实例
-          let container = dataFormat.getWidget(id);
+          // 目标显示器
           let targetObj = vm.displayerList.find(
             item => item.id == targetId
           );
-          const oldWidgetId = container.content && container.content.displayId;
-          // 满足条件则替换显示器
-          if (oldWidgetId) {
-            dataFormat.replaceDisplay(container.content.id);
-          }
-          let display = dataFormat.addWidget('display', {
-            parentId: id,
-            displayId: targetObj.id,
-            name: targetObj.name,
-          });
-          container.content = display;
-          let main = dataFormat.widgetMap[parentId];
-          main.setContent(container);
-          vm.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
-          vm.displayerList.forEach(item => {
-            if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
-              item.status = 'disable'
-            } else if(item.orChange != 0) {
-              item.status = 'useable'
+          // 放置在显示器容器上新增显示器
+          if ($(this).hasClass('displayer-box-child')) {
+            let main = dataFormat.widgetMap[parentId]; // 最外层容器
+            // 显示器容器实例
+            let displayerBox = dataFormat.getWidget(id);
+            // 创建新的显示器
+            let display = dataFormat.addWidget('display', {
+              parentId: id,
+              displayId: targetObj.id,
+              name: targetObj.name,
+            });
+            display.position = {
+              top: event.clientY - 64 - main.position.top - $(this)[0].offsetTop,
+              left: event.clientX - 88 - main.position.left - $(this)[0].offsetLeft
             }
-          });
-          vm.$store.dispatch('setDisplayerList', vm.displayerList);
+            displayerBox.content.push(display);
+            main.setContent(displayerBox);
+            vm.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
+            vm.displayerList.forEach(item => {
+              if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
+                item.status = 'disable'
+              } else if(item.orChange != 0) {
+                item.status = 'useable'
+              }
+            });
+            vm.$store.dispatch('setDisplayerList', vm.displayerList);
+            vm.$nextTick(() => {
+              vm.draggableInit();
+              vm.sortableInit();
+              vm.droppableInit();
+              vm.resizableInit();
+              vm.toggleInit();
+            })
+          }
+          if ($(this).hasClass('displayer-view')) {
+            // 被放置的显示器
+            const displayer = dataFormat.getWidget(id);
+            // 显示器容器实例
+            let displayerBox = dataFormat.getWidget(parentId);
+            let main = dataFormat.widgetMap[displayerBox.parentId]; // 最外层容器
+            const pointX = event.clientX - 88 - main.position.left - $(this).parent()[0].offsetLeft;
+            const pointY = event.clientY - 64 - main.position.top - $(this).parent()[0].offsetTop;
+            console.log(pointX, pointX);
+            if((pointX > 0 && pointX < 200) && (pointY > 0 && pointY < 120)) {
+              console.log('范围内');
+              // 创建新的显示器
+              let display = dataFormat.addWidget('display', {
+                parentId: displayer.parentId,
+                displayId: targetObj.id,
+                name: targetObj.name,
+              });
+              display.position = displayer.position;
+              displayerBox.content.forEach((item, index) => {
+                if(item.id == displayer.id) {
+                  displayerBox.content.splice(index, 1, display);
+                }
+              });
+              dataFormat.replaceDisplay(displayer.id);
+              main.setContent(displayerBox);
+              vm.displayerList.forEach(item => {
+                if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
+                  item.status = 'disable'
+                } else if(item.orChange != 0) {
+                  item.status = 'useable'
+                }
+              })
+              vm.$store.dispatch('setDisplayerList', vm.displayerList);
+              vm.$nextTick(() => {
+                vm.draggableInit();
+                vm.sortableInit();
+                vm.droppableInit();
+                vm.resizableInit();
+                vm.toggleInit();
+              })
+            } else {
+              console.log('范围外');
+            }
+          }
         }
       });
     },
     // 显示器在容器内拖拽
     sortableInit() {
+      const vm = this;
       $('.displayer-box .displayer-view').draggable({
+        delay: 100,
         snap: ".displayer-box",
         snapMode: 'inner',
         snapTolerance: 5,
         scroll: false,
         zIndex: 100,
         stop: function(event, ui) {
-          console.log($(this));
+          let displayer = dataFormat.widgetMap[$(this).attr('id')];
+          displayer.position = ui.position;
+          dataFormat.setWidget(displayer);
+          vm.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
+          vm.$nextTick(() => {
+            vm.draggableInit();
+            vm.sortableInit();
+            vm.droppableInit();
+            vm.resizableInit();
+            vm.toggleInit();
+          })
         }
       })
     },

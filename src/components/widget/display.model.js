@@ -9,7 +9,13 @@ export class Display extends Widget {
     this.position = config.position || null;
     this.customFeature = Object.assign({
       wBase: 200,
-      hBase: 120
+      hBase: 120,
+      zoom: {
+        xRadio: 1,
+        yRadio: 1
+      },
+      col: 1,
+      row: 1
     }, config.customFeature)
   }
 }

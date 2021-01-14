@@ -4,6 +4,7 @@
     v-if="cItem && cItem.templateId"
     :style="setContainerStyle"
     @mousedown="emitSetContainer(cItem)"
+    :id="cItem.id"
   >
     <div class="container-header">
       <span
@@ -23,8 +24,15 @@
         </div>
       </div>
     </div>
-    <div class="displayer-box">
-      <div
+    <div class="displayer-box" :parentId="cItem.id">
+      <Displayer
+        v-for="displayer in cItem.content"
+        :key="displayer.id"
+        :dMsg="displayer"
+        :deviceId="deviceId"
+        :size="setDisplayerItem"
+      />
+      <!-- <div
         class="displayer-box-child"
         v-for="(dItem) in cItem.content"
         :key="dItem.id"
@@ -32,18 +40,13 @@
         :parentId="dItem.parentId"
         :style="setContainerItem"
       >
-        <Displayer
-          v-for="displayer in dItem.content"
-          :key="displayer.id"
-          :dMsg="displayer"
-          :deviceId="deviceId"
-        />
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
 
 <script>
+import { dataFormat } from '../../utils/dataFormat';
 import Displayer from "@/components/displayer/Displayer";
 import $ from "jquery";
 export default {
@@ -65,10 +68,6 @@ export default {
   },
   data() {
     return {
-      zoom: {
-        xRadio: 1,
-        yRadio: 1,
-      },
     };
   },
   computed: {
@@ -85,14 +84,15 @@ export default {
         left: position.left ? position.left + "px" : 0,
       };
     },
-    setContainerItem() {
+    setDisplayerItem() {
       const { zoom } = this.cItem.customFeature;
       const { col, row, wBase, hBase } = this.cItem.content[0].customFeature;
-      const width = col * wBase * zoom.xRadio + "px";
-      const height = row * hBase * zoom.yRadio + "px";
+      const width = col * wBase * zoom.xRadio;
+      const height = row * hBase * zoom.yRadio;
       return {
         width: width,
         height: height,
+        zoom: this.cItem.customFeature.zoom
       };
     },
   },
@@ -125,8 +125,24 @@ export default {
     
   },
   created() {},
-  mounted() {},
-  watch: {},
+  mounted() {
+    const cElement = $('#'+ this.cItem.id);
+    let container = this.cItem; // 当前容器
+    let displayers = [];
+    $(cElement).find(".displayer-view").each(function() {
+      displayers.push($(this));
+    })
+    displayers.forEach((item, index) => {
+      const position = {
+        top: $(item)[0].offsetTop * container.customFeature.zoom.yRadio,
+        left: $(item)[0].offsetLeft * container.customFeature.zoom.xRadio
+      }
+      container.content[index].position = position;
+    })
+    this.$root.bus.$emit('setDisplayPositon', container);
+  },
+  watch: {
+  },
 };
 </script>
 
@@ -169,6 +185,7 @@ export default {
     background: rgb(63, 69, 94);
   }
   .displayer-box {
+    position: relative;
     flex: 1;
     display: flex;
     flex-wrap: wrap;

@@ -85,19 +85,16 @@ export const dataFormat = {
       name: ''
     });
     for (let index = 0; index < addNum; index++) {
-      let childWindow = this.addWidget('windows', {
-        parentId: windows.id,
-      });
+      
       if (addDisplay) {
         let display = this.addDisplay({
-          parentId: childWindow.id,
+          parentId: windows.id,
           name: usableDisplay[index].name,
           displayId: usableDisplay[index].id,
         });
 
-        childWindow.content = [display];
+        content.push(display);
       }
-      content.push(childWindow);
     }
     windows.content = content;
     this.curWindow = windows;

@@ -1,7 +1,7 @@
 <template>
   <div
     class="displayer-view"
-    :style="setPosition"
+    :style="setStyle"
     :class="deviceId == dMsg.id ? 'light' : ''"
     :parentId="dMsg.parentId"
     :id="dMsg.id"
@@ -9,6 +9,7 @@
     @click="clickDisplayer(dMsg.id)"
   >
     <div>显示器{{ dMsg.displayId }}</div>
+    <div v-if="dMsg.position"><span>x:{{dMsg.position.left}}</span><span>y:{{dMsg.position.top}}</span></div>
     <div>{{dMsg.name}}</div>
     <span
       class="delete-displayer"
@@ -19,6 +20,7 @@
 </template>
 
 <script>
+import { dataFormat } from '../../utils/dataFormat';
 export default {
   props: {
     dMsg: {
@@ -27,24 +29,42 @@ export default {
     deviceId: {
       type: Number | String,
       default: ''
-    }
+    },
+    size: {
+      type : Object,
+    },
   },
   data() {
     return {};
   },
   mounted() {
-    
   },
   watch: {},
   computed: {
-    setPosition() {
+    setStyle() {
       if (this.dMsg.position) {
         return {
-          left: this.dMsg.position.left + 'px',
-          top: this.dMsg.position.top + 'px'
+          width: this.size.width + 'px',
+          height: this.size.height + 'px',
+          left: this.dMsg.position.left * this.dMsg.customFeature.zoom.xRadio + 'px',
+          top: this.dMsg.position.top * this.dMsg.customFeature.zoom.yRadio + 'px',
+          position: 'absolute'
+        }
+      } else {
+        return {
+          width: this.size.width + 'px',
+          height: this.size.height + 'px',
         }
       }
     }
+    // setPosition() {
+    //   if (this.dMsg.position) {
+    //     return {
+    //       left: this.dMsg.position.left + 'px',
+    //       top: this.dMsg.position.top + 'px'
+    //     }
+    //   }
+    // }
   },
   methods: {
     // 删除单个显示器
@@ -65,9 +85,7 @@ export default {
 
 <style scoped lang='less'>
 .displayer-view {
-  position: absolute;
-  width: 100%;
-  height: 100%;
+  // position: absolute;
   padding: 12px;
   background: rgb(120, 190, 252);
   border: 1px solid #666;

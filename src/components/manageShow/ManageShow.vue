@@ -279,6 +279,7 @@ export default {
     }
   },
   mounted() {
+    
     const vm = this;
     this.draggableInit();
     this.sortableInit();
@@ -289,6 +290,8 @@ export default {
     // 
     customActive.Draggable('.displayer .displayer-item', {
       connectToSortable : ".displayer-view",
+      handle: '.icon-view',
+      refreshPositions: true
     });
     customActive.Draggable('.data-list .data-item', {
       connectToSortable: '.container-view',
@@ -327,6 +330,19 @@ export default {
       }
     })
 
+    // 生成容器后给显示器设置定位
+    this.$root.bus.$off('setDisplayPositon');
+    this.$root.bus.$on('setDisplayPositon', (data) => {
+      this.showVessels.some((item, index) => {
+        if(item.id == data.id) {
+          this.showVessels.splice(index, 1, data);
+        }
+      });
+      
+      dataFormat.setWidget(data);
+      this.$store.dispatch('setContainerList', this.showVessels);
+    });
+
     // 监听删除容器事件
     this.$root.bus.$off('deleteContainer');
     this.$root.bus.$on('deleteContainer', (container) => {
@@ -340,14 +356,14 @@ export default {
     // 删除显示器
     this.$root.bus.$off('deleteDisplayer');
     this.$root.bus.$on('deleteDisplayer', (data) => {
-      let displayerBox = dataFormat.getWidget(data.cId);
-      const contaienr = dataFormat.widgetMap[displayerBox.parentId];
-      displayerBox.content.forEach((item, index) => {
+      let contaienr = dataFormat.getWidget(data.cId);
+      contaienr.content.some((item, index) => {
         if(item.id == data.dId) {
-          displayerBox.content.splice(index, 1);
+          contaienr.content.splice(index, 1);
+          return true;
         }
       })
-      contaienr.setContent(displayerBox);
+      dataFormat.setWidget(contaienr);
       dataFormat.replaceDisplay(data.dId);
       console.log(dataFormat.getHasUseDisplayIds());
       this.displayerList.forEach(item => {
@@ -417,21 +433,25 @@ export default {
         minHeight: 144,
         aspectRatio: true,
         resize: function(event, ui) {
-          console.log(ui);
           const { size } = ui;
           const container = dataFormat.getWidget($(this).attr('id'));
           const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
           zoom.xRadio = size.width / (wBase * col);
           zoom.yRadio = (size.height - 24) / (hBase * row);
-          console.log(container);
-          const list = vm.showVessels;
+          container.content.some(item => {
+            item.customFeature.zoom.xRadio = zoom.xRadio;
+            item.customFeature.zoom.yRadio = zoom.yRadio;
+            dataFormat.setWidget(item);
+          })
+          dataFormat.setWidget(container);
+          let list = vm.showVessels;
           list.some(item => {
             if (item.id === container.id) {
               Object.assign(item, container);
               return true;
             }
           });
-          vm.$store.dispatch('setContainerList', list);
+          vm.$store.commit('setContainerList',list);
         },
         stop: function(event, ui) {
           const { size } = ui;
@@ -439,14 +459,20 @@ export default {
           const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
           zoom.xRadio = size.width / (wBase * col);
           zoom.yRadio = (size.height - 24) / (hBase * row);
-          const list = vm.showVessels;
+          container.content.some(item => {
+            item.customFeature.zoom.xRadio = zoom.xRadio;
+            item.customFeature.zoom.yRadio = zoom.yRadio;
+            dataFormat.setWidget(item);
+          })
+          dataFormat.setWidget(container);
+          let list = vm.showVessels;
           list.some(item => {
             if (item.id === container.id) {
               Object.assign(item, container);
               return true;
             }
           });
-          vm.$store.dispatch('setContainerList', list);
+          vm.$store.commit('setContainerList',list);
         }
       });
     },
@@ -468,7 +494,7 @@ export default {
     },
     droppableInit() {
       const vm = this;
-      $('.displayer-box-child, .displayer-view').droppable({
+      $('.displayer-box, .displayer-view').droppable({
         accept: '.displayer-item',
         greedy: true,
         over: function() {},
@@ -481,13 +507,11 @@ export default {
             item => item.id == targetId
           );
           // 放置在显示器容器上新增显示器
-          if ($(this).hasClass('displayer-box-child')) {
+          if ($(this).hasClass('displayer-box')) {
             let main = dataFormat.widgetMap[parentId]; // 最外层容器
-            // 显示器容器实例
-            let displayerBox = dataFormat.getWidget(id);
             // 创建新的显示器
             let display = dataFormat.addWidget('display', {
-              parentId: id,
+              parentId: parentId,
               displayId: targetObj.id,
               name: targetObj.name,
             });
@@ -495,8 +519,8 @@ export default {
               top: event.clientY - 64 - main.position.top - $(this)[0].offsetTop,
               left: event.clientX - 88 - main.position.left - $(this)[0].offsetLeft
             }
-            displayerBox.content.push(display);
-            main.setContent(displayerBox);
+            main.content.push(display);
+            dataFormat.setWidget(main);
             vm.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
             vm.displayerList.forEach(item => {
               if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
@@ -517,14 +541,16 @@ export default {
           if ($(this).hasClass('displayer-view')) {
             // 被放置的显示器
             const displayer = dataFormat.getWidget(id);
-            // 显示器容器实例
-            let displayerBox = dataFormat.getWidget(parentId);
-            let main = dataFormat.widgetMap[displayerBox.parentId]; // 最外层容器
-            const pointX = event.clientX - 88 - main.position.left - $(this).parent()[0].offsetLeft;
-            const pointY = event.clientY - 64 - main.position.top - $(this).parent()[0].offsetTop;
-            console.log(pointX, pointX);
-            if((pointX > 0 && pointX < 200) && (pointY > 0 && pointY < 120)) {
-              console.log('范围内');
+           
+            let main = dataFormat.widgetMap[parentId]; // 最外层容器
+            const { wBase, hBase, zoom, col, row } = main.customFeature;
+            const maxX = main.position.left + col * wBase * zoom.xRadio;
+            const maxY = main.position.top + 24 + row * hBase * zoom.yRadio;
+            const safeAreaX = [main.position.left, maxX];
+            const safeAreaY = [main.position.top, maxY];
+            const droppleX = event.clientX - 88;
+            const droppleY = event.clientY - 66;
+            if((droppleX >= safeAreaX[0] && droppleX <= safeAreaX[1]) && (droppleY >= safeAreaY[0] && droppleY <= safeAreaY[1])) {
               // 创建新的显示器
               let display = dataFormat.addWidget('display', {
                 parentId: displayer.parentId,
@@ -532,13 +558,13 @@ export default {
                 name: targetObj.name,
               });
               display.position = displayer.position;
-              displayerBox.content.forEach((item, index) => {
+              main.content.forEach((item, index) => {
                 if(item.id == displayer.id) {
-                  displayerBox.content.splice(index, 1, display);
+                  main.content.splice(index, 1, display);
                 }
               });
+              dataFormat.setWidget(main);
               dataFormat.replaceDisplay(displayer.id);
-              main.setContent(displayerBox);
               vm.displayerList.forEach(item => {
                 if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
                   item.status = 'disable'
@@ -568,14 +594,23 @@ export default {
         delay: 100,
         snap: ".displayer-box",
         snapMode: 'inner',
-        snapTolerance: 5,
+        // snapTolerance: 5,
         scroll: false,
         zIndex: 100,
         stop: function(event, ui) {
           let displayer = dataFormat.widgetMap[$(this).attr('id')];
+          let container = dataFormat.getWidget([$(this).attr('parentId')]);
+          // displayer.customFeature.zoom.xRadio = 1;
+          // displayer.customFeature.zoom.yRadio = 1;
           displayer.position = ui.position;
           dataFormat.setWidget(displayer);
-          vm.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
+          vm.showVessels.some(item => {
+            if (item.id === container.id) {
+              Object.assign(item, container);
+              return true;
+            }
+          })
+          vm.$store.dispatch('setContainerList', vm.showVessels);
           vm.$nextTick(() => {
             vm.draggableInit();
             vm.sortableInit();
@@ -789,6 +824,7 @@ export default {
               border-radius: 4px;
               background: #999;
               margin: 0 16px;
+              cursor: pointer;
             }
           }
         }

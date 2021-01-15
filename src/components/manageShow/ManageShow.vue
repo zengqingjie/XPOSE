@@ -351,8 +351,8 @@ export default {
       data.container.customFeature.hBase = data.container.customFeature.hBase + scaleVal * 0.6 * data.zoom;
       const positionZoom = scaleVal / 200 * data.zoom;
       data.container.content.forEach(item => {
-        item.position.left = item.position.left * (data.container.positionZoom + positionZoom);
-        item.position.top = item.position.top * (data.container.positionZoom + positionZoom);
+        item.position.left = item.position.left * (1 + positionZoom);
+        item.position.top = item.position.top * (1 + positionZoom);
         dataFormat.setWidget(item);
       });
       data.container.positionZoom = data.container.positionZoom + positionZoom;

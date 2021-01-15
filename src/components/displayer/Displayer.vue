@@ -33,6 +33,10 @@ export default {
     size: {
       type : Object,
     },
+    positionZoom: {
+      type: Number,
+      default: 1
+    }
   },
   data() {
     return {};
@@ -46,8 +50,8 @@ export default {
         return {
           width: this.size.width + 'px',
           height: this.size.height + 'px',
-          left: this.dMsg.position.left * this.dMsg.customFeature.zoom.xRadio + 'px',
-          top: this.dMsg.position.top * this.dMsg.customFeature.zoom.yRadio + 'px',
+          left: this.dMsg.position.left + 'px',
+          top: this.dMsg.position.top + 'px',
           position: 'absolute'
         }
       } else {

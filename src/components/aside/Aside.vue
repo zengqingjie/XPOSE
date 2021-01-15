@@ -8,15 +8,15 @@
       :class="item.id == '006' ? 'positon-bottom' : ''"
       @click="muneSelect(item, index)"
     >
-      <i
+      <img
         class="iconfont"
         :class="[
           item.className,
           item.id == '006' ? 'positon-bottom' : '',
           getDevides > 0 ? 'whiteText' : '',
-          index == menuIndex ? 'show' : '',
         ]"
-      ></i>
+        :src="index == menuIndex ? item.show_icon : item.usable_icon"
+      />
     </div>
   </div>
 </template>
@@ -26,12 +26,48 @@ export default {
   data() {
     return {
       asideMenuList: [
-        { id: "001", title: "拓扑图", className: "icontree" },
-        { id: "002", title: "", className: "iconsearch" },
-        { id: "003", title: "显示管理", className: "icondevice" },
-        { id: "004", title: "图层管理", className: "iconedit" },
-        { id: "005", title: "场景管理", className: "iconmenu" },
-        { id: "006", title: "设置", className: "iconsetting" },
+        {
+          id: "001",
+          title: "拓扑图",
+          className: "icontree",
+          show_icon: require('../../assets/aside_mune/aside_mune_show_1.png'),
+          usable_icon: require('../../assets/aside_mune/aside_mune_usable_1.png')
+        },
+        {
+          id: "002",
+          title: "",
+          className: "iconsearch",
+          show_icon: require('../../assets/aside_mune/aside_mune_show_2.png'),
+          usable_icon: require('../../assets/aside_mune/aside_mune_usable_2.png')
+        },
+        {
+          id: "003",
+          title: "显示管理", 
+          className: "icondevice",
+          show_icon: require('../../assets/aside_mune/aside_mune_show_3.png'),
+          usable_icon: require('../../assets/aside_mune/aside_mune_usable_3.png')
+        },
+        {
+          id: "004",
+          title: "图层管理", 
+          className: "iconedit",
+          show_icon: require('../../assets/aside_mune/aside_mune_show_4.png'),
+          usable_icon: require('../../assets/aside_mune/aside_mune_usable_4.png')
+        },
+        {
+          id: "005",
+          title: "场景管理", 
+          className: "iconmenu",
+          show_icon: require('../../assets/aside_mune/aside_mune_show_5.png'),
+          usable_icon: require('../../assets/aside_mune/aside_mune_usable_5.png')
+        },
+        {
+          id: "006",
+          title: "设置", 
+          className: "iconsetting",
+          show_icon: require('../../assets/aside_mune/aside_set_show.png'),
+          usable_icon: require('../../assets/aside_mune/aside_set_usable.png')
+        },
       ],
       menuIndex: 0,
     };

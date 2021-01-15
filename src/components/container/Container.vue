@@ -13,8 +13,8 @@
         }})</span
       >
       <div class="right-view">
-        <div>-</div>
-        <div>+</div>
+        <div @click="zoom(cItem, -1)">-</div>
+        <div @click="zoom(cItem, 1)">+</div>
         <div
           v-longpress="deleteContainer"
           class="delete-container"
@@ -31,6 +31,7 @@
         :dMsg="displayer"
         :deviceId="deviceId"
         :size="setDisplayerItem"
+        :positionZoom="cItem.positionZoom"
       />
       <!-- <div
         class="displayer-box-child"
@@ -85,10 +86,9 @@ export default {
       };
     },
     setDisplayerItem() {
-      const { zoom } = this.cItem.customFeature;
-      const { col, row, wBase, hBase } = this.cItem.content[0].customFeature;
-      const width = col * wBase * zoom.xRadio;
-      const height = row * hBase * zoom.yRadio;
+      const { col, row, wBase, hBase } = this.cItem.customFeature;
+      const width = wBase;
+      const height = hBase;
       return {
         width: width,
         height: height,
@@ -97,6 +97,10 @@ export default {
     },
   },
   methods: {
+    // 容器缩放
+    zoom(container, zoom) {
+      this.$root.bus.$emit('setZoom', {container, zoom});
+    },
     emitSetContainer(container) {
       this.$root.bus.$emit('setSelectedContainer', container);
     },

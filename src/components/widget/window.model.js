@@ -10,6 +10,7 @@ export class Windows extends Widget {
       top: 0,
       left: 0,
     };
+    this.positionZoom = 1;
     this.customFeature = Object.assign({
       wBase: 200,
       hBase: 120,

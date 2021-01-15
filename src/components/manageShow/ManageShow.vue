@@ -284,7 +284,7 @@ export default {
     this.draggableInit();
     this.sortableInit();
     this.droppableInit();
-    this.resizableInit();
+    // this.resizableInit();
     this.toggleInit();
     
     // 
@@ -323,7 +323,7 @@ export default {
             vm.draggableInit();
             vm.sortableInit();
             vm.droppableInit();
-            vm.resizableInit();
+            // vm.resizableInit();
             vm.toggleInit();
           })
         }
@@ -343,6 +343,21 @@ export default {
       this.$store.dispatch('setContainerList', this.showVessels);
     });
 
+    // 容器缩放
+    this.$root.bus.$off('setZoom');
+    this.$root.bus.$on('setZoom', (data) => {
+      const scaleVal = 10;
+      data.container.customFeature.wBase = data.container.customFeature.wBase + scaleVal * data.zoom;
+      data.container.customFeature.hBase = data.container.customFeature.hBase + scaleVal * 0.6 * data.zoom;
+      const positionZoom = scaleVal / 200 * data.zoom;
+      data.container.content.forEach(item => {
+        item.position.left = item.position.left * (data.container.positionZoom + positionZoom);
+        item.position.top = item.position.top * (data.container.positionZoom + positionZoom);
+        dataFormat.setWidget(item);
+      });
+      data.container.positionZoom = data.container.positionZoom + positionZoom;
+      dataFormat.setWidget(data.container);
+    });
     // 监听删除容器事件
     this.$root.bus.$off('deleteContainer');
     this.$root.bus.$on('deleteContainer', (container) => {
@@ -400,6 +415,7 @@ export default {
     typeSelect(num) {
       this.typeIndex = num;
     },
+    
     // 点击显示系统编辑图标
     clickEdit(e) {
       $(e.target).parents('.system-info').find('.name-input').show();
@@ -426,56 +442,56 @@ export default {
       this.clickItemId = obj.id;
     },
     
-    resizableInit() {
-      let vm = this;
-      $('.container-component').resizable({
-        minWidth: 200,
-        minHeight: 144,
-        aspectRatio: true,
-        resize: function(event, ui) {
-          const { size } = ui;
-          const container = dataFormat.getWidget($(this).attr('id'));
-          const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
-          zoom.xRadio = size.width / (wBase * col);
-          zoom.yRadio = (size.height - 24) / (hBase * row);
-          container.content.some(item => {
-            item.customFeature.zoom.xRadio = zoom.xRadio;
-            item.customFeature.zoom.yRadio = zoom.yRadio;
-            dataFormat.setWidget(item);
-          })
-          dataFormat.setWidget(container);
-          let list = vm.showVessels;
-          list.some(item => {
-            if (item.id === container.id) {
-              Object.assign(item, container);
-              return true;
-            }
-          });
-          vm.$store.commit('setContainerList',list);
-        },
-        stop: function(event, ui) {
-          const { size } = ui;
-          const container = dataFormat.getWidget($(this).attr('id'));
-          const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
-          zoom.xRadio = size.width / (wBase * col);
-          zoom.yRadio = (size.height - 24) / (hBase * row);
-          container.content.some(item => {
-            item.customFeature.zoom.xRadio = zoom.xRadio;
-            item.customFeature.zoom.yRadio = zoom.yRadio;
-            dataFormat.setWidget(item);
-          })
-          dataFormat.setWidget(container);
-          let list = vm.showVessels;
-          list.some(item => {
-            if (item.id === container.id) {
-              Object.assign(item, container);
-              return true;
-            }
-          });
-          vm.$store.commit('setContainerList',list);
-        }
-      });
-    },
+    // resizableInit() {
+    //   let vm = this;
+    //   $('.container-component').resizable({
+    //     minWidth: 200,
+    //     minHeight: 144,
+    //     aspectRatio: true,
+    //     resize: function(event, ui) {
+    //       const { size } = ui;
+    //       const container = dataFormat.getWidget($(this).attr('id'));
+    //       const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
+    //       zoom.xRadio = size.width / (wBase * col);
+    //       zoom.yRadio = (size.height - 24) / (hBase * row);
+    //       container.content.some(item => {
+    //         item.customFeature.zoom.xRadio = zoom.xRadio;
+    //         item.customFeature.zoom.yRadio = zoom.yRadio;
+    //         dataFormat.setWidget(item);
+    //       })
+    //       dataFormat.setWidget(container);
+    //       let list = vm.showVessels;
+    //       list.some(item => {
+    //         if (item.id === container.id) {
+    //           Object.assign(item, container);
+    //           return true;
+    //         }
+    //       });
+    //       vm.$store.commit('setContainerList',list);
+    //     },
+    //     stop: function(event, ui) {
+    //       const { size } = ui;
+    //       const container = dataFormat.getWidget($(this).attr('id'));
+    //       const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
+    //       zoom.xRadio = size.width / (wBase * col);
+    //       zoom.yRadio = (size.height - 24) / (hBase * row);
+    //       container.content.some(item => {
+    //         item.customFeature.zoom.xRadio = zoom.xRadio;
+    //         item.customFeature.zoom.yRadio = zoom.yRadio;
+    //         dataFormat.setWidget(item);
+    //       })
+    //       dataFormat.setWidget(container);
+    //       let list = vm.showVessels;
+    //       list.some(item => {
+    //         if (item.id === container.id) {
+    //           Object.assign(item, container);
+    //           return true;
+    //         }
+    //       });
+    //       vm.$store.commit('setContainerList',list);
+    //     }
+    //   });
+    // },
     draggableInit() {
       const vm = this;
       $('.container-view .container-component').draggable({
@@ -534,7 +550,7 @@ export default {
               vm.draggableInit();
               vm.sortableInit();
               vm.droppableInit();
-              vm.resizableInit();
+              // vm.resizableInit();
               vm.toggleInit();
             })
           }
@@ -577,7 +593,7 @@ export default {
                 vm.draggableInit();
                 vm.sortableInit();
                 vm.droppableInit();
-                vm.resizableInit();
+                // vm.resizableInit();
                 vm.toggleInit();
               })
             } else {
@@ -615,7 +631,7 @@ export default {
             vm.draggableInit();
             vm.sortableInit();
             vm.droppableInit();
-            vm.resizableInit();
+            // vm.resizableInit();
             vm.toggleInit();
           })
         }

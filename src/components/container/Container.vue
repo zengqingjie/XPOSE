@@ -86,12 +86,12 @@ export default {
       };
     },
     setDisplayerItem() {
-      const { col, row, wBase, hBase } = this.cItem.customFeature;
+      const { col, row, wBase, hBase, zoom } = this.cItem.customFeature;
       const width = wBase;
       const height = hBase;
       return {
-        width: width,
-        height: height,
+        width: width * zoom.xRadio,
+        height: height * zoom.yRadio,
         zoom: this.cItem.customFeature.zoom
       };
     },

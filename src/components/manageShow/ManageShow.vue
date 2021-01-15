@@ -127,10 +127,10 @@
             <div class="empty-box">无已用容器</div>
           </template>
         </div>
-        <div v-show="typeIndex == 3">
+        <div v-show="typeIndex == 3" style="padding: 0 12px">
           <div class="params-obj">
             <span>序号</span>
-            <span>显示器xxxx</span>
+            <div>显示器xxxx</div>
           </div>
           <div class="params-style">缩放</div>
           <div class="params-style-input">
@@ -397,17 +397,37 @@ export default {
     // 容器缩放
     this.$root.bus.$off('setZoom');
     this.$root.bus.$on('setZoom', (data) => {
+      let container = data.container;
+      let displayList = container.content || [];
+      let startWidth = $('#' + container.id).width();
+      let startHeight = $('#' + container.id).height();
+      displayList.forEach(item => {
+        item.setPositionZoom({
+          w: startWidth,
+          h: startHeight
+        })
+      })
+
       const scaleVal = 10;
       data.container.customFeature.wBase = data.container.customFeature.wBase + scaleVal * data.zoom;
       data.container.customFeature.hBase = data.container.customFeature.hBase + scaleVal * 0.6 * data.zoom;
-      const positionZoom = scaleVal / 200 * data.zoom;
+      dataFormat.setWidget(data.container);
+
+      let resizeWidth = $('#' + container.id).width();
+      let resizeHeight = $('#' + container.id).height();
+      container.content.forEach(item => {
+        item.resetPosition({
+          w: resizeWidth,
+          h: resizeHeight
+        })
+      })
+
       data.container.content.forEach(item => {
         item.position.left = item.position.left * (1 + positionZoom);
         item.position.top = item.position.top * (1 + positionZoom);
         dataFormat.setWidget(item);
       });
       data.container.positionZoom = data.container.positionZoom + positionZoom;
-      dataFormat.setWidget(data.container);
     });
     // 监听删除容器事件
     this.$root.bus.$off('deleteContainer');
@@ -502,6 +522,7 @@ export default {
         start: function(event, ui) {
           let container = dataFormat.getWidget($(this).attr('id'));
           let displayList = container.content || [];
+          console.log($(this).width(),$(this).height());
           let resizeWidth = $(this).width();
           let resizeHeight = $(this).height();
           displayList.forEach(item => {
@@ -510,11 +531,19 @@ export default {
               h: resizeHeight
             })
           })
-          console.log(container);
         },
         resize: function(event, ui) {
           const { size } = ui;
-          const container = dataFormat.getWidget($(this).attr('id'));
+          let container = dataFormat.getWidget($(this).attr('id'));
+          let displayList = container.content || [];
+          let resizeWidth = $(this).width();
+          let resizeHeight = $(this).height();
+          displayList.forEach(item => {
+            item.resetPosition({
+              w: resizeWidth,
+              h: resizeHeight
+            })
+          })
           const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
           zoom.xRadio = size.width / (wBase * col);
           zoom.yRadio = (size.height - 24) / (hBase * row);
@@ -537,6 +566,7 @@ export default {
           const { size } = ui;
           let container = dataFormat.getWidget($(this).attr('id'));
           let displayList = container.content || [];
+          console.log($(this).width(),$(this).height());
           let resizeWidth = $(this).width();
           let resizeHeight = $(this).height();
           displayList.forEach(item => {
@@ -833,37 +863,40 @@ export default {
         }
       }
       .params-conts {
-        padding-top: 16px;
-        .input-view {
-          display: flex;
-          align-items: center;
-          padding: 0 32px;
-          margin-bottom: 16px;
-          span {
-            width: 80px;
-            color: #ccc;
-            flex-shrink: 0;
-            font-size: 12px;
-          }
-          /deep/ .el-input__inner {
-            width: 108px;
-            height: 24px;
-          }
-          /deep/ .el-input__icon {
-            line-height: 24px;
-          }
-          .mar-left {
-            margin-left: 12px;
-            /deep/ .el-checkbox__input.is-checked .el-checkbox__inner {
-              background: rgb(26,188,156);
-              border-color: rgb(26,188,156);
+        > div {
+          padding-top: 16px;
+          .input-view {
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            margin-bottom: 16px;
+            span {
+              width: 80px;
+              color: #ccc;
+              flex-shrink: 0;
+              font-size: 12px;
             }
-            /deep/ .el-checkbox__input.is-checked+.el-checkbox__label {
-              color: rgb(26,188,156);
+            /deep/ .el-input__inner {
+              width: 108px;
+              height: 24px;
+            }
+            /deep/ .el-input__icon {
+              line-height: 24px;
+            }
+            .mar-left {
+              margin-left: 12px;
+              /deep/ .el-checkbox__input.is-checked .el-checkbox__inner {
+                background: rgb(26,188,156);
+                border-color: rgb(26,188,156);
+              }
+              /deep/ .el-checkbox__input.is-checked+.el-checkbox__label {
+                color: rgb(26,188,156);
+              }
             }
           }
         }
         .data-list {
+          padding-top: 16px;
           .data-item {
             display: flex;
             align-items: center;
@@ -1017,6 +1050,47 @@ export default {
         .system-info:hover {
           background: rgb(22,48,58);
           color: #fff;
+        }
+        .params-obj,
+        .params-style,
+        .params-style-input {
+          display: flex;
+          align-items: center;
+          font-size: 12px;
+        }
+        .params-obj {
+          height: 36px;
+          border-bottom: 1px solid #000;
+          span {
+            width: 80px;
+          }
+          div {
+            color: rgb(26,169,143);
+          }
+        }
+        .params-style {
+          height: 28px;
+          color: rgb(8,159,186);
+        }
+        .params-style-input {
+          margin-top: 10px;
+          span {
+            width: 80px;
+          }
+          input {
+            width: 120px;
+            border: 1px solid rgb(52,73,94);
+            border-radius: 4px;
+            background: rgb(22,28,44);
+            padding: 6px 8px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+            appearance: none;
+          }
+          input:focus {
+            border: 1px solid rgb(26,188,156)
+          }
         }
       }
       .params-footer {

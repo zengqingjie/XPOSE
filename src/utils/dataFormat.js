@@ -84,15 +84,22 @@ export const dataFormat = {
       customFeature: templateObj,
       name: ''
     });
+
+    let arr = [];
+    for (let i = 1; i <= row; i++) {
+      for (let j = 1; j <= col; j++) {
+        let position = { left: (j - 1) * 200, top: (i - 1) * 120 };
+        arr.push(position);
+      }
+    }
     for (let index = 0; index < addNum; index++) {
-      
       if (addDisplay) {
         let display = this.addDisplay({
           parentId: windows.id,
           name: usableDisplay[index].name,
           displayId: usableDisplay[index].id,
+          position: arr[index]
         });
-
         content.push(display);
       }
     }
@@ -110,7 +117,7 @@ export const dataFormat = {
   },
 
   replaceDisplay(oldId) {
-    if(oldId) {
+    if (oldId) {
       const index = this.widgetList.findIndex(item => item.id == oldId);
       this.widgetList.splice(index, 1);
     }

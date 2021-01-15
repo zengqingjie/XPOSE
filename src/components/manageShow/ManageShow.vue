@@ -284,7 +284,7 @@ export default {
     this.draggableInit();
     this.sortableInit();
     this.droppableInit();
-    // this.resizableInit();
+    this.resizableInit();
     this.toggleInit();
     
     // 
@@ -323,7 +323,7 @@ export default {
             vm.draggableInit();
             vm.sortableInit();
             vm.droppableInit();
-            // vm.resizableInit();
+            vm.resizableInit();
             vm.toggleInit();
           })
         }
@@ -442,56 +442,78 @@ export default {
       this.clickItemId = obj.id;
     },
     
-    // resizableInit() {
-    //   let vm = this;
-    //   $('.container-component').resizable({
-    //     minWidth: 200,
-    //     minHeight: 144,
-    //     aspectRatio: true,
-    //     resize: function(event, ui) {
-    //       const { size } = ui;
-    //       const container = dataFormat.getWidget($(this).attr('id'));
-    //       const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
-    //       zoom.xRadio = size.width / (wBase * col);
-    //       zoom.yRadio = (size.height - 24) / (hBase * row);
-    //       container.content.some(item => {
-    //         item.customFeature.zoom.xRadio = zoom.xRadio;
-    //         item.customFeature.zoom.yRadio = zoom.yRadio;
-    //         dataFormat.setWidget(item);
-    //       })
-    //       dataFormat.setWidget(container);
-    //       let list = vm.showVessels;
-    //       list.some(item => {
-    //         if (item.id === container.id) {
-    //           Object.assign(item, container);
-    //           return true;
-    //         }
-    //       });
-    //       vm.$store.commit('setContainerList',list);
-    //     },
-    //     stop: function(event, ui) {
-    //       const { size } = ui;
-    //       const container = dataFormat.getWidget($(this).attr('id'));
-    //       const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
-    //       zoom.xRadio = size.width / (wBase * col);
-    //       zoom.yRadio = (size.height - 24) / (hBase * row);
-    //       container.content.some(item => {
-    //         item.customFeature.zoom.xRadio = zoom.xRadio;
-    //         item.customFeature.zoom.yRadio = zoom.yRadio;
-    //         dataFormat.setWidget(item);
-    //       })
-    //       dataFormat.setWidget(container);
-    //       let list = vm.showVessels;
-    //       list.some(item => {
-    //         if (item.id === container.id) {
-    //           Object.assign(item, container);
-    //           return true;
-    //         }
-    //       });
-    //       vm.$store.commit('setContainerList',list);
-    //     }
-    //   });
-    // },
+    resizableInit() {
+      let vm = this;
+      $('.container-component').resizable({
+        minWidth: 200,
+        minHeight: 144,
+        aspectRatio: true,
+        start: function(event, ui) {
+          let container = dataFormat.getWidget($(this).attr('id'));
+          let displayList = container.content || [];
+          let resizeWidth = $(this).width();
+          let resizeHeight = $(this).height();
+          displayList.forEach(item => {
+            item.setPositionZoom({
+              w: resizeWidth,
+              h: resizeHeight
+            })
+          })
+          console.log(container);
+        },
+        resize: function(event, ui) {
+          const { size } = ui;
+          const container = dataFormat.getWidget($(this).attr('id'));
+          const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
+          zoom.xRadio = size.width / (wBase * col);
+          zoom.yRadio = (size.height - 24) / (hBase * row);
+          container.content.some(item => {
+            item.customFeature.zoom.xRadio = zoom.xRadio;
+            item.customFeature.zoom.yRadio = zoom.yRadio;
+            dataFormat.setWidget(item);
+          })
+          dataFormat.setWidget(container);
+          let list = vm.showVessels;
+          list.some(item => {
+            if (item.id === container.id) {
+              Object.assign(item, container);
+              return true;
+            }
+          });
+          vm.$store.commit('setContainerList',list);
+        },
+        stop: function(event, ui) {
+          const { size } = ui;
+          let container = dataFormat.getWidget($(this).attr('id'));
+          let displayList = container.content || [];
+          let resizeWidth = $(this).width();
+          let resizeHeight = $(this).height();
+          displayList.forEach(item => {
+            item.resetPosition({
+              w: resizeWidth,
+              h: resizeHeight
+            })
+          })
+          const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
+          zoom.xRadio = size.width / (wBase * col);
+          zoom.yRadio = (size.height - 24) / (hBase * row);
+          container.content.some(item => {
+            item.customFeature.zoom.xRadio = zoom.xRadio;
+            item.customFeature.zoom.yRadio = zoom.yRadio;
+            dataFormat.setWidget(item);
+          })
+          dataFormat.setWidget(container);
+          let list = vm.showVessels;
+          list.some(item => {
+            if (item.id === container.id) {
+              Object.assign(item, container);
+              return true;
+            }
+          });
+          vm.$store.commit('setContainerList',list);
+        }
+      });
+    },
     draggableInit() {
       const vm = this;
       $('.container-view .container-component').draggable({
@@ -550,7 +572,7 @@ export default {
               vm.draggableInit();
               vm.sortableInit();
               vm.droppableInit();
-              // vm.resizableInit();
+              vm.resizableInit();
               vm.toggleInit();
             })
           }
@@ -593,7 +615,7 @@ export default {
                 vm.draggableInit();
                 vm.sortableInit();
                 vm.droppableInit();
-                // vm.resizableInit();
+                vm.resizableInit();
                 vm.toggleInit();
               })
             } else {
@@ -631,7 +653,7 @@ export default {
             vm.draggableInit();
             vm.sortableInit();
             vm.droppableInit();
-            // vm.resizableInit();
+            vm.resizableInit();
             vm.toggleInit();
           })
         }

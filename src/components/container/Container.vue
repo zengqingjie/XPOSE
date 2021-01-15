@@ -138,8 +138,8 @@ export default {
     })
     displayers.forEach((item, index) => {
       const position = {
-        top: $(item)[0].offsetTop * container.customFeature.zoom.yRadio,
-        left: $(item)[0].offsetLeft * container.customFeature.zoom.xRadio
+        top: $(item)[0].offsetTop, 
+        left: $(item)[0].offsetLeft
       }
       container.content[index].position = position;
     })

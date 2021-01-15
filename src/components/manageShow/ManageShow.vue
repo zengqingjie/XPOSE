@@ -100,29 +100,73 @@
           </div>
         </div>
         <div v-show="typeIndex == 2">
-          <div
-            class="system-info"
-            v-for="(item, index) in showVessels"
-            :key="item.id"
-          >
-            <div class="sys-name">
-              <div class="left-view">
-                <span>{{index + 1}}</span>
-                <span class="text-view">{{item.name ? item.name : '显示容器'+ (index + 1)}}</span>
-                <input type="text" v-model="containerName" class="name-input">
+          <template v-if="showVessels.length > 0">
+            <div
+              class="system-info"
+              v-for="(item, index) in showVessels"
+              :key="item.id"
+            >
+              <div class="sys-name">
+                <div class="left-view">
+                  <span>{{index + 1}}</span>
+                  <span class="text-view">{{item.name ? item.name : '显示容器'+ (index + 1)}}</span>
+                  <input type="text" v-model="containerName" class="name-input">
+                </div>
+                <div class="right-view" @click="clickEdit"><i class="iconfont iconedit_name_icon" /></div>
+                <div class="right-view-sure" @click="(e) => sureEdit(e, item)"><i class="iconfont iconsure_edit" /></div>
               </div>
-              <div class="right-view" @click="clickEdit"><i class="iconfont iconedit_name_icon" /></div>
-              <div class="right-view-sure" @click="(e) => sureEdit(e, item)"><i class="iconfont iconsure_edit" /></div>
+              <div class="info-box">
+                <span>X:{{item.position.left}}</span>
+                <span>Y:{{item.position.top}}</span>
+                <span>W:{{item.customFeature.col*1920}}</span>
+                <span>H:{{item.customFeature.row*1080}}</span>
+              </div>
             </div>
-            <div class="info-box">
-              <span>X:{{item.position.left}}</span>
-              <span>Y:{{item.position.top}}</span>
-              <span>W:{{item.customFeature.col*1920}}</span>
-              <span>H:{{item.customFeature.row*1080}}</span>
-            </div>
+          </template>
+          <template v-if="showVessels.length == 0">
+            <div class="empty-box">无已用容器</div>
+          </template>
+        </div>
+        <div v-show="typeIndex == 3">
+          <div class="params-obj">
+            <span>序号</span>
+            <span>显示器xxxx</span>
+          </div>
+          <div class="params-style">缩放</div>
+          <div class="params-style-input">
+            <span>起始点X</span>
+            <input type="text" v-model="startX">
+          </div>
+          <div class="params-style-input">
+            <span>起始点Y</span>
+            <input type="text" v-model="startY">
+          </div>
+          <div class="params-style-input">
+            <span>宽度</span>
+            <input type="text" v-model="displayerWidth">
+          </div>
+          <div class="params-style-input">
+            <span>高度</span>
+            <input type="text" v-model="displayerHeight">
+          </div>
+          <div class="params-style">边框</div>
+          <div class="params-style-input">
+            <span>顶边框</span>
+            <input type="text" v-model="vBorder">
+          </div>
+          <div class="params-style-input">
+            <span>底边框</span>
+            <input type="text" v-model="vBorder">
+          </div>
+          <div class="params-style-input">
+            <span>左边框</span>
+            <input type="text" v-model="hBorder">
+          </div>
+          <div class="params-style-input">
+            <span>右边框</span>
+            <input type="text" v-model="hBorder">
           </div>
         </div>
-        <div v-show="typeIndex == 3">参数</div>
       </div>
       <div class="params-footer">
         <div v-if="typeIndex == 0">自定义</div>
@@ -262,6 +306,13 @@ export default {
       selectedDisplayerId: '',
       containerName: '',
       areaEle: [], // 显示器放置区域判断条件
+
+      startX: '',
+      startY: '',
+      displayerWidth: '',
+      displayerHeight: '',
+      vBorder: '',
+      hBorder: ''
     }
   },
   components: {
@@ -873,6 +924,11 @@ export default {
         }
         .show:hover {
           background: rgb(23,76,78);
+        }
+        .empty-box {
+          padding: 8px;
+          color: #fff;
+          font-size: 12px;
         }
         .system-info {
           padding: 10px 0;

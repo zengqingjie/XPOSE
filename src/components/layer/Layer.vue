@@ -9,7 +9,23 @@
         </div>
       </div>
       <div class="params-cont">
-        <div v-if="leftIndex == 0"></div>
+        <div v-if="leftIndex == 0">
+          <div
+            v-for="(item, index) in containerList"
+            :key="item.id"
+          >
+            <div class="container-list-item">
+              <div class="container-name">
+                <img src="../../assets/Container.png" alt="">
+                <span>{{item.name ? item.name : '容器' + (index + 1)}}</span>
+              </div>
+              <img
+                :src="item[index] == index ? require('../../assets/close_eye.png') : require('../../assets/green_eye.png')"
+                alt=""
+              >
+            </div>
+          </div>
+        </div>
         <div v-if="leftIndex == 1"></div>
         <div v-if="leftIndex == 2"></div>
       </div>
@@ -47,6 +63,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
 export default {
   props: ['showInfo', 'nowMenuId'],
   data() {
@@ -57,6 +74,15 @@ export default {
       layerList: [], // 图层
       sourceList: [], // 信号
     }
+  },
+  mounted() {
+    this.containerList = this.$store.state.showVessels;
+    this.$store.commit('setShareContainerList', this.containerList)
+  },
+  computed: {
+    ...mapState([
+      'shareVessels'
+    ]),
   },
   methods: {
     paramsEvent(num) {
@@ -81,6 +107,8 @@ export default {
     background: rgb(27,36,54);
     color: #fff;
     .left-view {
+      position: absolute;
+      left: 0;
       width: 180px;
       height: 100%;
       background: rgb(22,28,44);
@@ -122,6 +150,28 @@ export default {
             top: 0;
             background: rgb(26,188,156);
           }
+        }
+      }
+      .container-list-item {
+        display: flex;
+        height: 24px;
+        padding: 0 12px;
+        justify-content: space-between;
+        align-items: center;
+        color: #999;
+        font-size: 12px;
+        > .container-name {
+          display: flex;
+          align-items: center;
+          img {
+            margin-right: 12px;
+          }
+        }
+        > img {
+          display: block;
+          width: 16px;
+          height: 16px;
+          cursor: pointer;
         }
       }
     }

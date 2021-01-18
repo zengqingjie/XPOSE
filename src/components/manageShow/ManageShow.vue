@@ -397,7 +397,9 @@ export default {
     // 容器缩放
     this.$root.bus.$off('setZoom');
     this.$root.bus.$on('setZoom', (data) => {
+      console.log(data.zoom);
       let container = data.container;
+      const {col, row, wBase, hBase, zoom} = container.customFeature;
       let displayList = container.content || [];
       let startWidth = $('#' + container.id).width();
       let startHeight = $('#' + container.id).height();
@@ -408,26 +410,34 @@ export default {
         })
       })
 
-      const scaleVal = 10;
-      data.container.customFeature.wBase = data.container.customFeature.wBase + scaleVal * data.zoom;
-      data.container.customFeature.hBase = data.container.customFeature.hBase + scaleVal * 0.6 * data.zoom;
-      dataFormat.setWidget(data.container);
-
-      let resizeWidth = $('#' + container.id).width();
-      let resizeHeight = $('#' + container.id).height();
+      const scaleVal = 20;
+      let resizeWidth = $('#' + container.id).width() + scaleVal * col *  data.zoom;
+      console.log(resizeWidth / wBase * col);
+      let resizeHeight = (hBase * row + 24) * (resizeWidth / wBase * col);
+      console.log(resizeWidth, resizeHeight);
       container.content.forEach(item => {
         item.resetPosition({
           w: resizeWidth,
           h: resizeHeight
         })
       })
-
-      data.container.content.forEach(item => {
-        item.position.left = item.position.left * (1 + positionZoom);
-        item.position.top = item.position.top * (1 + positionZoom);
+      console.log(container);
+      zoom.xRadio = resizeWidth / (wBase * col);
+      zoom.yRadio = (resizeHeight - 24) / (hBase * row);
+      container.content.some(item => {
+        item.customFeature.zoom.xRadio = zoom.xRadio;
+        item.customFeature.zoom.yRadio = zoom.yRadio;
         dataFormat.setWidget(item);
+      })
+      dataFormat.setWidget(container);
+      let list = this.showVessels;
+      list.some(item => {
+        if (item.id === container.id) {
+          Object.assign(item, container);
+          return true;
+        }
       });
-      data.container.positionZoom = data.container.positionZoom + positionZoom;
+      this.$store.commit('setContainerList',list);
     });
     // 监听删除容器事件
     this.$root.bus.$off('deleteContainer');
@@ -566,7 +576,6 @@ export default {
           const { size } = ui;
           let container = dataFormat.getWidget($(this).attr('id'));
           let displayList = container.content || [];
-          console.log($(this).width(),$(this).height());
           let resizeWidth = $(this).width();
           let resizeHeight = $(this).height();
           displayList.forEach(item => {
@@ -713,7 +722,7 @@ export default {
         delay: 100,
         snap: ".displayer-box",
         snapMode: 'inner',
-        // snapTolerance: 5,
+        snapTolerance: 15,
         scroll: false,
         zIndex: 100,
         stop: function(event, ui) {

@@ -728,8 +728,6 @@ export default {
         stop: function(event, ui) {
           let displayer = dataFormat.widgetMap[$(this).attr('id')];
           let container = dataFormat.getWidget([$(this).attr('parentId')]);
-          // displayer.customFeature.zoom.xRadio = 1;
-          // displayer.customFeature.zoom.yRadio = 1;
           displayer.position = ui.position;
           dataFormat.setWidget(displayer);
           vm.showVessels.some(item => {

@@ -20,8 +20,9 @@
                 <span>{{item.name ? item.name : '容器' + (index + 1)}}</span>
               </div>
               <img
-                :src="item[index] == index ? require('../../assets/close_eye.png') : require('../../assets/green_eye.png')"
+                :src="item.status ? require('../../assets/close_eye.png') : require('../../assets/green_eye.png')"
                 alt=""
+                @click="eyeStatus(item)"
               >
             </div>
           </div>
@@ -30,7 +31,17 @@
         <div v-if="leftIndex == 2"></div>
       </div>
     </div>
-    <div class="layer-cont"></div>
+    <div class="layer-cont">
+      <div class="container-box">
+        <Container
+          v-for="(item, index) in containerList" :key="index"
+          :cItem="item"
+          :index="index"
+          :id="item.id"
+          :style="{borderColor: item.id == (selectedContainer && selectedContainer.id) ? 'red' : ''}"
+        />
+      </div>
+    </div>
     <div class="right-view" v-if="!showInfo && nowMenuId == '004'">
       <div class="params-type" v-dragscroll>
         <div class="flex-box">
@@ -38,20 +49,282 @@
           <div :class="typeIndex == 1 ? 'show' : ''" @click="typeSelect(1)">裁剪</div>
           <div :class="typeIndex == 2 ? 'show' : ''" @click="typeSelect(2)">H264 Demo</div>
           <div :class="typeIndex == 3 ? 'show' : ''" @click="typeSelect(3)">流媒体</div>
-          <div :class="typeIndex == 4 ? 'show' : ''" @click="typeSelect(4)">热键</div>
-
         </div>
       </div>
       <div class="params-conts">
         <div v-if="typeIndex == 0">
-          
+          <div class="params-obj">
+            <span>信号源</span>
+            <div>信号 16</div>
+          </div>
+          <div class="params-obj">
+            <span>图层序号</span>
+            <div>图层 9</div>
+          </div>
+          <div class="params-style-input">
+            <span>透明度</span>
+            <input type="text" v-model="opacityVal">
+          </div>
+          <hr style="border: 1px solid #000">
+          <div class="params-style">位置</div>
+          <div class="params-style-input">
+            <span>X</span>
+            <input type="text" v-model="positionX">
+          </div>
+          <div class="params-style-input">
+            <span>Y</span>
+            <input type="text" v-model="positionY">
+          </div>
+          <div class="params-style-input">
+            <span>宽度</span>
+            <input type="text" v-model="sourceW">
+          </div>
+          <div class="params-style-input">
+            <span>高度</span>
+            <input type="text" v-model="sourceH">
+          </div>
         </div>
         <div v-if="typeIndex == 1">
-         
+         <div class="params-obj">
+            <span>图层序号</span>
+            <div>图层 9</div>
+          </div>
+          <hr style="border: 1px solid #000;margin:0 0 8px 0">
+          <div class="params-style">显示</div>
+          <div class="params-style-input">
+            <span>显示模式</span>
+            <el-switch
+              v-model="showModel"
+              active-color="#1ABC9C"
+              inactive-color="#2C384F">
+            </el-switch>
+          </div>
+          <div class="params-style-input">
+            <span>镜像</span>
+            <el-switch
+              v-model="mirrorVal"
+              active-color="#1ABC9C"
+              inactive-color="#2C384F">
+            </el-switch>
+          </div>
+          <hr style="border: 1px solid #000;">
+          <div class="params-style">位置</div>
+          <div class="params-style-input">
+            <span>X</span>
+            <input type="text" v-model="positionX">
+          </div>
+          <div class="params-style-input">
+            <span>Y</span>
+            <input type="text" v-model="positionY">
+          </div>
+          <div class="params-style-input">
+            <span>宽度</span>
+            <input type="text" v-model="sourceW">
+          </div>
+          <div class="params-style-input">
+            <span>高度</span>
+            <input type="text" v-model="sourceH">
+          </div>
         </div>
-        <div v-if="typeIndex == 2">H264 Demo</div>
-        <div v-if="typeIndex == 3">流媒体</div>
-        <div v-if="typeIndex == 4">热键</div>
+        <div v-if="typeIndex == 2">
+          <div class="params-obj">
+            <span>Input Port</span>
+          </div>
+          <hr style="border: 1px solid #000;margin:0 0 8px 0">
+          <div class="params-style-input">
+            <el-radio v-model="radio" label="1">IP设置</el-radio>
+          </div>
+          <div class="params-style-input">
+            <span>ip地址</span>
+            <div class="input-group">
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+            </div>
+          </div>
+          <div class="params-style-input">
+            <span>子网掩码</span>
+            <div class="input-group">
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+            </div>
+          </div>
+          <div class="params-style-input">
+            <span>网关</span>
+            <div class="input-group">
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+            </div>
+          </div>
+          <div class="params-style-input">
+            <span>DNS</span>
+            <div class="input-group">
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+            </div>
+          </div>
+          <div class="params-style-input">
+            <span>Mac</span>
+            <div class="input-group-mac">
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+              <span>-</span>
+              <input type="text" :disabled="radio=='1' ? false : true">
+            </div>
+          </div>
+          <div class="params-style-input">
+            <el-radio v-model="radio" label="2">网络URL设置</el-radio>
+          </div>
+          <div class="params-style-input">
+            <span>Picture</span>
+            <div class="input-select">
+              <el-select v-model="picValue" placeholder="请选择" :disabled="radio=='2' ? false : true">
+                <el-option
+                  v-for="item in picture"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value">
+                </el-option>
+              </el-select>
+            </div>
+          </div>
+          <div class="params-style-input">
+            <span>网络URL</span>
+            <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
+            <div class="net-set">设置</div>
+          </div>
+          <div class="params-style-input">
+            <span>网络URL</span>
+            <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
+            <div class="net-set">设置</div>
+          </div>
+          <div class="params-style-input">
+            <span>网络URL</span>
+            <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
+            <div class="net-set">设置</div>
+          </div>
+          <div class="params-style-input">
+            <span>网络URL</span>
+            <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
+            <div class="net-set">设置</div>
+          </div>
+          <div class="params-style-input">
+            <span>网络URL</span>
+            <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
+            <div class="net-set">设置</div>
+          </div>
+          <div class="params-style-input">
+            <span>网络URL</span>
+            <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
+            <div class="net-set">设置</div>
+          </div>
+          <div class="params-style-input">
+            <span>网络URL</span>
+            <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
+            <div class="net-set">设置</div>
+          </div>
+          <div class="params-style-input">
+            <span>网络URL</span>
+            <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
+            <div class="net-set">设置</div>
+          </div>
+        </div>
+        <div v-if="typeIndex == 3">
+          <div class="params-obj">
+            <span>板块位置</span>
+            <div>H264</div>
+          </div>
+          <hr style="border: 1px solid #000;margin:0 0 8px 0">
+          <div class="params-style-input">
+            <span>画质</span>
+            <div class="input-select">
+              <el-select v-model="imgQuality" placeholder="请选择">
+                <el-option
+                  v-for="item in imgQualityList"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value">
+                </el-option>
+              </el-select>
+            </div>
+          </div>
+          <div class="params-style-input">
+            <span>图层预监</span>
+            <el-switch
+              v-model="tcyj"
+              active-color="#1ABC9C"
+              inactive-color="#2C384F"
+              :width="100"
+            >
+            </el-switch>
+          </div>
+          <div class="params-style-input">
+            <span>输入预监</span>
+            <el-switch
+              v-model="sryj"
+              active-color="#1ABC9C"
+              inactive-color="#2C384F"
+              :width="100"
+            >
+            </el-switch>
+          </div>
+          <div class="params-style-input">
+            <span>场景预监</span>
+            <el-switch
+              v-model="cjyj"
+              active-color="#1ABC9C"
+              inactive-color="#2C384F"
+              :width="100"
+            >
+            </el-switch>
+          </div>
+          <div class="params-style-input">
+            <span>扩展预监</span>
+            <el-switch
+              v-model="kzyj"
+              active-color="#1ABC9C"
+              inactive-color="#2C384F"
+              :width="100"
+            >
+            </el-switch>
+          </div>
+          <div class="params-style-input">
+            <span>H.264</span>
+            <el-switch
+              v-model="h264"
+              active-color="#1ABC9C"
+              inactive-color="#2C384F"
+              :width="100"
+            >
+            </el-switch>
+          </div>
+        </div>
       </div>
       <div class="params-footer">
         <div v-if="typeIndex == 2">保存</div>
@@ -59,10 +332,23 @@
         <div @click="hideRightView">返回</div>
       </div>
     </div>
+    <div class="bank-view">
+      <div class="bank-box">
+        <div class="bank-item"
+          v-for="(item, index) in bankList"
+          :key="index"
+        >
+          <div class="bank-head" :style="{background:item && item.headColor}">bank{{index + 1}}</div>
+          <div class="bank-cont" :style="{borderColor:item && item.headColor}"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import $ from "jquery";
+import Container from '@/components/container/Container';
 import { mapState } from 'vuex';
 export default {
   props: ['showInfo', 'nowMenuId'],
@@ -73,15 +359,129 @@ export default {
       containerList: [], // 容器
       layerList: [], // 图层
       sourceList: [], // 信号
+      selectedContainer: null,
+      positionX: '',
+      positionY: '',
+      sourceW: '',
+      sourceH: '',
+      opacityVal: '',
+      showModel: false,
+      mirrorVal: false,
+      radio: '1',
+      picture: [{
+        value: '1',
+        label: '单画面'
+      }, {
+        value: '4',
+        label: '四画面'
+      }, {
+        value: '8',
+        label: '八画面'
+      }],
+      picValue: '1',
+      imgQualityList: [{
+        value: '1',
+        label: '流畅'
+      }, {
+        value: '2',
+        label: '正常'
+      }, {
+        value: '3',
+        label: '高画质'
+      }],
+      imgQuality: '1',
+      tcyj: false,
+      sryj: false,
+      cjyj: false,
+      kzyj: false,
+      h264: false,
+      bankList: [
+        {
+          id: 'bank1',
+          headColor: '#4F1633'
+        },
+        {
+          id: 'bank2',
+          headColor: '#3D4A7C'
+        },
+        {
+          id: 'bank3',
+          headColor: '#7C693D'
+        },
+        {
+          id: 'bank4',
+          headColor: '#6D9094'
+        },
+        {
+          id: 'bank5',
+          headColor: '#07ACAA'
+        },
+        {
+          id: 'bank6',
+          headColor: '#403F2D'
+        },
+        {
+          id: 'bank7',
+          headColor: '#713E76'
+        },
+        {
+          id: 'bank8',
+          headColor: '#763E3E'
+        },
+        {
+          id: 'bank9',
+          headColor: '#9C7676'
+        },
+        {
+          id: 'bank10',
+          headColor: '#C40609'
+        },
+        {
+          id: 'bank11',
+          headColor: '#2F2F4F'
+        },
+        {
+          id: 'bank12',
+          headColor: '#3D7453'
+        },
+        {
+          id: 'bank13',
+          headColor: '#6A743D'
+        },
+        {
+          id: 'bank14',
+          headColor: '#7669B0'
+        },
+        {
+          id: 'bank15',
+          headColor: '#64912D'
+        },
+        {
+          id: 'bank16',
+          headColor: '#522557'
+        }
+      ]
     }
   },
+  components: {
+    Container
+  },
   mounted() {
-    this.containerList = this.$store.state.showVessels;
-    this.$store.commit('setShareContainerList', this.containerList)
+    // 标识当前操作的容器
+    this.$root.bus.$off('setSelectedContainer');
+    this.$root.bus.$on('setSelectedContainer', (data) => {
+      this.selectedContainer = data;
+    });
+    this.containerList = this.$store.state.showVessels || [];
+    if(this.containerList.length > 0) {
+      this.$store.commit('setShareContainerList', this.containerList);
+    }
+    this.draggableInit();
   },
   computed: {
     ...mapState([
-      'shareVessels'
+      'shareVessels',
+      'editContainer',
     ]),
   },
   methods: {
@@ -94,6 +494,27 @@ export default {
     },
     hideRightView() {
       this.$root.bus.$emit('hideRightView');
+    },
+    // 容器显示与否
+    eyeStatus(target) {
+      this.containerList.some((item, index) => {
+        if(item.id == target.id) {
+          console.log(item[index]);
+          this.$set(item, 'status', item.status ? false : true);
+          return true;
+        }
+      })
+    },
+    // 容器区域拖拽
+    draggableInit() {
+      const vm = this;
+      $('.layer-cont .container-box').draggable({
+        containment: [-Infinity,-Infinity,Infinity,Infinity],
+        scroll: false,
+        stop: function(event, ui) {
+         
+        }
+      })
     },
   },
 }
@@ -113,6 +534,7 @@ export default {
       height: 100%;
       background: rgb(22,28,44);
       border-left: 1px solid #000;
+      z-index: 99;
       .params-type {
         position: relative;
         overflow: hidden;
@@ -176,12 +598,20 @@ export default {
       }
     }
     .layer-cont {
+      display: flex;
+      overflow: auto;
+      position: relative;
       flex: 1;
+      .container-box {
+        position: relative;
+        flex: 1;
+        background: rgb(18, 24 36);
+      }
     }
     .right-view {
       position: relative;
       width: 320px;
-      height: 100%;
+      height: calc(100% - 128px);
       background: rgb(22,28,44);
       border-left: 1px solid #000;
       .params-type {
@@ -225,117 +655,108 @@ export default {
         }
       }
       .params-conts {
-        padding-top: 16px;
-        .input-view {
+        padding: 0 12px;
+        .params-obj,
+        .params-style,
+        .params-style-input {
           display: flex;
           align-items: center;
-          padding: 0 32px;
-          margin-bottom: 16px;
+          font-size: 12px;
+          /deep/ .el-radio__input.is-checked .el-radio__inner {
+            border-color: #1ABC9C;
+            background: #1ABC9C;
+          }
+          /deep/ .el-radio__input.is-checked+.el-radio__label {
+            color: #1ABC9C;
+          }
+        }
+        .params-obj {
+          height: 36px;
           span {
             width: 80px;
-            color: #ccc;
-            flex-shrink: 0;
+          }
+          div {
+            color: rgb(26,169,143);
+          }
+        }
+        .params-style {
+          height: 28px;
+          color: rgb(8,159,186);
+        }
+        .params-style-input {
+          margin-top: 10px;
+          > span {
+            width: 80px;
+          }
+          > input {
+            width: 120px;
+            border: 1px solid rgb(52,73,94);
+            border-radius: 4px;
+            background: rgb(22,28,44);
+            padding: 6px 8px;
+            color: #fff;
             font-size: 12px;
+            outline: none;
+            appearance: none;
+          }
+          > .input-group {
+            display: flex;
+            align-items: center;
+            input {
+              width: 32px;
+              padding: 5px;
+              border-radius: 4px;
+              border: 1px solid rgb(52,73,94);
+              background: rgb(22,28,44);
+              outline: none;
+              appearance: none;
+              color: #fff;
+              font-size: 12px;
+            }
+            span {
+              margin: 0 4px;
+            }
+          }
+          .input-group-mac {
+            display: flex;
+            align-items: center;
+            input {
+              width: 20px;
+              padding: 5px;
+              border-radius: 4px;
+              border: 1px solid rgb(52,73,94);
+              background: rgb(22,28,44);
+              outline: none;
+              appearance: none;
+              color: #fff;
+              font-size: 12px;
+            }
+          }
+          input:focus {
+            border: 1px solid rgb(26,188,156)
           }
           /deep/ .el-input__inner {
-            width: 108px;
-            height: 24px;
+            height: 30px;
           }
           /deep/ .el-input__icon {
-            line-height: 24px;
+            line-height: 30px;
           }
-          .mar-left {
-            margin-left: 12px;
-            /deep/ .el-checkbox__input.is-checked .el-checkbox__inner {
-              background: rgb(26,188,156);
-              border-color: rgb(26,188,156);
-            }
-            /deep/ .el-checkbox__input.is-checked+.el-checkbox__label {
-              color: rgb(26,188,156);
-            }
+          > .network-url {
+            flex: 1;
           }
-        }
-        .data-list {
-          .data-item {
+          > .net-set {
+            width: 48px;
+            height: 24px;
+            background: #1ABC9C;
+            margin-left: 8px;
+            border-radius: 12px;
             display: flex;
+            justify-content: center;
             align-items: center;
-            padding: 0 16px;
-            color: #999;
+            color: #fff;
             font-size: 12px;
-            margin-bottom: 12px;
-            .index-text {
-              width: 16px;
-            }
-            .icon-view {
-              width: 24px;
-              height: 24px;
-              background: #999;
-              border-radius: 4px;
-              margin-left: 24px;
-              margin-right: 48px;
-            }
-            .create-container {
-              margin-left: 16px;
-              padding: 2px 12px;
-              border-radius: 4px;
-              background: rgb(26,188,156);
-              color: #fff;
-              cursor: pointer;
-            }
+            cursor: pointer;
           }
-        }
-        .displayer-item {
-          padding: 0 16px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          height: 24px;
-          color: #999;
-          font-size: 12px;
-          > div {
-            display: flex;
-            align-items: center;
-            .id-text {
-              width: 20px;
-            }
-            .icon-view {
-              width: 42px;
-              height: 16px;
-              border-radius: 4px;
-              background: #999;
-              margin: 0 16px;
-            }
-          }
-        }
-        .deep {
-          background: rgb(22,28,44);
-        }
-        .shallow {
-          background: rgb(24,31,48);
-        }
-        .disable {
-          color: rgb(40,42,49);
-          background: rgb(16,21,35);
-          > div {
-            .icon-view {
-              background: rgb(40,42,49);
-            }
-          }
-        }
-        .show {
-          color: #fff;
-          background: rgb(23,76,78);
-        }
-        .displayer-item:hover {
-          color: #fff;
-          background: rgb(22,48,58);
-        }
-        .disable:hover {
-          color: #999;
-          background: rgb(16,21,35);
-        }
-        .show:hover {
-          background: rgb(23,76,78);
         }
       }
       .params-footer {
@@ -359,6 +780,36 @@ export default {
           color: #fff;
           font-size: 12px;
           cursor: pointer;
+        }
+      }
+    }
+    .bank-view {
+      overflow-y: auto;
+      position: absolute;
+      height: 148px;
+      bottom: 0;
+      left: 180px;
+      right: 0;
+      background: rgb(22,28,44);
+      z-index: 99;
+      .bank-box {
+        display: flex;
+        .bank-item {
+          width: 182px;
+          .bank-head {
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            color: #fff;
+            font-size: 12px;
+          }
+          .bank-cont {
+            position: relative;
+            width: 178px;
+            height: 102px;
+            border-width: 2px;
+            border-style: solid;
+          }
         }
       }
     }

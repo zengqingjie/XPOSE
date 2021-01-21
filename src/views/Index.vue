@@ -118,7 +118,7 @@ export default {
       }
     }
     .hegihter {
-      bottom: 180px;
+      bottom: 220px;
     }
     .float-view:hover {
       background: rgb(22,44,55);

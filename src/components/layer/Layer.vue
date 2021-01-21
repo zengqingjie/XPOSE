@@ -611,7 +611,7 @@ export default {
     .right-view {
       position: relative;
       width: 320px;
-      height: calc(100% - 128px);
+      height: calc(100% - 148px);
       background: rgb(22,28,44);
       border-left: 1px solid #000;
       .params-type {

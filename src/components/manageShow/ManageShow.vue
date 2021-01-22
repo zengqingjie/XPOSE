@@ -608,7 +608,7 @@ export default {
       const vm = this;
       $('.container-view .container-component').draggable({
         connectToSortable: '.container-view',
-        containment: [0,0,Infinity,Infinity],
+        containment: [88,66,Infinity,Infinity],
         scroll: false,
         handle: '.container-header',
         zIndex: 100,

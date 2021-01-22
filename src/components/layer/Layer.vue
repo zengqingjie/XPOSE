@@ -398,7 +398,7 @@ export default {
       bankList: [
         {
           id: 'bank1',
-          headColor: '#4F1633'
+          headColor: '#4F1633',
         },
         {
           id: 'bank2',
@@ -528,8 +528,8 @@ export default {
     background: rgb(27,36,54);
     color: #fff;
     .left-view {
-      position: absolute;
-      left: 0;
+      // position: absolute;
+      // left: 0;
       width: 180px;
       height: 100%;
       background: rgb(22,28,44);
@@ -606,6 +606,7 @@ export default {
         position: relative;
         flex: 1;
         background: rgb(18, 24 36);
+        cursor: move;
       }
     }
     .right-view {

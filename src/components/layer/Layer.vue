@@ -217,42 +217,42 @@
           <div class="params-style-input">
             <span>网络URL</span>
             <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
-            <div class="net-set">设置</div>
+            <div :class="(radio== '2' && picValue) ? 'net-set' : 'default'">设置</div>
           </div>
           <div class="params-style-input">
             <span>网络URL</span>
             <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
-            <div class="net-set">设置</div>
+            <div :class="(radio== '2' && picValue == '4' || picValue == '8') ? 'net-set' : 'default'">设置</div>
           </div>
           <div class="params-style-input">
             <span>网络URL</span>
             <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
-            <div class="net-set">设置</div>
+            <div :class="(radio== '2' && picValue == '4' || picValue == '8') ? 'net-set' : 'default'">设置</div>
           </div>
           <div class="params-style-input">
             <span>网络URL</span>
             <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
-            <div class="net-set">设置</div>
+            <div :class="(radio== '2' && picValue == '4' || picValue == '8') ? 'net-set' : 'default'">设置</div>
           </div>
           <div class="params-style-input">
             <span>网络URL</span>
             <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
-            <div class="net-set">设置</div>
+            <div :class="(radio== '2' && picValue == '8') ? 'net-set' : 'default'">设置</div>
           </div>
           <div class="params-style-input">
             <span>网络URL</span>
             <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
-            <div class="net-set">设置</div>
+            <div :class="(radio== '2' && picValue == '8') ? 'net-set' : 'default'">设置</div>
           </div>
           <div class="params-style-input">
             <span>网络URL</span>
             <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
-            <div class="net-set">设置</div>
+            <div :class="(radio== '2' && picValue == '8') ? 'net-set' : 'default'">设置</div>
           </div>
           <div class="params-style-input">
             <span>网络URL</span>
             <input type="text" class="network-url" :disabled="radio=='2' ? false : true">
-            <div class="net-set">设置</div>
+            <div :class="(radio== '2' && picValue == '8') ? 'net-set' : 'default'">设置</div>
           </div>
         </div>
         <div v-if="typeIndex == 3">
@@ -749,6 +749,19 @@ export default {
             width: 48px;
             height: 24px;
             background: #1ABC9C;
+            margin-left: 8px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+          }
+          > .default {
+            width: 48px;
+            height: 24px;
+            background: #ccc;
             margin-left: 8px;
             border-radius: 12px;
             display: flex;

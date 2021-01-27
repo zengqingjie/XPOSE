@@ -28,12 +28,23 @@
           </div>
         </div>
         <div v-if="leftIndex == 1"></div>
-        <div v-if="leftIndex == 2"></div>
+        <div v-if="leftIndex == 2">
+          <div
+            class="signal-item"
+            v-for="(item, index) in signalList"
+            :key="item.id"
+            :class="[index % 2 ? 'deep' : 'shallow', signalId == item.id ? 'show' : '']"
+          >
+            <span>{{index + 1}}</span>
+            <img src="../../assets/default/DVI.png" alt="">
+            <span>{{item.label}}</span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="layer-cont">
       <div class="container-box">
-        <Container
+        <LayerContainer
           v-for="(item, index) in containerList" :key="index"
           :cItem="item"
           :index="index"
@@ -348,7 +359,7 @@
 
 <script>
 import $ from "jquery";
-import Container from '@/components/container/Container';
+import LayerContainer from '@/components/container/LayerContainer';
 import { mapState } from 'vuex';
 export default {
   props: ['showInfo', 'nowMenuId'],
@@ -358,7 +369,8 @@ export default {
       typeIndex: 0, // 右侧菜单参数类型
       containerList: [], // 容器
       layerList: [], // 图层
-      sourceList: [], // 信号
+      signalList: [], // 信号
+      signalId: '',
       selectedContainer: null,
       positionX: '',
       positionY: '',
@@ -460,11 +472,11 @@ export default {
           id: 'bank16',
           headColor: '#522557'
         }
-      ]
+      ],
     }
   },
   components: {
-    Container
+    LayerContainer
   },
   mounted() {
     // 标识当前操作的容器
@@ -477,6 +489,45 @@ export default {
       this.$store.commit('setShareContainerList', this.containerList);
     }
     this.draggableInit();
+
+    const signalList = [
+      {
+        id: 'XH_001',
+        type: 'DVI',
+        label: '1920*1080@60',
+      },
+      {
+        id: 'XH_002',
+        type: 'HDMI',
+        label: '1920*1080@60',
+      },
+      {
+        id: 'XH_003',
+        type: 'SDI',
+        label: '1920*1080@60',
+      },
+      {
+        id: 'XH_004',
+        type: 'HDMI2.0',
+        label: '1920*1080@60',
+      },
+      {
+        id: 'XH_005',
+        type: 'RS1',
+        label: '1920*1080@60',
+      },
+      {
+        id: 'XH_006',
+        type: 'HDBaseT',
+        label: '1920*1080@60',
+      },
+      {
+        id: 'XH_007',
+        type: 'H264',
+        label: '1920*1080@60',
+      },
+    ];
+    this.signalList = signalList;
   },
   computed: {
     ...mapState([
@@ -595,6 +646,28 @@ export default {
           height: 16px;
           cursor: pointer;
         }
+      }
+      
+      .signal-item {
+        display: flex;
+        align-items: center;
+        padding: 6px 8px;
+        color: #999;
+        font-size: 12px;
+        img {
+          display: block;
+          margin: 0 16px;
+        }
+      }
+      .signal-item:hover {
+        color: #fff;
+        background: #162C37;
+      }
+      .deep {
+        background: #161C2C;
+      }
+      .shallow {
+        background: #181F30;
       }
     }
     .layer-cont {

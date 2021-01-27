@@ -12,17 +12,6 @@
           cItem.customFeature.row * 1080
         }})</span
       >
-      <div class="right-view">
-        <div @click="zoom(cItem, -1)">-</div>
-        <div @click="zoom(cItem, 1)">+</div>
-        <div
-          v-longpress="deleteContainer"
-          class="delete-container"
-          @click="deleteContainerItem(cItem)"
-        >
-          x
-        </div>
-      </div>
     </div>
     <div class="displayer-box" :parentId="cItem.id">
       <Displayer
@@ -88,41 +77,14 @@ export default {
     },
   },
   methods: {
-    // 容器缩放
-    zoom(container, zoom) {
-      this.$root.bus.$emit('setZoom', {container, zoom});
-    },
     emitSetContainer(container) {
       this.$root.bus.$emit('setSelectedContainer', container);
     },
-    // 点击删除容器
-    deleteContainerItem(obj) {
-      const vm = this;
-      vm.$confirm("是否删除该容器?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      })
-        .then(() => {
-          vm.$root.bus.$emit("deleteContainer", obj);
-        })
-        .catch(() => {
-          vm.$message({
-            type: "info",
-            message: "已取消删除",
-          });
-        });
-    },
-    // 长按删除容器
-    deleteContainer() {
-
-    },
+    
     
   },
   created() {},
-  mounted() {
-    
-  },
+  mounted() {},
   watch: {
   },
 };
@@ -148,18 +110,6 @@ export default {
       white-space: nowrap;
       font-size: 12px;
       font-weight: bold;
-    }
-    .right-view {
-      width: 72px;
-      display: flex;
-      align-items: center;
-      font-size: 16px;
-      font-weight: bold;
-      div {
-        text-align: center;
-        flex: 1;
-        cursor: pointer;
-      }
     }
   }
   > .displayer-view {

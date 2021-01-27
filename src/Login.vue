@@ -51,9 +51,9 @@ export default {
   },
   methods: {
     loginEvent() {
-      // Api.login({n: 1, m: 22}).then(res => {
-      //   console.log(res);
-      // });
+      Api.login({m: '1', n: '22'}).then(res => {
+        console.log(res);
+      });
       // return;
       this.$router.push({path: '/index'})
     }

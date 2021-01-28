@@ -1,21 +1,16 @@
 <template>
   <div
-    class="displayer-view"
+    class="signal-view"
     :style="setStyle"
     :class="deviceId == dMsg.id ? 'light' : ''"
     :parentId="dMsg.parentId"
     :id="dMsg.id"
     v-if="dMsg"
-    @click="clickDisplayer(dMsg.id)"
   >
-    <div>显示器{{ dMsg.displayId }}</div>
-    <div v-if="dMsg.position"><span>x:{{dMsg.position.left}}</span><span>y:{{dMsg.position.top}}</span></div>
-    <div>{{dMsg.name}}</div>
-    <span
-      class="delete-displayer"
-      @click.stop="deleteDisplayer(dMsg.id, dMsg.parentId)"
-      >x</span
-    >
+    <div class="signal-num">
+      <span>2</span>
+      <div>[{{dMsg.displayId}}]</div>
+    </div>
   </div>
 </template>
 
@@ -79,27 +74,29 @@ export default {
 </script>
 
 <style scoped lang='less'>
-.displayer-view {
-  // position: absolute;
+.signal-view {
   padding: 12px;
-  background: rgb(120, 190, 252);
+  background: rgba(255, 255, 255, 0.1);
   border: 1px solid #666;
   box-sizing: border-box;
   font-size: 12px;
-  .delete-displayer {
-    display: none;
+  .signal-num {
     position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 24px;
-    height: 24px;
-    line-height: 24px;
-    text-align: center;
-    background: rgba(0, 0, 0, 0.2);
-    color: #333;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
+    display: flex;
+    width: 28%;
+    padding: 0 8px;
+    align-items: center;
+    bottom: 6px;
+    right: 6px;
+    color: #bbb;
+    background: #4A6D8C;
+    span {
+      font-size: 18px;
+    }
+    div {
+      margin-left: 8px;
+      font-size: 12px;
+    }
   }
 }
 .light {

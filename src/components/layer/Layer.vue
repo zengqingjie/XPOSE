@@ -9,7 +9,7 @@
         </div>
       </div>
       <div class="params-cont">
-        <div v-if="leftIndex == 0">
+        <div v-show="leftIndex == 0">
           <div
             v-for="(item, index) in containerList"
             :key="item.id"
@@ -27,17 +27,19 @@
             </div>
           </div>
         </div>
-        <div v-if="leftIndex == 1"></div>
-        <div v-if="leftIndex == 2">
-          <div
-            class="signal-item"
-            v-for="(item, index) in signalList"
-            :key="item.id"
-            :class="[index % 2 ? 'deep' : 'shallow', signalId == item.id ? 'show' : '']"
-          >
-            <span>{{index + 1}}</span>
-            <img src="../../assets/default/DVI.png" alt="">
-            <span>{{item.label}}</span>
+        <div v-show="leftIndex == 1"></div>
+        <div v-show="leftIndex == 2">
+          <div class="signal-box">
+            <div
+              class="signal-item"
+              v-for="(item, index) in signalList"
+              :key="item.id"
+              :class="[index % 2 ? 'deep' : 'shallow', signalId == item.id ? 'show' : '']"
+            >
+              <span>{{index + 1}}</span>
+              <img src="../../assets/default/DVI.png" alt="">
+              <span>{{item.label}}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -348,6 +350,7 @@
         <div class="bank-item"
           v-for="(item, index) in bankList"
           :key="index"
+          @click="changeBank(item, index)"
         >
           <div class="bank-head" :style="{background:item && item.headColor}">bank{{index + 1}}</div>
           <div class="bank-cont" :style="{borderColor:item && item.headColor}"></div>
@@ -365,7 +368,7 @@ export default {
   props: ['showInfo', 'nowMenuId'],
   data() {
     return {
-      leftIndex: 0, // 容器、图层、信号参数
+      leftIndex: 2, // 容器、图层、信号参数
       typeIndex: 0, // 右侧菜单参数类型
       containerList: [], // 容器
       layerList: [], // 图层
@@ -473,23 +476,13 @@ export default {
           headColor: '#522557'
         }
       ],
+      bankIndex: 0,
     }
   },
   components: {
     LayerContainer
   },
-  mounted() {
-    // 标识当前操作的容器
-    this.$root.bus.$off('setSelectedContainer');
-    this.$root.bus.$on('setSelectedContainer', (data) => {
-      this.selectedContainer = data;
-    });
-    this.containerList = this.$store.state.showVessels || [];
-    if(this.containerList.length > 0) {
-      this.$store.commit('setShareContainerList', this.containerList);
-    }
-    this.draggableInit();
-
+  created() {
     const signalList = [
       {
         id: 'XH_001',
@@ -528,6 +521,21 @@ export default {
       },
     ];
     this.signalList = signalList;
+    this.bankList.some(item => {
+      item.containers = this.deepCopy(this.$store.state.showVessels);
+    });
+    this.containerList = this.bankList[0].containers;
+  },
+  mounted() {
+    // 标识当前操作的容器
+    this.$root.bus.$off('setSelectedContainer');
+    this.$root.bus.$on('setSelectedContainer', (data) => {
+      this.selectedContainer = data;
+    });
+
+    this.draggableInit();
+    this.signalInitDraggable();
+    this.signalInitDroppable();
   },
   computed: {
     ...mapState([
@@ -536,6 +544,12 @@ export default {
     ]),
   },
   methods: {
+    // 克隆
+    deepCopy(obj) {
+      let _obj = JSON.stringify(obj);
+      let obj2 = JSON.parse(_obj);
+      return obj2;
+    },
     paramsEvent(num) {
       this.leftIndex = num;
     },
@@ -545,6 +559,11 @@ export default {
     },
     hideRightView() {
       this.$root.bus.$emit('hideRightView');
+    },
+    changeBank (bank, index){
+      console.log(bank);
+      this.containerList = bank.containers;
+      this.bankIndex = index;
     },
     // 容器显示与否
     eyeStatus(target) {
@@ -565,8 +584,30 @@ export default {
         stop: function(event, ui) {
          
         }
-      })
+      });
     },
+    // 信号拖拽
+    signalInitDraggable() {
+      const vm = this;
+      $('.signal-item').draggable({
+        helper: 'clone',
+        stop: function(event, ui) {
+          // console.log(1);
+        }
+      });
+    },
+    // 信号放置
+    signalInitDroppable() {
+      const vm = this;
+      $(".signal-model .signal-view").droppable({
+        accept: '.signal-item',
+        drop: function(event, ui) {
+          console.log($(this));
+          console.log(event);
+          console.log(ui);
+        }
+      })
+    }
   },
 }
 </script>
@@ -579,9 +620,7 @@ export default {
     background: rgb(27,36,54);
     color: #fff;
     .left-view {
-      // position: absolute;
-      // left: 0;
-      width: 180px;
+      width: 200px;
       height: 100%;
       background: rgb(22,28,44);
       border-left: 1px solid #000;
@@ -589,14 +628,14 @@ export default {
       .params-type {
         position: relative;
         overflow: hidden;
-        width: 180px;
+        width: 200px;
         height: 24px;
         border-top: 1px solid #000;
         .flex-box {
           display: flex;
           div {
             display: inline-block;
-            width: 60px;
+            width: 33.3%;
             height: 24px;
             line-height: 24px;
             flex-shrink: 0;
@@ -654,6 +693,7 @@ export default {
         padding: 6px 8px;
         color: #999;
         font-size: 12px;
+        cursor: move;
         img {
           display: block;
           margin: 0 16px;
@@ -871,11 +911,11 @@ export default {
       }
     }
     .bank-view {
-      overflow-y: auto;
+      overflow-x: auto;
       position: absolute;
       height: 148px;
       bottom: 0;
-      left: 180px;
+      left: 200px;
       right: 0;
       background: rgb(22,28,44);
       z-index: 99;

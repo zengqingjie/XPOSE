@@ -36,8 +36,19 @@
               :key="item.id"
               :class="[index % 2 ? 'deep' : 'shallow', signalId == item.id ? 'show' : '']"
             >
-              <span>{{index + 1}}</span>
-              <img src="../../assets/default/DVI.png" alt="">
+              <span class="order">{{index + 1}}</span>
+              <div class="signal-icon">
+                <img src="../../assets/default/H264.png" alt="" v-if="item.type == 'H264'">
+                <img src="../../assets/default/HDBaseT.png" alt="" v-if="item.type == 'HDBaseT'">
+                <img src="../../assets/default/CVBS.png" alt="" v-if="item.type == 'CVBS'">
+                <img src="../../assets/default/SDI_12G.png" alt="" v-if="item.type == 'SDI_12G'">
+                <img src="../../assets/default/DVI.png" alt="" v-if="item.type == 'DVI'">
+                <img src="../../assets/default/HDMI1.4.png" alt="" v-if="item.type == 'HDMI1.4'">
+                <img src="../../assets/default/HDMI2.0.png" alt="" v-if="item.type == 'HDMI2.0'">
+                <img src="../../assets/default/DP1.2.png" alt="" v-if="item.type == 'DP1.2'">
+                <img src="../../assets/default/HDMI.png" alt="" v-if="item.type == 'HDMI'">
+                <img src="../../assets/default/SDI_D.png" alt="" v-if="item.type == 'SDI_D'">
+              </div>
               <span>{{item.label}}</span>
             </div>
           </div>
@@ -353,7 +364,9 @@
           @click="changeBank(item, index)"
         >
           <div class="bank-head" :style="{background:item && item.headColor}">bank{{index + 1}}</div>
-          <div class="bank-cont" :style="{borderColor:item && item.headColor}"></div>
+          <div class="bank-cont" :style="{borderColor:item && item.headColor}">
+            
+          </div>
         </div>
       </div>
     </div>
@@ -486,37 +499,52 @@ export default {
     const signalList = [
       {
         id: 'XH_001',
-        type: 'DVI',
+        type: 'H264',
         label: '1920*1080@60',
       },
       {
         id: 'XH_002',
-        type: 'HDMI',
-        label: '1920*1080@60',
-      },
-      {
-        id: 'XH_003',
-        type: 'SDI',
-        label: '1920*1080@60',
-      },
-      {
-        id: 'XH_004',
-        type: 'HDMI2.0',
-        label: '1920*1080@60',
-      },
-      {
-        id: 'XH_005',
-        type: 'RS1',
-        label: '1920*1080@60',
-      },
-      {
-        id: 'XH_006',
         type: 'HDBaseT',
         label: '1920*1080@60',
       },
       {
+        id: 'XH_003',
+        type: 'CVBS',
+        label: '1920*1080@60',
+      },
+      {
+        id: 'XH_004',
+        type: 'SDI_12G',
+        label: '1920*1080@60',
+      },
+      {
+        id: 'XH_005',
+        type: 'DVI',
+        label: '1920*1080@60',
+      },
+      {
+        id: 'XH_006',
+        type: 'HDMI1.4',
+        label: '1920*1080@60',
+      },
+      {
         id: 'XH_007',
-        type: 'H264',
+        type: 'HDMI2.0',
+        label: '1920*1080@60',
+      },
+      {
+        id: 'XH_008',
+        type: 'DP1.2',
+        label: '1920*1080@60',
+      },
+      {
+        id: 'XH_009',
+        type: 'HDMI',
+        label: '1920*1080@60',
+      },
+      {
+        id: 'XH_010',
+        type: 'SDI_D',
         label: '1920*1080@60',
       },
     ];
@@ -525,6 +553,7 @@ export default {
       item.containers = this.deepCopy(this.$store.state.showVessels);
     });
     this.containerList = this.bankList[0].containers;
+    console.log(this.bankIndex);
   },
   mounted() {
     // 标识当前操作的容器
@@ -694,9 +723,15 @@ export default {
         color: #999;
         font-size: 12px;
         cursor: move;
-        img {
-          display: block;
-          margin: 0 16px;
+        .order {
+          width: 16px;
+        }
+        .signal-icon {
+          width: 50px;
+          margin-right: 10px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
       }
       .signal-item:hover {

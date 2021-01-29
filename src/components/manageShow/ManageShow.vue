@@ -397,7 +397,6 @@ export default {
     // 容器缩放
     this.$root.bus.$off('setZoom');
     this.$root.bus.$on('setZoom', (data) => {
-      console.log(data.zoom);
       let container = data.container;
       const {col, row, wBase, hBase, zoom} = container.customFeature;
       let displayList = container.content || [];
@@ -409,11 +408,9 @@ export default {
           h: startHeight
         })
       })
-
       const scaleVal = 20;
       let resizeWidth = $('#' + container.id).width() + scaleVal * col *  data.zoom;
-      console.log(resizeWidth / wBase * col);
-      let resizeHeight = (hBase * row + 24) * (resizeWidth / wBase * col);
+      let resizeHeight = startHeight + row * 12  * data.zoom;
       console.log(resizeWidth, resizeHeight);
       container.content.forEach(item => {
         item.resetPosition({
@@ -421,7 +418,6 @@ export default {
           h: resizeHeight
         })
       })
-      console.log(container);
       zoom.xRadio = resizeWidth / (wBase * col);
       zoom.yRadio = (resizeHeight - 24) / (hBase * row);
       container.content.some(item => {

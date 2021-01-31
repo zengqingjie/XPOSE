@@ -1,0 +1,150 @@
+<template>
+  <div
+    class="container-component"
+    v-if="cItem && cItem.templateId"
+    :style="setContainerStyle"
+    @mousedown="emitSetContainer(cItem)"
+    :id="cItem.id"
+  >
+    <div class="container-header">
+      <span
+        >{{ index + 1 }}--(W:{{ cItem.customFeature.col * 1920 }} H:{{
+          cItem.customFeature.row * 1080
+        }})</span
+      >
+    </div>
+    <div class="displayer-box" :parentId="cItem.id">
+      <Displayer
+        v-for="displayer in cItem.content"
+        :key="displayer.id"
+        :dMsg="displayer"
+        :deviceId="deviceId"
+        :size="setDisplayerItem"
+        :positionZoom="cItem.positionZoom"
+      />
+    </div>
+    <div class="signal-model">
+      <Signal
+        v-for="displayer in cItem.content"
+        :key="displayer.id"
+        :dMsg="displayer"
+        :deviceId="deviceId"
+        :size="setDisplayerItem"
+        :positionZoom="cItem.positionZoom"
+      />
+    </div>
+  </div>
+</template>
+
+<script>
+import Displayer from "@/components/displayer/Displayer";
+import Signal from '@/components/displayer/Signal';
+import $ from "jquery";
+export default {
+  props: {
+    cItem: {
+      type: Object,
+    },
+    index: {
+      type: Number | String,
+      default: -1,
+    },
+    deviceId: {
+      type: Number | String,
+      default: ''
+    }
+  },
+  components: {
+    Displayer,
+    Signal
+  },
+  data() {
+    return {
+    };
+  },
+  computed: {
+    // 容器尺寸
+    setContainerStyle() {
+      const { position } = this.cItem;
+      const { col, row, wBase, hBase, zoom } = this.cItem.customFeature;
+      const width = col * wBase * zoom.xRadio + "px";
+      const height = row * hBase * zoom.yRadio + 24 + "px";
+      return {
+        width: width,
+        height: height,
+        top: position.top ? position.top + "px" : 0,
+        left: position.left ? position.left + "px" : 0,
+      };
+    },
+    setDisplayerItem() {
+      const { col, row, wBase, hBase, zoom } = this.cItem.customFeature;
+      const width = wBase;
+      const height = hBase;
+      return {
+        width: width * zoom.xRadio,
+        height: height * zoom.yRadio,
+        zoom: this.cItem.customFeature.zoom
+      };
+    },
+  },
+  methods: {
+    emitSetContainer(container) {
+      this.$root.bus.$emit('setSelectedContainer', container);
+    },
+    
+    
+  },
+  created() {},
+  mounted() {},
+  watch: {
+  },
+};
+</script>
+
+<style scoped lang="less">
+.container-component {
+  display: inline-flex;
+  position: absolute;
+  border: 2px solid rgb(0, 196, 172);
+  flex-direction: column;
+  .container-header {
+    height: 24px;
+    background: rgb(0, 196, 172);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
+    cursor: move;
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: bold;
+    }
+  }
+  > .displayer-view {
+    flex: 1;
+    background: rgb(63, 69, 94);
+  }
+  .displayer-box {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    .displayer-box-child {
+      position: relative;
+      box-sizing: border-box;
+    }
+  }
+  .signal-model {
+    position: absolute;
+    background: rgba(23, 78, 80, 0.2);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 24px;
+    z-index: 99;
+  }
+}
+</style>

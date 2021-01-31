@@ -36,6 +36,7 @@
 </template>
 
 <script>
+import Api from '@/utils/api';
 export default {
   data() {
     return {
@@ -50,6 +51,10 @@ export default {
   },
   methods: {
     loginEvent() {
+      Api.login({m: '1', n: '22'}).then(res => {
+        console.log(res);
+      });
+      // return;
       this.$router.push({path: '/index'})
     }
   }

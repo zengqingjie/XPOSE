@@ -34,7 +34,7 @@
       :class="menuInfo && (menuInfo.id =='004' || menuInfo.id =='005') ? 'hegihter' : ''"
       @click="setParams"
     >
-      <i class="iconfont iconfloat_set"></i>
+      <img src="../assets/setting_none.png" alt="">
     </div>
   </div>
 </template>
@@ -111,12 +111,14 @@ export default {
       align-items: center;
       color: #fff;
       cursor: pointer;
-      .iconfont {
-        font-size: 32px;
+      img {
+        display: block;
+        width: 28px;
+        height: 28px;
       }
     }
     .hegihter {
-      bottom: 180px;
+      bottom: 220px;
     }
     .float-view:hover {
       background: rgb(22,44,55);

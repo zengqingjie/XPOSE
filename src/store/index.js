@@ -5,7 +5,12 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    editContainer: {}, // 当前编辑的容器
+    editContainer: {
+      zoom: {
+        xRadio: 1,
+        yRadio: 1
+      }
+    }, // 当前编辑的容器
     containers: ['defaultDevice'], // 拓扑图拖出的设备
     showVessels: [], // 显示容器
     shareVessels: [], // 共享容器 （图层管理 && 场景管理）
@@ -26,20 +31,20 @@ export default new Vuex.Store({
       { id: 14, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
       { id: 15, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
       { id: 16, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
-      { id: 17, name: 'HDMI 2.0', type: 'HDMI2.0', width: 1920, height:1080, status: 'disable' },
-      { id: 19, name: 'HDMI 2.0', type: 'HDMI2.0', width: 1920, height:1080, status: 'disable' },
-      { id: 21, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable' },
-      { id: 22, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable' },
-      { id: 23, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable' },
-      { id: 24, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable' },
+      { id: 17, name: 'HDMI 2.0', type: 'HDMI2.0', width: 1920, height:1080, status: 'disable', orChange: 0 },
+      { id: 19, name: 'HDMI 2.0', type: 'HDMI2.0', width: 1920, height:1080, status: 'disable', orChange: 0 },
+      { id: 21, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable', orChange: 0 },
+      { id: 22, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable', orChange: 0 },
+      { id: 23, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable', orChange: 0 },
+      { id: 24, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable', orChange: 0 },
       { id: 25, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
       { id: 26, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
       { id: 27, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
       { id: 28, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
-      { id: 29, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
-      { id: 30, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
-      { id: 31, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
-      { id: 32, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable' },
+      { id: 29, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable', orChange: 0 },
+      { id: 30, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable', orChange: 0 },
+      { id: 31, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable', orChange: 0 },
+      { id: 32, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable', orChange: 0 },
     ], // 设备列表
     bankList: [
       {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}
@@ -61,6 +66,9 @@ export default new Vuex.Store({
     // 设置显示器列表
     setDisplayerList(state, list) {
       state.displayerList = list;
+    },
+    setEditContainer(state, edit) {
+      state.editContainer = edit;
     }
   },
   actions: {
@@ -79,5 +87,11 @@ export default new Vuex.Store({
   },
   modules: {
   },
-  getters: {}
+  getters: {
+    getCurEditContainer(state) {
+      return state.showVessels.find(
+        item => item.id === state.editContainer.id
+      )
+    }
+  }
 })

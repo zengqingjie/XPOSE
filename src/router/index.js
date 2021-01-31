@@ -22,18 +22,6 @@ const routes = [
     name: 'Index',
     component: () => import('@/views/Index.vue')
   },
-  // 拖拽组件
-  {
-    path: '/tz',
-    name: 'Tz',
-    component: () => import('../Tz.vue')
-  },
-  // 自由拖拽
-  {
-    path: '/free',
-    name: 'Free',
-    component: () => import('../FreeDom.vue')
-  }
 ]
 
 const router = new VueRouter({

@@ -1,15 +1,14 @@
-import Vue from 'vue'
+import Vue from 'vue';
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
-import 'vue-draggable-resizable-gorkys/dist/VueDraggableResizable.css'
-import App from './App.vue'
-import router from './router'
-import store from './store'
-import VueDND from 'awe-dnd';
+import App from './App.vue';
+import router from './router';
+import store from './store';
+import 'jquery-ui-dist/jquery-ui';
+import 'jquery-ui-dist/jquery-ui.min.css';
 
 Vue.config.productionTip = false;
 Vue.use(ElementUI);
-Vue.use(VueDND);
 
 new Vue({
   router,
@@ -53,8 +52,8 @@ Vue.directive('longpress', {
     if (vNode.elm.className == 'delete-container') {
       let pressTimer = null;
       let start = (e) => {
-        if(e.type === 'click') return;
-        if(pressTimer === null) {
+        if (e.type === 'click') return;
+        if (pressTimer === null) {
           pressTimer = setTimeout(() => {
             // 执行函数
             handler();
@@ -63,27 +62,12 @@ Vue.directive('longpress', {
       }
 
       let cancel = () => {
-        if(pressTimer !== null) {
+        if (pressTimer !== null) {
           clearTimeout(pressTimer);
         }
         pressTimer = null;
       }
 
-      // const animation = (num) => {
-      //   e.style['background'] = 'red';
-      //   clearInterval(e.tid);
-      //   let opac = num;
-      //   e.tid = setInterval(() => {
-      //     opac = opac < 0 ? opac + 0.3 : 1;
-      //     e.style['opacity'] = opac;
-      //     if (opac > 1) {
-      //       opac = 1;
-      //       e.style['opacity'] = opac;
-      //       clearInterval(e.tid);
-      //     }
-      //   }, 3000);
-        
-      // }
 
       const handler = (e) => {
         binding.value(e);

@@ -105,6 +105,8 @@ export default {
   methods: {
     // 开始注册
     register() {
+      this.$router.push({name: 'Login'});
+      return;
       if (!this.name) {
         this.$message.error('名字不能为空');
         return;

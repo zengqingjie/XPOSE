@@ -19,14 +19,6 @@
           </div>
         </div>
       </div>
-<<<<<<< HEAD
-      <div class="container-box" v-if="containerList.length > 0"> 
-        <Container
-          v-for="(item, index) in containerList" :key="index"
-          :item="item"
-          :index="index"
-          :id="item.id"
-=======
       <div class="container-box" v-if="showVessels.length > 0">
         <Container
           v-for="(item, index) in showVessels" :key="index"
@@ -35,7 +27,6 @@
           :id="item.id"
           :style="{borderColor: item.id == (selectedContainer && selectedContainer.id) ? 'red' : ''}"
           :deviceId="selectedDisplayerId"
->>>>>>> fe5284b69298b635fc7e224efe058d521a2f9de3
         />
       </div>
 
@@ -85,19 +76,8 @@
             </div>
           </div>
         </div>
-<<<<<<< HEAD
-        <div v-if="typeIndex == 1">
-          <draggable
-            group="displayers"
-            class="displayer"
-            :sort="false"
-            :move="onMove"
-            @end="onEnd"
-          >
-=======
         <div v-show="typeIndex == 1" class="box">
           <div class="displayer">
->>>>>>> fe5284b69298b635fc7e224efe058d521a2f9de3
             <div
               class="displayer-item"
               :class="[index % 2 ? 'deep' :'shallow', item.status == 'disable' ? 'disable' : '', clickItemId == item.id ? 'show' : '']"

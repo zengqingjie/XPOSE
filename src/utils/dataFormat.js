@@ -1,5 +1,6 @@
 import { Windows } from "../components/widget/window.model";
 import { Display } from "../components/widget/display.model";
+import { Signal } from "../components/widget/layer.model";
 
 export const dataFormat = {
 
@@ -19,6 +20,9 @@ export const dataFormat = {
         break;
       case "display":
         widget = new Display(congfig);
+        break;
+      case "signal":
+        widget = new Signal(congfig);
         break;
       default:
         break;

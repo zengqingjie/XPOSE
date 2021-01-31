@@ -365,7 +365,13 @@
         >
           <div class="bank-head" :style="{background:item && item.headColor}">bank{{index + 1}}</div>
           <div class="bank-cont" :style="{borderColor:item && item.headColor}">
-            
+            <div
+              class="signalContainer-item"
+              v-for="(cItem) in item.containers"
+              :key="cItem.id"
+              :style="setSignalStyle(cItem)"
+            >
+            </div>
           </div>
         </div>
       </div>
@@ -377,6 +383,7 @@
 import $ from "jquery";
 import LayerContainer from '@/components/container/LayerContainer';
 import { mapState } from 'vuex';
+import { dataFormat } from '../../utils/dataFormat';
 export default {
   props: ['showInfo', 'nowMenuId'],
   data() {
@@ -551,9 +558,9 @@ export default {
     this.signalList = signalList;
     this.bankList.some(item => {
       item.containers = this.deepCopy(this.$store.state.showVessels);
+      this.$set(item.containers, 'signalList', []);
     });
     this.containerList = this.bankList[0].containers;
-    console.log(this.bankIndex);
   },
   mounted() {
     // 标识当前操作的容器
@@ -585,6 +592,20 @@ export default {
     // 容器参数类型切换
     typeSelect(num) {
       this.typeIndex = num;
+    },
+    // 设置bank内显示区域样式
+    setSignalStyle(item) {
+      const { row, col, wBase, hBase } = item.customFeature;
+      const { left, top } = item.position;
+      const width = col * wBase / 10;
+      const height = row * hBase / 10;
+      return {
+        'width': width + 'px',
+        'height': height + 'px',
+        'top': top / 10 + 'px',
+        'left': left / 10
+         + 'px'
+      }
     },
     hideRightView() {
       this.$root.bus.$emit('hideRightView');
@@ -631,9 +652,15 @@ export default {
       $(".signal-model .signal-view").droppable({
         accept: '.signal-item',
         drop: function(event, ui) {
-          console.log($(this));
-          console.log(event);
-          console.log(ui);
+          // console.log($(this));
+          // console.log(event);
+          // console.log(ui);
+          const targetObj = dataFormat.getWidget($(this).attr('id'));
+          const singal = dataFormat.addWidget('signal', {
+            position: targetObj.position
+          });
+          console.log(singal);
+          vm.bankList[vm.bankIndex].containers.bankList .push(singal);
         }
       })
     }
@@ -971,6 +998,10 @@ export default {
             height: 102px;
             border-width: 2px;
             border-style: solid;
+            .signalContainer-item {
+              position: absolute;
+              background: rgba(255, 255, 255, 0.4);
+            }
           }
         }
       }

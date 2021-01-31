@@ -23,22 +23,6 @@
           x
         </div>
       </div>
-<<<<<<< HEAD
-    </vdr>
-
-    <draggable
-      group="displayers"
-      class="displayer-box"
-      :style="displayerBoxStyle"
-      v-if="itemObj.displayerList"
-      animation="1000"
-    > 
-      <Displayer
-        v-for="dItem in itemObj.displayerList"
-        :key="dItem.id"
-        :dMsg="dItem"
-        :data-id="dItem.parentId"
-=======
     </div>
     <div class="displayer-box" :parentId="cItem.id">
       <Displayer
@@ -48,7 +32,6 @@
         :deviceId="deviceId"
         :size="setDisplayerItem"
         :positionZoom="cItem.positionZoom"
->>>>>>> fe5284b69298b635fc7e224efe058d521a2f9de3
       />
     </div>
   </div>

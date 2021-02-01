@@ -7,6 +7,8 @@ export class Signal extends Widget {
     this.name = config.name || '信号';
     this.signal = config.signal;
     this.position = config.position || null;
+    this.signalIndex = config.signalIndex || '',
+    this.signalId = config.signalId || '',
     this.customFeature = Object.assign({
       wBase: 200,
       hBase: 120,

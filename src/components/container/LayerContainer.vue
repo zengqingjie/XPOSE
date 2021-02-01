@@ -24,7 +24,7 @@
       />
     </div>
     <div class="signal-model">
-      <Signal
+      <SignalModel
         v-for="displayer in cItem.content"
         :key="displayer.id"
         :dMsg="displayer"
@@ -32,19 +32,28 @@
         :size="setDisplayerItem"
         :positionZoom="cItem.positionZoom"
       />
+      <SignalLayer
+        v-for="layer in signalLayers"
+        :key="layer.id"
+        :info="layer"
+      />
     </div>
-    
   </div>
 </template>
 
 <script>
 import Displayer from "@/components/displayer/Displayer";
-import Signal from '@/components/displayer/Signal';
+import SignalModel from '@/components/displayer/SignalModel';
+import SignalLayer from '@/components/displayer/SignalLayer';
 import $ from "jquery";
 export default {
   props: {
     cItem: {
       type: Object,
+    },
+    signalLayers: {
+      type: Array,
+      default: []
     },
     index: {
       type: Number | String,
@@ -57,7 +66,8 @@ export default {
   },
   components: {
     Displayer,
-    Signal
+    SignalModel,
+    SignalLayer
   },
   data() {
     return {
@@ -98,6 +108,9 @@ export default {
   created() {},
   mounted() {},
   watch: {
+    signalLayers(newVal, old) {
+      console.log(JSON.parse(JSON.stringify(newVal)))
+    }
   },
 };
 </script>
@@ -141,6 +154,15 @@ export default {
   .signal-model {
     position: absolute;
     background: rgba(23, 78, 80, 0.2);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 24px;
+    z-index: 99;
+  }
+  .signal-box {
+    position: absolute;
+    background: rgba(255, 255, 255, 0);
     left: 0;
     right: 0;
     bottom: 0;

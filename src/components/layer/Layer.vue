@@ -35,6 +35,8 @@
               v-for="(item, index) in signalList"
               :key="item.id"
               :class="[index % 2 ? 'deep' : 'shallow', signalId == item.id ? 'show' : '']"
+              :id="item.id"
+              :index="index"
             >
               <span class="order">{{index + 1}}</span>
               <div class="signal-icon">
@@ -60,6 +62,7 @@
         <LayerContainer
           v-for="(item, index) in containerList" :key="index"
           :cItem="item"
+          :signalLayers="layerList"
           :index="index"
           :id="item.id"
           :style="{borderColor: item.id == (selectedContainer && selectedContainer.id) ? 'red' : ''}"
@@ -558,7 +561,7 @@ export default {
     this.signalList = signalList;
     this.bankList.some(item => {
       item.containers = this.deepCopy(this.$store.state.showVessels);
-      this.$set(item.containers, 'signalList', []);
+      this.$set(item, 'signalList', []);
     });
     this.containerList = this.bankList[0].containers;
   },
@@ -654,13 +657,15 @@ export default {
         drop: function(event, ui) {
           // console.log($(this));
           // console.log(event);
-          // console.log(ui);
           const targetObj = dataFormat.getWidget($(this).attr('id'));
           const singal = dataFormat.addWidget('signal', {
-            position: targetObj.position
+            signalId: $(ui.draggable[0]).attr('id'),
+            position: targetObj.position,
+            signalIndex: $(ui.draggable[0]).attr('index')
           });
-          console.log(singal);
-          vm.bankList[vm.bankIndex].containers.bankList .push(singal);
+          vm.bankList[vm.bankIndex].signalList.push(singal);
+          vm.layerList =  vm.bankList[vm.bankIndex].signalList;
+          vm.containerList = vm.bankList[vm.bankIndex].containers;
         }
       })
     }
@@ -1000,7 +1005,7 @@ export default {
             border-style: solid;
             .signalContainer-item {
               position: absolute;
-              background: rgba(255, 255, 255, 0.4);
+              background: #3F455E;
             }
           }
         }

@@ -1,5 +1,10 @@
 <template>
-  <div class="signal-layer" v-if="layerInfo" :style="setStyle">
+  <div
+    class="signal-layer"
+    v-if="layerInfo"
+    :style="setStyle"
+    :class="layerInfo.signalType ? layerInfo.signalType : ''"
+  >
     {{layerInfo && layerInfo.id}}
   </div>
 </template>
@@ -26,11 +31,13 @@ export default {
   },
   computed: {
     setStyle() {
+      console.log(this.layerInfo);
       return {
-        width: this.layerInfo.wBase + 'px',
-        height: this.layerInfo.hBase + 'px',
+        width: this.layerInfo.customFeature.wBase + 'px',
+        height: this.layerInfo.customFeature.hBase + 'px',
         left: this.layerInfo.position.left + 'px',
-        top: this.layerInfo.position.top + 'px'
+        top: this.layerInfo.position.top + 'px',
+        background: this.layerInfo.bColor
       }
     }
   },
@@ -46,5 +53,8 @@ export default {
   .signal-layer {
     position: absolute;
     z-index: 99;
+  }
+  .H264 {
+    background: rgba(96, 127, 109, 0.4);
   }
 </style>

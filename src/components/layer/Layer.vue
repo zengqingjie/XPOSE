@@ -36,6 +36,7 @@
               :key="item.id"
               :class="[index % 2 ? 'deep' : 'shallow', signalId == item.id ? 'show' : '']"
               :id="item.id"
+              :type="item.type"
               :index="index"
             >
               <span class="order">{{index + 1}}</span>
@@ -45,9 +46,9 @@
                 <img src="../../assets/default/CVBS.png" alt="" v-if="item.type == 'CVBS'">
                 <img src="../../assets/default/SDI_12G.png" alt="" v-if="item.type == 'SDI_12G'">
                 <img src="../../assets/default/DVI.png" alt="" v-if="item.type == 'DVI'">
-                <img src="../../assets/default/HDMI1.4.png" alt="" v-if="item.type == 'HDMI1.4'">
-                <img src="../../assets/default/HDMI2.0.png" alt="" v-if="item.type == 'HDMI2.0'">
-                <img src="../../assets/default/DP1.2.png" alt="" v-if="item.type == 'DP1.2'">
+                <img src="../../assets/default/HDMI1.4.png" alt="" v-if="item.type == 'HDMI14'">
+                <img src="../../assets/default/HDMI2.0.png" alt="" v-if="item.type == 'HDMI20'">
+                <img src="../../assets/default/DP1.2.png" alt="" v-if="item.type == 'DP12'">
                 <img src="../../assets/default/HDMI.png" alt="" v-if="item.type == 'HDMI'">
                 <img src="../../assets/default/SDI_D.png" alt="" v-if="item.type == 'SDI_D'">
               </div>
@@ -62,7 +63,7 @@
         <LayerContainer
           v-for="(item, index) in containerList" :key="index"
           :cItem="item"
-          :signalLayers="layerList"
+          :signalLayers="item.signalList"
           :index="index"
           :id="item.id"
           :style="{borderColor: item.id == (selectedContainer && selectedContainer.id) ? 'red' : ''}"
@@ -374,7 +375,14 @@
               :key="cItem.id"
               :style="setSignalStyle(cItem)"
             >
+              <div
+                class="signal-layer"
+                v-for="layer in cItem.signalList"
+                :key="layer.id"
+                :style="setSignalStyle(layer)"
+              ></div>
             </div>
+            <div class="sel-model" v-if="index == bankIndex"></div>
           </div>
         </div>
       </div>
@@ -534,17 +542,17 @@ export default {
       },
       {
         id: 'XH_006',
-        type: 'HDMI1.4',
+        type: 'HDMI14',
         label: '1920*1080@60',
       },
       {
         id: 'XH_007',
-        type: 'HDMI2.0',
+        type: 'HDMI20',
         label: '1920*1080@60',
       },
       {
         id: 'XH_008',
-        type: 'DP1.2',
+        type: 'DP12',
         label: '1920*1080@60',
       },
       {
@@ -561,7 +569,6 @@ export default {
     this.signalList = signalList;
     this.bankList.some(item => {
       item.containers = this.deepCopy(this.$store.state.showVessels);
-      this.$set(item, 'signalList', []);
     });
     this.containerList = this.bankList[0].containers;
   },
@@ -606,10 +613,23 @@ export default {
         'width': width + 'px',
         'height': height + 'px',
         'top': top / 10 + 'px',
-        'left': left / 10
-         + 'px'
+        'left': left / 10 + 'px'
       }
     },
+    // 设置bank内显示区域信号高亮
+    // setLayerStyle(layer) {
+    //   console.log(layer);
+    //   const { row, col, wBase, hBase } = layer.customFeature;
+    //   const { left, top } = layer.position;
+    //   const width = col * wBase / 10;
+    //   const height = row * hBase / 10;
+    //   return {
+    //     'width': width + 'px',
+    //     'height': height + 'px',
+    //     'top': top / 10 + 'px',
+    //     'left': left / 10 + 'px'
+    //   }
+    // },
     hideRightView() {
       this.$root.bus.$emit('hideRightView');
     },
@@ -633,6 +653,7 @@ export default {
       const vm = this;
       $('.layer-cont .container-box').draggable({
         containment: [-Infinity,-Infinity,Infinity,Infinity],
+        handle: '.container-box',
         scroll: false,
         stop: function(event, ui) {
          
@@ -658,13 +679,22 @@ export default {
           // console.log($(this));
           // console.log(event);
           const targetObj = dataFormat.getWidget($(this).attr('id'));
+          const r = Math.floor(Math.random()*256);
+          const g = Math.floor(Math.random()*256);
+          const b = Math.floor(Math.random()*256);
+
           const singal = dataFormat.addWidget('signal', {
             signalId: $(ui.draggable[0]).attr('id'),
             position: targetObj.position,
-            signalIndex: $(ui.draggable[0]).attr('index')
+            signalIndex: $(ui.draggable[0]).attr('index'),
+            bColor: `rgba(${r},${g},${b},0.4)`
           });
-          vm.bankList[vm.bankIndex].signalList.push(singal);
-          vm.layerList =  vm.bankList[vm.bankIndex].signalList;
+          vm.bankList[vm.bankIndex].containers.some(item => {
+            if(item.id == targetObj.parentId) {
+              item.signalList.push(singal);
+              return true;
+            }
+          })
           vm.containerList = vm.bankList[vm.bankIndex].containers;
         }
       })
@@ -1006,6 +1036,18 @@ export default {
             .signalContainer-item {
               position: absolute;
               background: #3F455E;
+              .signal-layer {
+                position: absolute;
+                background: rgba(255, 255, 255, 0.5);
+              }
+            }
+            .sel-model {
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: rgba(23, 76, 78, 0.4);
             }
           }
         }

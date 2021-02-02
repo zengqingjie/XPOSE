@@ -6,6 +6,7 @@ export class Windows extends Widget {
   constructor(config) {
     super(config);
     this.templateId = config.templateId;
+    this.signalList = [];
     this.position = config.position || {
       top: 0,
       left: 0,

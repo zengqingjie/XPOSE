@@ -9,7 +9,7 @@
     @click="clickDisplayer(dMsg.id)"
   >
     <div>显示器{{ dMsg.displayId }}</div>
-    <div v-if="dMsg.position"><span>x:{{dMsg.position.left}}</span><span>y:{{dMsg.position.top}}</span></div>
+    <div v-if="pisition && dMsg.position"><span>x:{{dMsg.position.left}}</span><span>y:{{dMsg.position.top}}</span></div>
     <div>{{dMsg.name}}</div>
     <span
       class="delete-displayer"
@@ -36,6 +36,10 @@ export default {
       type: Number,
       default: 1
     },
+    pisition: {
+      type: String | Boolean,
+      default: ''
+    }
   },
   data() {
     return {};

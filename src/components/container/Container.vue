@@ -32,6 +32,7 @@
         :deviceId="deviceId"
         :size="setDisplayerItem"
         :positionZoom="cItem.positionZoom"
+        pisition="true"
       />
     </div>
   </div>

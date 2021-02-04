@@ -382,7 +382,9 @@
                 :style="setSignalStyle(layer)"
               ></div>
             </div>
-            <div class="sel-model" v-if="index == bankIndex"></div>
+            <div class="sel-model" v-if="index == bankIndex">
+              <img src="../../assets/bank_show.png" alt="">
+            </div>
           </div>
         </div>
       </div>
@@ -578,10 +580,45 @@ export default {
     this.$root.bus.$on('setSelectedContainer', (data) => {
       this.selectedContainer = data;
     });
+    // 信号图层删除
+    this.$root.bus.$off('deleteLayer');
+    this.$root.bus.$on('deleteLayer', (data) => {
+      this.containerList.some(item => {
+        if (item.id == data.parentId) {
+          item.signalList.some((layer, index) => {
+            if (layer.signalId == data.signalId) {
+              item.signalList.splice(index, 1);
+              return true;
+            }
+          })
+          return true;
+        }
+      });
+      this.bankList.some((item, index) => {
+        if(index == this.bankIndex) {
+          item.containers = this.containerList;
+          return true;
+        }
+      })
+    });
+
+    // 图层锁定状态
+    this.$root.bus.$off('layerActive');
+    this.$root.bus.$on('layerActive', (data) => {
+      if(data.status) {
+        $('#' + data.id).draggable('destroy');
+        $('#' + data.id).resizable('destroy');
+      }else {
+        this.signalLayerDraggable();
+        this.signalLayerResize();
+      }
+    })
 
     this.draggableInit();
     this.signalInitDraggable();
     this.signalInitDroppable();
+    this.signalLayerDraggable();
+    this.signalLayerResize();
   },
   computed: {
     ...mapState([
@@ -616,20 +653,6 @@ export default {
         'left': left / 10 + 'px'
       }
     },
-    // 设置bank内显示区域信号高亮
-    // setLayerStyle(layer) {
-    //   console.log(layer);
-    //   const { row, col, wBase, hBase } = layer.customFeature;
-    //   const { left, top } = layer.position;
-    //   const width = col * wBase / 10;
-    //   const height = row * hBase / 10;
-    //   return {
-    //     'width': width + 'px',
-    //     'height': height + 'px',
-    //     'top': top / 10 + 'px',
-    //     'left': left / 10 + 'px'
-    //   }
-    // },
     hideRightView() {
       this.$root.bus.$emit('hideRightView');
     },
@@ -653,21 +676,17 @@ export default {
       const vm = this;
       $('.layer-cont .container-box').draggable({
         containment: [-Infinity,-Infinity,Infinity,Infinity],
-        handle: '.container-box',
         scroll: false,
         stop: function(event, ui) {
          
         }
       });
     },
-    // 信号拖拽
+    // 左侧信号拖拽
     signalInitDraggable() {
       const vm = this;
       $('.signal-item').draggable({
         helper: 'clone',
-        stop: function(event, ui) {
-          // console.log(1);
-        }
       });
     },
     // 信号放置
@@ -684,10 +703,11 @@ export default {
           const b = Math.floor(Math.random()*256);
 
           const singal = dataFormat.addWidget('signal', {
+            parentId: targetObj.parentId,
             signalId: $(ui.draggable[0]).attr('id'),
             position: targetObj.position,
-            signalIndex: $(ui.draggable[0]).attr('index'),
-            bColor: `rgba(${r},${g},${b},0.4)`
+            signalIndex: Number($(ui.draggable[0]).attr('index')),
+            bColor: `rgba(${r},${g},${b},0.6)`
           });
           vm.bankList[vm.bankIndex].containers.some(item => {
             if(item.id == targetObj.parentId) {
@@ -696,9 +716,73 @@ export default {
             }
           })
           vm.containerList = vm.bankList[vm.bankIndex].containers;
+          vm.$nextTick(() => {
+            vm.signalLayerDraggable();
+            vm.signalLayerResize();
+          })
         }
       })
-    }
+    },
+
+    signalLayerDraggable() {
+      const vm = this;
+      $('.signal-layer-item').draggable({
+        scroll: false,
+        zIndex: 100,
+        stop: function(event, ui) {
+          const containerId = $(this).attr('containerId');
+          const signalId = $(this).attr('signalId');
+          const id = $(this).attr('id');
+          vm.containerList.some(item => {
+            if (item.id == containerId) {
+              item.signalList.some((layer, index) => {
+                if (layer.id == id) {
+                  layer.position = ui.position;
+                  return true;
+                }
+              })
+              return true;
+            }
+          });
+          vm.bankList.some((item, index) => {
+            if(index == vm.bankIndex) {
+              item.containers = vm.containerList;
+              return true;
+            }
+          })
+        }
+      })
+    },
+    signalLayerResize() {
+      const vm = this;
+      $('.signal-layer-item').resizable({
+        minWidth: 32,
+        minHeight: 32,
+        resize: function(event, ui) {
+          const containerId = $(this).attr('containerId');
+          const signalId = $(this).attr('signalId');
+          const id = $(this).attr('id');
+          vm.containerList.some(item => {
+            if (item.id == containerId) {
+              item.signalList.some((layer, index) => {
+                if (layer.id == id) {
+                  layer.customFeature.wBase = ui.size.width;
+                  layer.customFeature.hBase = ui.size.height;
+                  return true;
+                }
+              })
+              return true;
+            }
+          });
+          vm.bankList.some((item, index) => {
+            if(index == vm.bankIndex) {
+              item.containers = vm.containerList;
+              return true;
+            }
+          })
+        }
+      })
+    },
   },
 }
 </script>
@@ -813,10 +897,9 @@ export default {
       position: relative;
       flex: 1;
       .container-box {
-        position: relative;
+        // position: relative;
         flex: 1;
         background: rgb(18, 24 36);
-        cursor: move;
       }
     }
     .right-view {
@@ -1048,6 +1131,14 @@ export default {
               right: 0;
               bottom: 0;
               background: rgba(23, 76, 78, 0.4);
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              img {
+                display: block;
+                width: 32px;
+                height: 32px;
+              }
             }
           }
         }

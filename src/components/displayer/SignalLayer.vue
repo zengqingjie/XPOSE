@@ -1,11 +1,32 @@
 <template>
   <div
-    class="signal-layer"
+    class="signal-layer-item"
     v-if="layerInfo"
     :style="setStyle"
     :class="layerInfo.signalType ? layerInfo.signalType : ''"
+    :containerId="layerInfo.parentId"
+    :signalId="layerInfo.signalId"
+    :id="layerInfo.id"
+    @mouseenter="mouseEnter"
+    @mouseleave="mouseLeave"
   >
-    {{layerInfo && layerInfo.id}}
+    <div class="position-head" v-if="positionHead">
+      <img src="../../assets/layer_aoi.png" alt="" v-if="!layerLock">
+      <img :src="layerLock ? require('../../assets/layer_lock.png') : require('../../assets/layer_unlock.png')" @click="lockEvent(layerInfo.id)" alt="">
+      <img src="../../assets/layer_tile.png" alt="" v-if="!layerLock">
+      <img src="../../assets/layer_maximize.png" alt="" v-if="!layerLock">
+      <img src="../../assets/layer_delete.png" alt="" v-if="!layerLock" @click="deleteLayer(layerInfo)">
+    </div>
+    <div>信号 {{layerInfo.signalIndex}}</div>
+    <div>
+      <span>x:{{layerInfo.position.left}}</span>
+      <span>y:{{layerInfo.position.top}}</span>
+    </div>
+    <div>
+      <span>w:{{layerInfo.customFeature.wBase}}</span>
+      <span>y:{{layerInfo.customFeature.hBase}}</span>
+    </div>
+    <div>Order:xx</div>
   </div>
 </template>
 
@@ -18,7 +39,10 @@ export default {
   },
   data() {
     return {
-      layerInfo: null
+      positionHead: false,
+      layerInfo: null,
+      aoi: false,
+      layerLock: false,
     }
   },
   mounted() {
@@ -27,11 +51,27 @@ export default {
   methods: {
     init() {
       this.layerInfo = this.info;
+    },
+    lockEvent(id) {
+      this.layerLock = !this.layerLock;
+      const data = {
+        status: this.layerLock,
+        id
+      }
+      this.$root.bus.$emit('layerActive', data);
+    },
+    mouseEnter() {
+      this.positionHead = true;
+    },
+    mouseLeave() {
+      this.positionHead = false;
+    },
+    deleteLayer(layer) {
+      this.$root.bus.$emit('deleteLayer', layer);
     }
   },
   computed: {
     setStyle() {
-      console.log(this.layerInfo);
       return {
         width: this.layerInfo.customFeature.wBase + 'px',
         height: this.layerInfo.customFeature.hBase + 'px',
@@ -50,11 +90,33 @@ export default {
 </script>
 
 <style lang='less' scoped>
-  .signal-layer {
+  .signal-layer-item {
     position: absolute;
     z-index: 99;
-  }
-  .H264 {
-    background: rgba(96, 127, 109, 0.4);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 8px;
+    box-sizing: border-box;
+    color: #F6FC2E;
+    font-size: 12px;
+    .position-head {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 28px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 0 12px;
+      background: rgba(0, 0, 0, 0.5);
+      img {
+        display: block;
+        margin-left: 10px;
+        width: 16px;
+        height: 16px;
+      }
+    }
   }
 </style>

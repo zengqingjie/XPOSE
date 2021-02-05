@@ -11,11 +11,11 @@
     @mouseleave="mouseLeave"
   >
     <div class="position-head" v-if="positionHead">
-      <img src="../../assets/layer_aoi.png" alt="" v-if="!layerLock">
-      <img :src="layerLock ? require('../../assets/layer_lock.png') : require('../../assets/layer_unlock.png')" @click="lockEvent(layerInfo.id)" alt="">
-      <img src="../../assets/layer_tile.png" alt="" v-if="!layerLock">
-      <img src="../../assets/layer_maximize.png" alt="" v-if="!layerLock">
-      <img src="../../assets/layer_delete.png" alt="" v-if="!layerLock" @click="deleteLayer(layerInfo)">
+      <img src="../../assets/layer_aoi.png" alt="" v-if="!layerInfo.layerLock">
+      <img :src="layerInfo.layerLock ? require('../../assets/layer_lock.png') : require('../../assets/layer_unlock.png')" @click="lockEvent(layerInfo.parentId, layerInfo.id)" alt="">
+      <img src="../../assets/layer_tile.png" alt="" v-if="!layerInfo.layerLock">
+      <img src="../../assets/layer_maximize.png" alt="" v-if="!layerInfo.layerLock">
+      <img src="../../assets/layer_delete.png" alt="" v-if="!layerInfo.layerLock" @click="deleteLayer(layerInfo)">
     </div>
     <div>信号 {{layerInfo.signalIndex}}</div>
     <div>
@@ -35,14 +35,16 @@ export default {
   props: {
     info: {
       type: Object
-    }
+    },
+    size: {
+      type : Object,
+    },
   },
   data() {
     return {
       positionHead: false,
       layerInfo: null,
       aoi: false,
-      layerLock: false,
     }
   },
   mounted() {
@@ -52,10 +54,10 @@ export default {
     init() {
       this.layerInfo = this.info;
     },
-    lockEvent(id) {
-      this.layerLock = !this.layerLock;
+    lockEvent(cId, id) {
       const data = {
-        status: this.layerLock,
+        status: !this.layerInfo.layerLock,
+        cId,
         id
       }
       this.$root.bus.$emit('layerActive', data);

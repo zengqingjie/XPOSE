@@ -10,6 +10,7 @@ export class Signal extends Widget {
     this.signalIndex = config.signalIndex || '',
     this.signalId = config.signalId || '',
     this.bColor = config.bColor || '',
+    this.layerLock = config.layerLock || false,
     this.customFeature = Object.assign({
       wBase: 200,
       hBase: 120,

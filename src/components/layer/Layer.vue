@@ -575,6 +575,11 @@ export default {
     this.containerList = this.bankList[0].containers;
   },
   mounted() {
+    this.draggableInit();
+    this.signalInitDraggable();
+    this.signalInitDroppable();
+    this.signalLayerDraggable();
+    this.signalLayerResize();
     // 标识当前操作的容器
     this.$root.bus.$off('setSelectedContainer');
     this.$root.bus.$on('setSelectedContainer', (data) => {
@@ -605,20 +610,34 @@ export default {
     // 图层锁定状态
     this.$root.bus.$off('layerActive');
     this.$root.bus.$on('layerActive', (data) => {
+      console.log(data);
+      this.containerList.some(item => {
+        if (item.id == data.cId) {
+          item.signalList.some((layer, index) => {
+            if (layer.id == data.id) {
+              layer.layerLock = data.status;
+              return true;
+            }
+          })
+          return true;
+        }
+      });
+      this.bankList.some((item, index) => {
+        if(index == this.bankIndex) {
+          item.containers = this.containerList;
+          return true;
+        }
+      })
       if(data.status) {
         $('#' + data.id).draggable('destroy');
         $('#' + data.id).resizable('destroy');
       }else {
-        this.signalLayerDraggable();
-        this.signalLayerResize();
+        this.$nextTick(() => {
+          this.signalLayerDraggable();
+          this.signalLayerResize();
+        })
       }
     })
-
-    this.draggableInit();
-    this.signalInitDraggable();
-    this.signalInitDroppable();
-    this.signalLayerDraggable();
-    this.signalLayerResize();
   },
   computed: {
     ...mapState([
@@ -657,9 +676,18 @@ export default {
       this.$root.bus.$emit('hideRightView');
     },
     changeBank (bank, index){
-      console.log(bank);
       this.containerList = bank.containers;
       this.bankIndex = index;
+      this.$nextTick(() => {
+        this.containerList.map(item => {
+          item.signalList.map(sItem => {
+            if(!sItem.layerLock) {
+              this.signalLayerDraggable();
+              this.signalLayerResize();
+            }
+          })
+        })
+      })
     },
     // 容器显示与否
     eyeStatus(target) {
@@ -707,7 +735,8 @@ export default {
             signalId: $(ui.draggable[0]).attr('id'),
             position: targetObj.position,
             signalIndex: Number($(ui.draggable[0]).attr('index')),
-            bColor: `rgba(${r},${g},${b},0.6)`
+            bColor: `rgba(${r},${g},${b},0.6)`,
+            layerLock: false
           });
           vm.bankList[vm.bankIndex].containers.some(item => {
             if(item.id == targetObj.parentId) {

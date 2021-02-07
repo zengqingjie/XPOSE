@@ -335,7 +335,7 @@ export default {
     this.draggableInit();
     this.sortableInit();
     this.droppableInit();
-    this.resizableInit();
+    // this.resizableInit();
     this.toggleInit();
     
     // 
@@ -374,7 +374,7 @@ export default {
             vm.draggableInit();
             vm.sortableInit();
             vm.droppableInit();
-            vm.resizableInit();
+            // vm.resizableInit();
             vm.toggleInit();
           })
         }
@@ -399,32 +399,17 @@ export default {
     this.$root.bus.$on('setZoom', (data) => {
       let container = data.container;
       const {col, row, wBase, hBase, zoom} = container.customFeature;
-      let displayList = container.content || [];
-      let startWidth = $('#' + container.id).width();
-      let startHeight = $('#' + container.id).height();
-      displayList.forEach(item => {
-        item.setPositionZoom({
-          w: startWidth,
-          h: startHeight
-        })
-      })
-      const scaleVal = 20;
-      let resizeWidth = $('#' + container.id).width() + scaleVal * col *  data.zoom;
-      let resizeHeight = startHeight + row * 12  * data.zoom;
-      console.log(resizeWidth, resizeHeight);
-      container.content.forEach(item => {
-        item.resetPosition({
-          w: resizeWidth,
-          h: resizeHeight
-        })
-      })
-      zoom.xRadio = resizeWidth / (wBase * col);
-      zoom.yRadio = (resizeHeight - 24) / (hBase * row);
-      container.content.some(item => {
-        item.customFeature.zoom.xRadio = zoom.xRadio;
-        item.customFeature.zoom.yRadio = zoom.yRadio;
+     
+      const scaleValW = 20;
+      const scaleValH = 12;
+      container.customFeature.wBase = wBase + scaleValW * data.zoom;
+      container.customFeature.hBase = hBase + scaleValH * data.zoom;
+      container.content.map(item => {
+        item.position.left = item.position.left == 0 ? 0 : item.position.left + 20;
+        item.position.top = item.position.top == 0 ? 0 : item.position.top + 12;
         dataFormat.setWidget(item);
       })
+     
       dataFormat.setWidget(container);
       let list = this.showVessels;
       list.some(item => {
@@ -658,7 +643,7 @@ export default {
               vm.draggableInit();
               vm.sortableInit();
               vm.droppableInit();
-              vm.resizableInit();
+              // vm.resizableInit();
               vm.toggleInit();
             })
           }
@@ -701,7 +686,7 @@ export default {
                 vm.draggableInit();
                 vm.sortableInit();
                 vm.droppableInit();
-                vm.resizableInit();
+                // vm.resizableInit();
                 vm.toggleInit();
               })
             } else {
@@ -737,7 +722,7 @@ export default {
             vm.draggableInit();
             vm.sortableInit();
             vm.droppableInit();
-            vm.resizableInit();
+            // vm.resizableInit();
             vm.toggleInit();
           })
         }

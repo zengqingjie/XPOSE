@@ -23,6 +23,10 @@ export class Signal extends Widget {
       positionZoom: {
         wZoom: 0,
         hZoom: 0,
+      },
+      resize: {
+        width: 200,
+        height: 120
       }
     }, config.customFeature)
   }

@@ -730,7 +730,7 @@ export default {
           const g = Math.floor(Math.random()*256);
           const b = Math.floor(Math.random()*256);
 
-          const singal = dataFormat.addWidget('signal', {
+          const signal = dataFormat.addWidget('signal', {
             parentId: targetObj.parentId,
             signalId: $(ui.draggable[0]).attr('id'),
             position: targetObj.position,
@@ -738,9 +738,17 @@ export default {
             bColor: `rgba(${r},${g},${b},0.6)`,
             layerLock: false
           });
+
+          const nowContainer = dataFormat.getWidget(targetObj.parentId);
+          console.log(signal);
+          console.log(nowContainer);
+          signal.customFeature.wBase = nowContainer.customFeature.wBase;
+          signal.customFeature.hBase = nowContainer.customFeature.hBase;
+          dataFormat.setWidget(signal);
+          
           vm.bankList[vm.bankIndex].containers.some(item => {
             if(item.id == targetObj.parentId) {
-              item.signalList.push(singal);
+              item.signalList.push(signal);
               return true;
             }
           })

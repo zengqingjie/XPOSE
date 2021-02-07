@@ -36,6 +36,7 @@
         v-for="layer in signalLayers"
         :key="layer.id"
         :info="layer"
+        :container="cItem"
       />
     </div>
   </div>

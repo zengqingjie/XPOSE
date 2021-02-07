@@ -27,15 +27,14 @@ export class Display extends Widget {
     let { left, top } = this.position;
     let { w, h } = content;
     Object.assign(this.customFeature.positionZoom, {
-      wZoom: (left / w).toFixed(2),
-      hZoom: (top / h).toFixed(2)
+      wZoom: (left / w).toFixed(4),
+      hZoom: (top / h).toFixed(4)
     })
   }
 
   resetPosition(content) {
     let { w, h } = content;
     let { wZoom, hZoom } = this.customFeature.positionZoom;
-    console.log(wZoom, hZoom);
     Object.assign(this.position, {
       left: (w * wZoom).toFixed(4),
       top:(h * hZoom).toFixed(4)

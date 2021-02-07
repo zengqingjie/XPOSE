@@ -39,6 +39,9 @@ export default {
     size: {
       type : Object,
     },
+    container: {
+      type: Object
+    }
   },
   data() {
     return {
@@ -49,6 +52,7 @@ export default {
   },
   mounted() {
     this.init();
+    console.log(this.container);
   },
   methods: {
     init() {

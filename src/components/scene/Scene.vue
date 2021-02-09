@@ -139,7 +139,32 @@
           >{{index + 1}}</div>
          </div>
         </div>
-        <div v-if="typeIndex == 2">H264 Demo</div>
+        <div v-if="typeIndex == 2">
+          <div class="params-style-input">
+            <span>保存脚本</span>
+          </div>
+          <div class="params-style-input">
+            <span>文件路径</span>
+            <input type="text" v-model="documentSrc">
+          </div>
+          <div class="params-style-input">
+            <span>文件名</span>
+            <input type="text" v-model="documentName">
+          </div>
+          <div class="params-style-input">
+            <div class="save-btn">保存</div>
+          </div>
+          <div class="params-style-input">
+            <span>加载脚本</span>
+          </div>
+          <div class="script-data">
+            <div class="head">
+              <div class="script-name">文件名</div>
+              <div>载入</div>
+              <div>删除</div>
+            </div>
+          </div>
+        </div>
         <div v-if="typeIndex == 3">流媒体</div>
         <div v-if="typeIndex == 4">热键</div>
         <div v-if="typeIndex == 5">热键</div>
@@ -172,6 +197,8 @@ export default {
       keepReplace: false, // 保持交换
       scenceOpacity: 0,
       pageLoad: true,
+      documentSrc: '',
+      documentName: '',
       pageLoadList: [
         {
           id: 1,
@@ -415,6 +442,22 @@ export default {
           > span {
             width: 80px;
           }
+          > input {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 80%;
+            border: 1px solid rgb(52,73,94);
+            border-radius: 4px;
+            background: rgb(22,28,44);
+            padding: 6px 8px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+            appearance: none;
+          }
+          input:focus {
+            border: 1px solid rgb(26,188,156)
+          }
           .block {
             flex: 1;
           }
@@ -428,6 +471,18 @@ export default {
             text-align: center;
             color: #fff;
           }
+          .save-btn {
+            width: 80px;
+            height: 24px;
+            margin-left: 220px;
+            background: #1ABC9C;
+            border-radius: 12px;
+            text-align: center;
+            line-height: 24px;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+          }
           /deep/ .el-radio__input.is-checked .el-radio__inner {
             border-color: #1ABC9C;
             background: #1ABC9C;
@@ -440,6 +495,25 @@ export default {
           }
           /deep/ .el-slider__button {
             border-color: #1ABC9C;
+          }
+        }
+        .script-data {
+          margin-top: 10px;
+          .head {
+            display: flex;
+            align-items: center;
+            height: 24px;
+            background: #2C384F;
+            font-size: 12px;
+            .script-name {
+              flex: 3;
+              padding-left: 10px;
+              text-align: left;
+            }
+            > div {
+              flex: 1;
+              text-align: center;
+            }
           }
         }
         .opacity-slider {

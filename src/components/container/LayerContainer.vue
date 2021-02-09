@@ -23,7 +23,7 @@
         :positionZoom="cItem.positionZoom"
       />
     </div>
-    <div class="signal-model">
+    <div class="signal-model" v-if="signalModelShow">
       <SignalModel
         v-for="displayer in cItem.content"
         :key="displayer.id"
@@ -63,6 +63,9 @@ export default {
     deviceId: {
       type: Number | String,
       default: ''
+    },
+    signalModelShow: {
+      type: Boolean
     }
   },
   components: {

@@ -67,6 +67,7 @@
           :index="index"
           :id="item.id"
           :style="{borderColor: item.id == (selectedContainer && selectedContainer.id) ? 'red' : ''}"
+          :signalModelShow="true"
         />
       </div>
     </div>
@@ -443,79 +444,13 @@ export default {
       cjyj: false,
       kzyj: false,
       h264: false,
-      bankList: [
-        {
-          id: 'bank1',
-          headColor: '#4F1633',
-        },
-        {
-          id: 'bank2',
-          headColor: '#3D4A7C'
-        },
-        {
-          id: 'bank3',
-          headColor: '#7C693D'
-        },
-        {
-          id: 'bank4',
-          headColor: '#6D9094'
-        },
-        {
-          id: 'bank5',
-          headColor: '#07ACAA'
-        },
-        {
-          id: 'bank6',
-          headColor: '#403F2D'
-        },
-        {
-          id: 'bank7',
-          headColor: '#713E76'
-        },
-        {
-          id: 'bank8',
-          headColor: '#763E3E'
-        },
-        {
-          id: 'bank9',
-          headColor: '#9C7676'
-        },
-        {
-          id: 'bank10',
-          headColor: '#C40609'
-        },
-        {
-          id: 'bank11',
-          headColor: '#2F2F4F'
-        },
-        {
-          id: 'bank12',
-          headColor: '#3D7453'
-        },
-        {
-          id: 'bank13',
-          headColor: '#6A743D'
-        },
-        {
-          id: 'bank14',
-          headColor: '#7669B0'
-        },
-        {
-          id: 'bank15',
-          headColor: '#64912D'
-        },
-        {
-          id: 'bank16',
-          headColor: '#522557'
-        }
-      ],
-      bankIndex: 0,
     }
   },
   components: {
     LayerContainer
   },
   created() {
+    console.log(111);
     const signalList = [
       {
         id: 'XH_001',
@@ -569,10 +504,17 @@ export default {
       },
     ];
     this.signalList = signalList;
-    this.bankList.some(item => {
-      item.containers = this.deepCopy(this.$store.state.showVessels);
-    });
-    this.containerList = this.bankList[0].containers;
+
+    const bankListData = this.$store.state.bankList;
+    const bankStoreVal = this.$store.state.bankIndex;
+    if(!bankListData[0].containers) {
+      bankListData.some(item => {
+        item.containers = this.deepCopy(this.$store.state.showVessels);
+      });
+      this.containerList = bankListData[bankStoreVal].containers;
+      this.$store.dispatch('setBankList', this.bankList);
+    }
+    this.containerList = bankListData[bankStoreVal].containers;
   },
   mounted() {
     this.draggableInit();
@@ -605,6 +547,7 @@ export default {
           return true;
         }
       })
+      this.$store.dispatch('setBankList', this.bankList);
     });
 
     // 图层锁定状态
@@ -628,6 +571,7 @@ export default {
           return true;
         }
       })
+      this.$store.dispatch('setBankList', this.bankList);
       if(data.status) {
         $('#' + data.id).draggable('destroy');
         $('#' + data.id).resizable('destroy');
@@ -643,6 +587,8 @@ export default {
     ...mapState([
       'shareVessels',
       'editContainer',
+      'bankList',
+      'bankIndex'
     ]),
   },
   methods: {
@@ -677,7 +623,7 @@ export default {
     },
     changeBank (bank, index){
       this.containerList = bank.containers;
-      this.bankIndex = index;
+      this.$store.commit('setBankIndex', index)
       this.$nextTick(() => {
         this.containerList.map(item => {
           item.signalList.map(sItem => {
@@ -740,8 +686,6 @@ export default {
           });
 
           const nowContainer = dataFormat.getWidget(targetObj.parentId);
-          console.log(signal);
-          console.log(nowContainer);
           signal.customFeature.wBase = nowContainer.customFeature.wBase;
           signal.customFeature.hBase = nowContainer.customFeature.hBase;
           dataFormat.setWidget(signal);
@@ -757,6 +701,7 @@ export default {
             vm.signalLayerDraggable();
             vm.signalLayerResize();
           })
+          vm.$store.dispatch('setBankList', vm.bankList);
         }
       })
     },
@@ -787,6 +732,7 @@ export default {
               return true;
             }
           })
+          vm.$store.dispatch('setBankList', vm.bankList);
         }
       })
     },
@@ -817,6 +763,7 @@ export default {
               return true;
             }
           })
+          vm.$store.dispatch('setBankList', vm.bankList);
         }
       })
     },

@@ -312,7 +312,8 @@ export default {
       displayerWidth: '',
       displayerHeight: '',
       vBorder: '',
-      hBorder: ''
+      hBorder: '',
+      inintPositionList: [],
     }
   },
   components: {
@@ -404,9 +405,17 @@ export default {
       const scaleValH = 12;
       container.customFeature.wBase = wBase + scaleValW * data.zoom;
       container.customFeature.hBase = hBase + scaleValH * data.zoom;
-      container.content.map(item => {
-        item.position.left = item.position.left == 0 ? 0 : item.position.left + 20;
-        item.position.top = item.position.top == 0 ? 0 : item.position.top + 12;
+      let positionList = this.inintPositionList || [];
+      if(positionList.length == 0) {
+        container.content.map(item => {
+          positionList.push({left: item.position.left, top: item.position.top});
+          this.inintPositionList = positionList;
+        })
+      }
+      container.content.map((item, index) => {
+        console.log(positionList[index].left, positionList[index].top);
+        item.position.left = item.position.left == 0 ? 0 : item.position.left + (20 * (positionList[index].left / 200)) * data.zoom;
+        item.position.top = item.position.top == 0 ? 0 : item.position.top + (12 * (positionList[index].top / 120)) * data.zoom;
         dataFormat.setWidget(item);
       })
      

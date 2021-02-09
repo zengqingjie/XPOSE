@@ -165,8 +165,38 @@
             </div>
           </div>
         </div>
-        <div v-if="typeIndex == 3">流媒体</div>
-        <div v-if="typeIndex == 4">热键</div>
+        <div v-if="typeIndex == 3" style="padding-top: 8px">
+          <div
+            v-for="(item, index) in bankList[bankIndex].containers"
+            :key="item.id"
+          >
+            <div class="container-list-item">
+              <div class="container-name">
+                <span>{{index + 1}}</span>
+                <img src="../../assets/Container.png" alt="">
+                <span>{{item.name ? item.name : '容器' + (index + 1)}}</span>
+              </div>
+              <img
+                :src="item.status ? require('../../assets/close_eye.png') : require('../../assets/green_eye.png')"
+                alt=""
+              >
+            </div>
+          </div>
+        </div>
+        <div v-if="typeIndex == 4">
+          <div class="params-style-input">
+            <span>当前场景名</span>
+            <div>xxxxxxx</div>
+          </div>
+          <div class="params-style-input">
+            <span>新场景名</span>
+            <input type="text" v-model="sceneName" style="width: 120px">
+          </div>
+          <div class="params-style-input">
+            <span>颜色选择</span>
+            <div class="color-view"></div>
+          </div>
+        </div>
         <div v-if="typeIndex == 5">热键</div>
       </div>
       <div class="params-footer">
@@ -199,6 +229,7 @@ export default {
       pageLoad: true,
       documentSrc: '',
       documentName: '',
+      sceneName: '',
       pageLoadList: [
         {
           id: 1,
@@ -246,7 +277,7 @@ export default {
           id: 15,
         },
         {
-          id: 16,
+          id: 24,
         }
       ],
       pageSaveList: [
@@ -483,6 +514,13 @@ export default {
             font-size: 12px;
             cursor: pointer;
           }
+          .color-view {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: red;
+            cursor: pointer;
+          }
           /deep/ .el-radio__input.is-checked .el-radio__inner {
             border-color: #1ABC9C;
             background: #1ABC9C;
@@ -602,6 +640,27 @@ export default {
           }
           .show {
             background: #174C4E;
+          }
+        }
+        .container-list-item {
+          display: flex;
+          height: 24px;
+          justify-content: space-between;
+          align-items: center;
+          color: #999;
+          font-size: 12px;
+          > .container-name {
+            display: flex;
+            align-items: center;
+            img {
+              margin: 0 12px;
+            }
+          }
+          > img {
+            display: block;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
           }
         }
       }

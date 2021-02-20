@@ -11,6 +11,8 @@ export class Signal extends Widget {
     this.signalId = config.signalId || '',
     this.bColor = config.bColor || '',
     this.layerLock = config.layerLock || false,
+    this.full = config.full || false,
+    this.aoi = config.aoi || null;
     this.customFeature = Object.assign({
       wBase: 200,
       hBase: 120,

@@ -88,8 +88,9 @@ export default {
     align-items: center;
     bottom: 6px;
     right: 6px;
-    color: #bbb;
-    background: #4A6D8C;
+    color: #eee;
+    background: rgba(62, 77, 68, 0.5);
+    z-index: 1000;
     span {
       font-size: 18px;
     }

@@ -11,10 +11,14 @@
     @mouseleave="mouseLeave"
   >
     <div class="position-head" v-if="positionHead">
-      <img src="../../assets/layer_aoi.png" alt="" v-if="!layerInfo.layerLock">
-      <img :src="layerInfo.layerLock ? require('../../assets/layer_lock.png') : require('../../assets/layer_unlock.png')" @click="lockEvent(layerInfo.parentId, layerInfo.id)" alt="">
+      <img src="../../assets/layer_aoi.png" alt="" v-if="!layerInfo.layerLock" @click="aoiEvent(layerInfo)">
+      <img
+        :src="layerInfo.layerLock ? require('../../assets/layer_lock.png') : require('../../assets/layer_unlock.png')"
+        @click="lockEvent(layerInfo.parentId, layerInfo.id)"
+        alt=""
+      >
       <img src="../../assets/layer_tile.png" alt="" v-if="!layerInfo.layerLock">
-      <img src="../../assets/layer_maximize.png" alt="" v-if="!layerInfo.layerLock">
+      <img src="../../assets/layer_maximize.png" alt="" v-if="!layerInfo.layerLock" @click="fullScreen(layerInfo)">
       <img src="../../assets/layer_delete.png" alt="" v-if="!layerInfo.layerLock" @click="deleteLayer(layerInfo)">
     </div>
     <div>信号 {{layerInfo.signalIndex}}</div>
@@ -52,7 +56,6 @@ export default {
   },
   mounted() {
     this.init();
-    console.log(this.container);
   },
   methods: {
     init() {
@@ -74,6 +77,12 @@ export default {
     },
     deleteLayer(layer) {
       this.$root.bus.$emit('deleteLayer', layer);
+    },
+    fullScreen(layer) {
+      this.$root.bus.$emit('fullScreen', layer);
+    },
+    aoiEvent(layer) {
+      this.$root.bus.$emit('aoiEvent', layer);
     }
   },
   computed: {

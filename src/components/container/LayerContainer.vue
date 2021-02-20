@@ -3,7 +3,6 @@
     class="container-component"
     v-if="cItem && cItem.templateId"
     :style="setContainerStyle"
-    @mousedown="emitSetContainer(cItem)"
     :id="cItem.id"
   >
     <div class="container-header">
@@ -38,6 +37,9 @@
         :info="layer"
         :container="cItem"
       />
+      <Aoi
+        :aoi="aoiData"
+      />
     </div>
   </div>
 </template>
@@ -46,6 +48,7 @@
 import Displayer from "@/components/displayer/Displayer";
 import SignalModel from '@/components/displayer/SignalModel';
 import SignalLayer from '@/components/displayer/SignalLayer';
+import Aoi from '@/components/displayer/Aoi';
 import $ from "jquery";
 export default {
   props: {
@@ -66,15 +69,21 @@ export default {
     },
     signalModelShow: {
       type: Boolean
+    },
+    aoiData: {
+      type: Object,
+      default: null
     }
   },
   components: {
     Displayer,
     SignalModel,
-    SignalLayer
+    SignalLayer,
+    Aoi
   },
   data() {
     return {
+     
     };
   },
   computed: {
@@ -111,9 +120,15 @@ export default {
   },
   created() {},
   mounted() {},
+  methods: {
+    
+  },
   watch: {
-    signalLayers(newVal, old) {
-      console.log(JSON.parse(JSON.stringify(newVal)))
+    signalLayers() {
+      
+    },
+    aoiData(newVal) {
+      console.log(newVal);
     }
   },
 };

@@ -68,6 +68,7 @@
           :id="item.id"
           :style="{borderColor: item.id == (selectedContainer && selectedContainer.id) ? 'red' : ''}"
           :signalModelShow="true"
+          :aoiData="aoiData"
         />
       </div>
     </div>
@@ -444,6 +445,7 @@ export default {
       cjyj: false,
       kzyj: false,
       h264: false,
+      aoiData: null
     }
   },
   components: {
@@ -507,14 +509,30 @@ export default {
 
     const bankListData = this.$store.state.bankList;
     const bankStoreVal = this.$store.state.bankIndex;
-    if(!bankListData[0].containers) {
-      bankListData.some(item => {
-        item.containers = this.deepCopy(this.$store.state.showVessels);
-      });
-      this.containerList = bankListData[bankStoreVal].containers;
-      this.$store.dispatch('setBankList', this.bankList);
-    }
+
+    const instanceData = this.$store.state.showVessels;
+    console.log(instanceData);
+    bankListData.some(item => {
+      if(item.containers) {
+        item.containers.some((cItem, cIndex) => {
+          cItem.position = instanceData[cIndex].position;
+          cItem.customFeature = instanceData[cIndex].customFeature;
+        })
+      }else {
+        item.containers = this.deepCopy(instanceData);
+      }
+    });
     this.containerList = bankListData[bankStoreVal].containers;
+    this.containerList.some(item => {
+      item.signalList.map(sItem => {
+        sItem.aoi.status = false;
+      })
+    })
+    this.$store.dispatch('setBankList', bankListData);
+    this.$nextTick(() => {
+      this.signalLayerDraggable();
+      this.signalLayerResize();
+    });
   },
   mounted() {
     this.draggableInit();
@@ -527,13 +545,54 @@ export default {
     this.$root.bus.$on('setSelectedContainer', (data) => {
       this.selectedContainer = data;
     });
+    // 信号全屏
+    this.$root.bus.$off('fullScreen');
+    this.$root.bus.$on('fullScreen', (data) => {
+      const container = dataFormat.getWidget(data.parentId);
+      const { col, row, wBase, hBase, zoom } = container.customFeature;
+      this.containerList.some(item => {
+        if (item.id == data.parentId) {
+          item.signalList.some((layer, index) => {
+            if (layer.signalId == data.signalId) {
+              console.log(layer);
+              if(layer.full) {
+                layer.customFeature.wBase = layer.fullBeforeWbase;
+                layer.customFeature.hBase = layer.fullBeforeHbase;
+                layer.position.top = layer.fullBeforeTop;
+                layer.position.left = layer.fullBeforeLeft;
+                layer.full = false;
+              } else {
+                this.$set(layer, 'fullBeforeWbase', layer.customFeature.wBase);
+                this.$set(layer, 'fullBeforeHbase', layer.customFeature.hBase);
+                this.$set(layer, 'fullBeforeTop', layer.position.top);
+                this.$set(layer, 'fullBeforeLeft', layer.position.left);
+                layer.customFeature.wBase = col * wBase * zoom.xRadio;
+                layer.customFeature.hBase = row * hBase * zoom.yRadio;
+                layer.position.top = 0;
+                layer.position.left = 0;
+                layer.full = true;
+              }
+              return true;
+            }
+          })
+          return true;
+        }
+      });
+      this.bankList.some((item, index) => {
+        if(index == this.bankIndex) {
+          item.containers = this.containerList;
+          return true;
+        }
+      })
+      this.$store.dispatch('setBankList', this.bankList);
+    });
     // 信号图层删除
     this.$root.bus.$off('deleteLayer');
     this.$root.bus.$on('deleteLayer', (data) => {
       this.containerList.some(item => {
         if (item.id == data.parentId) {
           item.signalList.some((layer, index) => {
-            if (layer.signalId == data.signalId) {
+            if (layer.id == data.id) {
               item.signalList.splice(index, 1);
               return true;
             }
@@ -553,7 +612,6 @@ export default {
     // 图层锁定状态
     this.$root.bus.$off('layerActive');
     this.$root.bus.$on('layerActive', (data) => {
-      console.log(data);
       this.containerList.some(item => {
         if (item.id == data.cId) {
           item.signalList.some((layer, index) => {
@@ -581,7 +639,58 @@ export default {
           this.signalLayerResize();
         })
       }
-    })
+    });
+
+    // 显示aoi事件
+    this.$root.bus.$off('aoiEvent');
+    this.$root.bus.$on('aoiEvent', (data) => {
+      this.containerList.some(item => {
+        if (item.id == data.parentId) {
+          item.signalList.map((layer, index) => {
+            if (layer.id == data.id) {
+              layer.aoi.status = layer.aoi.status ? false : true;
+              this.aoiData = layer.aoi;
+              this.$nextTick(() => {
+                this.signalAOIDraggable();
+                this.signalAOIResize();
+              })
+            } else {
+              layer.aoi.status = false;
+            }
+          })
+          return true;
+        }
+      });
+      this.bankList.some((item, index) => {
+        if(index == this.bankIndex) {
+          item.containers = this.containerList;
+          return true;
+        }
+      })
+      this.$store.dispatch('setBankList', this.bankList);
+    });
+    // 关闭aoi
+    this.$root.bus.$off('closeAoi');
+    this.$root.bus.$on('closeAoi', (data) => {
+      this.containerList.some(item => {
+        if (item.id == data.parentId) {
+          item.signalList.map((layer, index) => {
+            if (layer.id == data.id) {
+              layer.aoi.status = false;
+              this.aoiData = layer.aoi;
+            }
+          })
+          return true;
+        }
+      });
+      this.bankList.some((item, index) => {
+        if(index == this.bankIndex) {
+          item.containers = this.containerList;
+          return true;
+        }
+      })
+      this.$store.dispatch('setBankList', this.bankList);
+    });
   },
   computed: {
     ...mapState([
@@ -669,25 +778,31 @@ export default {
       $(".signal-model .signal-view").droppable({
         accept: '.signal-item',
         drop: function(event, ui) {
-          // console.log($(this));
-          // console.log(event);
           const targetObj = dataFormat.getWidget($(this).attr('id'));
           const r = Math.floor(Math.random()*256);
           const g = Math.floor(Math.random()*256);
           const b = Math.floor(Math.random()*256);
-
+          const aoi = {
+            status: false,
+            position: targetObj.position,
+            parentId: targetObj.parentId,
+          };
           const signal = dataFormat.addWidget('signal', {
             parentId: targetObj.parentId,
             signalId: $(ui.draggable[0]).attr('id'),
             position: targetObj.position,
             signalIndex: Number($(ui.draggable[0]).attr('index')),
             bColor: `rgba(${r},${g},${b},0.6)`,
-            layerLock: false
+            layerLock: false,
+            aoi
           });
 
           const nowContainer = dataFormat.getWidget(targetObj.parentId);
           signal.customFeature.wBase = nowContainer.customFeature.wBase;
           signal.customFeature.hBase = nowContainer.customFeature.hBase;
+          signal.aoi.width = nowContainer.customFeature.wBase;
+          signal.aoi.height = nowContainer.customFeature.hBase;
+          signal.aoi.id = signal.id;
           dataFormat.setWidget(signal);
           
           vm.bankList[vm.bankIndex].containers.some(item => {
@@ -705,7 +820,7 @@ export default {
         }
       })
     },
-
+    // 信号图层拖拽
     signalLayerDraggable() {
       const vm = this;
       $('.signal-layer-item').draggable({
@@ -720,6 +835,7 @@ export default {
               item.signalList.some((layer, index) => {
                 if (layer.id == id) {
                   layer.position = ui.position;
+                  layer.aoi.position = ui.position;
                   return true;
                 }
               })
@@ -736,6 +852,7 @@ export default {
         }
       })
     },
+    // 信号图层缩放
     signalLayerResize() {
       const vm = this;
       $('.signal-layer-item').resizable({
@@ -764,6 +881,31 @@ export default {
             }
           })
           vm.$store.dispatch('setBankList', vm.bankList);
+        }
+      })
+    },
+    // aoi图层拖拽初始化
+    signalAOIDraggable() {
+      const vm = this;
+      let aoiData = this.aoiData;
+      $(".aoi").draggable({
+        scroll: false,
+        stop: function(event, ui) {
+          aoiData.position = ui.position;
+          vm.aoiData = aoiData;
+        }
+      })
+    },
+    signalAOIResize() {
+      const vm = this;
+      let aoiData = this.aoiData;
+      $(".aoi").resizable({
+        maxWidth: 500,
+        maxHeight: 500,
+        resize: function(event, ui) {
+          aoiData.width = ui.size.width;
+          aoiData.height = ui.size.height;
+          vm.aoiData = aoiData;
         }
       })
     },

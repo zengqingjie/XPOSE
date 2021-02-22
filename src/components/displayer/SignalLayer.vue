@@ -31,6 +31,7 @@
       <span>y:{{layerInfo.customFeature.hBase}}</span>
     </div>
     <div>Order:xx</div>
+    <slot></slot>
   </div>
 </template>
 

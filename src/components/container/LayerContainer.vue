@@ -36,10 +36,12 @@
         :key="layer.id"
         :info="layer"
         :container="cItem"
-      />
-      <Aoi
-        :aoi="aoiData"
-      />
+      >
+        <Aoi
+          :aoi="layer.aoi"
+        />
+      </SignalLayer>
+      
     </div>
   </div>
 </template>
@@ -70,10 +72,6 @@ export default {
     signalModelShow: {
       type: Boolean
     },
-    aoiData: {
-      type: Object,
-      default: null
-    }
   },
   components: {
     Displayer,

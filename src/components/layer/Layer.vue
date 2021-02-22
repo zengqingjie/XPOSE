@@ -68,7 +68,6 @@
           :id="item.id"
           :style="{borderColor: item.id == (selectedContainer && selectedContainer.id) ? 'red' : ''}"
           :signalModelShow="true"
-          :aoiData="aoiData"
         />
       </div>
     </div>
@@ -445,7 +444,6 @@ export default {
       cjyj: false,
       kzyj: false,
       h264: false,
-      aoiData: null
     }
   },
   components: {
@@ -655,25 +653,23 @@ export default {
     // 显示aoi事件
     this.$root.bus.$off('aoiEvent');
     this.$root.bus.$on('aoiEvent', (data) => {
+      console.log(this.containerList);
       this.containerList.some(item => {
-        console.log(item);
-        console.log(data);
-        if (item.id == data.aoi.parentId) {
-          item.signalList.map((layer, index) => {
-            if (layer.id == data.id) {
-              layer.aoi.status = layer.aoi.status ? false : true;
-              this.aoiData = layer.aoi;
-              this.$nextTick(() => {
-                this.signalAOIDraggable();
-                this.signalAOIResize();
-              })
+        if (item.id === data.parentId) {
+
+          item.signalList.forEach(single => {
+            if (single.id === data.id) {
+              single.aoi.status = true;
             } else {
-              layer.aoi.status = false;
+              single.aoi.status = false;
             }
           })
-          return true;
+
+          this.$nextTick(() => {
+            this.signalAOIDraggable();
+            this.signalAOIResize();
+          })
         }
-        return true
       });
       this.bankList.some((item, index) => {
         if(index == this.bankIndex) {
@@ -691,7 +687,6 @@ export default {
           item.signalList.map((layer, index) => {
             if (layer.id == data.id) {
               layer.aoi.status = false;
-              this.aoiData = layer.aoi;
             }
           })
           return true;
@@ -798,7 +793,7 @@ export default {
           const b = Math.floor(Math.random()*256);
           const aoi = {
             status: false,
-            position: targetObj.position,
+            position: {left: 0, top: 0},
             parentId: targetObj.parentId,
           };
           const signal = dataFormat.addWidget('signal', {
@@ -905,6 +900,23 @@ export default {
       $(".aoi").draggable({
         scroll: false,
         stop: function(event, ui) {
+          // this.containerList.some(item => {
+          //   if (item.id === data.parentId) {
+
+          //     item.signalList.forEach(single => {
+          //       if (single.id === data.id) {
+          //         single.aoi.status = true;
+          //       } else {
+          //         single.aoi.status = false;
+          //       }
+          //     })
+
+          //     this.$nextTick(() => {
+          //       this.signalAOIDraggable();
+          //       this.signalAOIResize();
+          //     })
+          //   }
+          // });
           aoiData.position = ui.position;
           vm.aoiData = aoiData;
         }

@@ -512,17 +512,28 @@ export default {
 
     const instanceData = this.$store.state.showVessels;
     console.log(instanceData);
-    bankListData.some(item => {
-      if(item.containers) {
-        item.containers.some((cItem, cIndex) => {
-          cItem.position = instanceData[cIndex].position;
-          cItem.customFeature = instanceData[cIndex].customFeature;
-        })
-      }else {
+    bankListData.some((item, index) => {
+      if (item.containers) {
+        instanceData.forEach(ele => {
+          let culEle = item.containers.find(itemCon => itemCon.id === ele.id);
+          if(culEle) {
+            culEle.signalList.forEach(sItem => {
+              Object.assign(sItem.customFeature, ele.customFeature);
+              sItem.aoi.width = ele.customFeature.wBase;
+              sItem.aoi.height = ele.customFeature.hBase;
+            });
+            Object.assign(culEle.content, ele.content);
+            Object.assign(culEle, {position: ele.position}, {customFeature: ele.customFeature});
+          }else {
+            item.containers.push(this.deepCopy(ele));
+          }
+        });
+      } else {
         item.containers = this.deepCopy(instanceData);
       }
     });
     this.containerList = bankListData[bankStoreVal].containers;
+    console.log(this.containerList);
     this.containerList.some(item => {
       item.signalList.map(sItem => {
         sItem.aoi.status = false;
@@ -645,7 +656,9 @@ export default {
     this.$root.bus.$off('aoiEvent');
     this.$root.bus.$on('aoiEvent', (data) => {
       this.containerList.some(item => {
-        if (item.id == data.parentId) {
+        console.log(item);
+        console.log(data);
+        if (item.id == data.aoi.parentId) {
           item.signalList.map((layer, index) => {
             if (layer.id == data.id) {
               layer.aoi.status = layer.aoi.status ? false : true;
@@ -660,6 +673,7 @@ export default {
           })
           return true;
         }
+        return true
       });
       this.bankList.some((item, index) => {
         if(index == this.bankIndex) {

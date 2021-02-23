@@ -1,7 +1,9 @@
 <template>
   <div class="aoi"
-    v-if="aoi && aoi.status"
+    v-if="aoi && aoi.status && aoi.parentId === cId"
     :style="setStyle"
+    :cId="aoi.parentId"
+    :sId="aoi.id"
   >
     <span>AOI Crop</span>
     <img src="../../assets/closeAoi.png" alt="" @click="closeAoi(aoi)">
@@ -14,6 +16,9 @@ export default {
     aoi: {
       type: Object,
       default: null
+    },
+    cId: {
+      type: String,
     }
   },
   computed: {
@@ -32,9 +37,7 @@ export default {
     }
   },
   watch: {
-    aoiData(newVal) {
-      console.log(newVal);
-    }
+
   }
 }
 </script>

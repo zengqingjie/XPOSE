@@ -68,7 +68,12 @@
           :id="item.id"
           :style="{borderColor: item.id == (selectedContainer && selectedContainer.id) ? 'red' : ''}"
           :signalModelShow="true"
-        />
+        >
+          <Aoi
+            :aoi="aoiData"
+            :cId="item.id"
+          />
+        </LayerContainer>
       </div>
     </div>
     <div class="right-view" v-if="!showInfo && nowMenuId == '004'">
@@ -374,7 +379,7 @@
               class="signalContainer-item"
               v-for="(cItem) in item.containers"
               :key="cItem.id"
-              :style="setSignalStyle(cItem)"
+              :style="setContainerStyle(cItem)"
             >
               <div
                 class="signal-layer"
@@ -396,6 +401,7 @@
 <script>
 import $ from "jquery";
 import LayerContainer from '@/components/container/LayerContainer';
+import Aoi from '@/components/displayer/Aoi';
 import { mapState } from 'vuex';
 import { dataFormat } from '../../utils/dataFormat';
 export default {
@@ -444,13 +450,14 @@ export default {
       cjyj: false,
       kzyj: false,
       h264: false,
+      aoiData: null
     }
   },
   components: {
-    LayerContainer
+    LayerContainer,
+    Aoi
   },
   created() {
-    console.log(111);
     const signalList = [
       {
         id: 'XH_001',
@@ -509,7 +516,6 @@ export default {
     const bankStoreVal = this.$store.state.bankIndex;
 
     const instanceData = this.$store.state.showVessels;
-    console.log(instanceData);
     bankListData.some((item, index) => {
       if (item.containers) {
         instanceData.forEach(ele => {
@@ -530,8 +536,8 @@ export default {
         item.containers = this.deepCopy(instanceData);
       }
     });
+    console.log(bankListData);
     this.containerList = bankListData[bankStoreVal].containers;
-    console.log(this.containerList);
     this.containerList.some(item => {
       item.signalList.map(sItem => {
         sItem.aoi.status = false;
@@ -563,7 +569,6 @@ export default {
         if (item.id == data.parentId) {
           item.signalList.some((layer, index) => {
             if (layer.signalId == data.signalId) {
-              console.log(layer);
               if(layer.full) {
                 layer.customFeature.wBase = layer.fullBeforeWbase;
                 layer.customFeature.hBase = layer.fullBeforeHbase;
@@ -653,18 +658,17 @@ export default {
     // 显示aoi事件
     this.$root.bus.$off('aoiEvent');
     this.$root.bus.$on('aoiEvent', (data) => {
-      console.log(this.containerList);
+      console.log(data);
       this.containerList.some(item => {
         if (item.id === data.parentId) {
-
           item.signalList.forEach(single => {
             if (single.id === data.id) {
               single.aoi.status = true;
+              this.aoiData = single.aoi;
             } else {
               single.aoi.status = false;
             }
-          })
-
+          });
           this.$nextTick(() => {
             this.signalAOIDraggable();
             this.signalAOIResize();
@@ -687,6 +691,7 @@ export default {
           item.signalList.map((layer, index) => {
             if (layer.id == data.id) {
               layer.aoi.status = false;
+              this.aoiData = layer.aoi;
             }
           })
           return true;
@@ -724,11 +729,23 @@ export default {
       this.typeIndex = num;
     },
     // 设置bank内显示区域样式
-    setSignalStyle(item) {
+    setContainerStyle(item) {
       const { row, col, wBase, hBase } = item.customFeature;
       const { left, top } = item.position;
       const width = col * wBase / 10;
       const height = row * hBase / 10;
+      return {
+        'width': width + 'px',
+        'height': height + 'px',
+        'top': top / 10 + 'px',
+        'left': left / 10 + 'px'
+      }
+    },
+    setSignalStyle(item) {
+      const { row, col, wBase, hBase } = item.customFeature;
+      const { left, top } = item.position;
+      const width = wBase / 10;
+      const height = hBase / 10;
       return {
         'width': width + 'px',
         'height': height + 'px',
@@ -793,7 +810,7 @@ export default {
           const b = Math.floor(Math.random()*256);
           const aoi = {
             status: false,
-            position: {left: 0, top: 0},
+            position: targetObj.position,
             parentId: targetObj.parentId,
           };
           const signal = dataFormat.addWidget('signal', {
@@ -896,42 +913,37 @@ export default {
     // aoi图层拖拽初始化
     signalAOIDraggable() {
       const vm = this;
-      let aoiData = this.aoiData;
       $(".aoi").draggable({
         scroll: false,
         stop: function(event, ui) {
-          // this.containerList.some(item => {
-          //   if (item.id === data.parentId) {
-
-          //     item.signalList.forEach(single => {
-          //       if (single.id === data.id) {
-          //         single.aoi.status = true;
-          //       } else {
-          //         single.aoi.status = false;
-          //       }
-          //     })
-
-          //     this.$nextTick(() => {
-          //       this.signalAOIDraggable();
-          //       this.signalAOIResize();
-          //     })
-          //   }
-          // });
-          aoiData.position = ui.position;
-          vm.aoiData = aoiData;
+          const cid = $(this).attr('cId');
+          const sid = $(this).attr('sId');
+          const changeCitem = vm.containerList.find(item => item.id === cid);
+          let changeSitem = changeCitem.signalList.find(item => item.id === sid);
+          changeSitem.aoi.position = ui.position;
+          vm.$nextTick(() => {
+            vm.signalAOIDraggable();
+            vm.signalAOIResize();
+          });
         }
       })
     },
     signalAOIResize() {
       const vm = this;
-      let aoiData = this.aoiData;
       $(".aoi").resizable({
         maxWidth: 500,
         maxHeight: 500,
         resize: function(event, ui) {
-          aoiData.width = ui.size.width;
-          aoiData.height = ui.size.height;
-          vm.aoiData = aoiData;
+          const cid = $(this).attr('cId');
+          const sid = $(this).attr('sId');
+          const changeCitem = vm.containerList.find(item => item.id === cid);
+          let changeSitem = changeCitem.signalList.find(item => item.id === sid);
+          changeSitem.aoi.width = ui.size.width;
+          changeSitem.aoi.height = ui.size.height;
+          vm.$nextTick(() => {
+            vm.signalAOIDraggable();
+            vm.signalAOIResize();
+          });
         }
       })
     },

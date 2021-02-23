@@ -102,7 +102,8 @@ export const dataFormat = {
           parentId: windows.id,
           name: usableDisplay[index].name,
           displayId: usableDisplay[index].id,
-          position: arr[index]
+          position: arr[index],
+          signalNum: 2
         });
         content.push(display);
       }

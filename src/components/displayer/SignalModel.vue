@@ -8,7 +8,7 @@
     v-if="dMsg"
   >
     <div class="signal-num">
-      <span>2</span>
+      <span>{{dMsg.signalNum}}</span>
       <div>[{{dMsg.displayId}}]</div>
     </div>
   </div>

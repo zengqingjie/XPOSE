@@ -8,6 +8,7 @@ export class Display extends Widget {
     this.displayId = config.displayId;
     this.position = config.position || null;
     this.signalNum = config.signalNum || 2;
+    this.intersectList = config.intersect || [];
     this.customFeature = Object.assign({
       wBase: 200,
       hBase: 120,

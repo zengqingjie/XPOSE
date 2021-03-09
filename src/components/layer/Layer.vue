@@ -404,6 +404,7 @@ import LayerContainer from '@/components/container/LayerContainer';
 import Aoi from '@/components/displayer/Aoi';
 import { mapState } from 'vuex';
 import { dataFormat } from '../../utils/dataFormat';
+import { Signal } from '../widget/layer.model';
 export default {
   props: ['showInfo', 'nowMenuId'],
   data() {
@@ -411,7 +412,6 @@ export default {
       leftIndex: 2, // 容器、图层、信号参数
       typeIndex: 0, // 右侧菜单参数类型
       containerList: [], // 容器
-      layerList: [], // 图层
       signalList: [], // 信号
       signalId: '',
       selectedContainer: null,
@@ -536,13 +536,19 @@ export default {
         item.containers = this.deepCopy(instanceData);
       }
     });
-    console.log(bankListData);
     this.containerList = bankListData[bankStoreVal].containers;
     this.containerList.some(item => {
       item.signalList.map(sItem => {
         sItem.aoi.status = false;
+        item.content.forEach(dItem => {
+          if (this.isOverlap(sItem, dItem)) {
+            dItem.signalNum = dItem.signalNum - 1;
+            dItem.intersectList.push(sItem);
+          }
+        });
       })
     })
+
     this.$store.dispatch('setBankList', bankListData);
     this.$nextTick(() => {
       this.signalLayerDraggable();
@@ -758,6 +764,7 @@ export default {
     },
     changeBank (bank, index){
       this.containerList = bank.containers;
+      this.aoiData = null;
       this.$store.commit('setBankIndex', index)
       this.$nextTick(() => {
         this.containerList.map(item => {
@@ -836,8 +843,20 @@ export default {
               item.signalList.push(signal);
               return true;
             }
-          })
+          });
+          vm.bankList[vm.bankIndex].containers.some(item => {
+            if(item.id == targetObj.parentId) {
+              item.content.forEach(dItem => {
+                if (vm.isOverlap(signal, dItem)) {
+                  dItem.signalNum = dItem.signalNum - 1;
+                  dItem.intersectList.push(signal);
+                }
+              });
+              return true;
+            }
+          });
           vm.containerList = vm.bankList[vm.bankIndex].containers;
+
           vm.$nextTick(() => {
             vm.signalLayerDraggable();
             vm.signalLayerResize();
@@ -862,6 +881,22 @@ export default {
                 if (layer.id == id) {
                   layer.position = ui.position;
                   layer.aoi.position = ui.position;
+                  item.content.forEach(dItem => {
+                    if (vm.isOverlap(layer, dItem)) {
+                      const isBelong = dItem.intersectList.find(iItem => iItem === layer);
+                      if(!isBelong) {
+                        dItem.signalNum = dItem.signalNum - 1;
+                        dItem.intersectList.push(layer);
+                      }
+                    } else {
+                      const isBelong = dItem.intersectList.find(iItem => iItem === layer);
+                      if(isBelong) {
+                        dItem.signalNum = dItem.signalNum + 1;
+                        const iItemIndex = dItem.intersectList.findIndex(iItem => iItem !== layer);
+                        dItem.intersectList.splice(iItemIndex, 1);
+                      }
+                    }
+                  })
                   return true;
                 }
               })
@@ -894,6 +929,22 @@ export default {
                 if (layer.id == id) {
                   layer.customFeature.wBase = ui.size.width;
                   layer.customFeature.hBase = ui.size.height;
+                  item.content.forEach(dItem => {
+                    if (vm.isOverlap(layer, dItem)) {
+                      const isBelong = dItem.intersectList.find(iItem => iItem === layer);
+                      if(!isBelong) {
+                        dItem.signalNum = dItem.signalNum - 1;
+                        dItem.intersectList.push(layer);
+                      }
+                    } else {
+                      const isBelong = dItem.intersectList.find(iItem => iItem === layer);
+                      if(isBelong) {
+                        dItem.signalNum = dItem.signalNum + 1;
+                        const iItemIndex = dItem.intersectList.findIndex(iItem => iItem !== layer);
+                        dItem.intersectList.splice(iItemIndex, 1);
+                      }
+                    }
+                  })
                   return true;
                 }
               })
@@ -947,6 +998,26 @@ export default {
         }
       })
     },
+    // 显示器可放置信号数
+    isOverlap(signal, display) {
+      const signalX = signal.position.left;
+      const signalY = signal.position.top;
+      const signalW = signal.customFeature.wBase;
+      const signalH = signal.customFeature.hBase;
+      const displayX = display.position.left;
+      const displayY = display.position.top;
+      const displayW = display.customFeature.wBase;
+      const displayH = display.customFeature.hBase;
+      if (
+          ( Math.round(signalX + signalW) <= Math.round(displayX) )
+          || ( Math.round( signalY + signalH) <= Math.round(displayY) )
+          || ( Math.round(signalX) >= Math.round(displayX + displayW) )
+          || ( Math.round(signalY) >= Math.round(displayY + displayH) ) 
+        ) {
+            return false;
+          }
+        return true;
+    }
   },
 }
 </script>

@@ -331,7 +331,11 @@ export default {
     }
   },
   mounted() {
-    
+    // const json = {
+    //   ReadDeviceMsg: "0",
+    //   SessionID: this.$store.state.sessionId
+    // };
+    // this.websocket.ws.send(JSON.stringify(json));
     const vm = this;
     this.draggableInit();
     this.sortableInit();

@@ -34,15 +34,24 @@ module.exports = {
     // proxy: 'http://localhost:4000' // 配置跨域处理,只有一个代理
     proxy: {
       "/api": {
-        target: 'http://192.168.0.122',
+        target: 'http://192.168.0.150',
         pathRewrite: {
-            "^/api": ""
+          "^/api": ""
         },
         changeOrigin: true,
         ws: true,
         // ws: true,//websocket支持
         secure: false
       },
+      "/code": {
+        target: 'https://xposereg.azurewebsites.net',
+        pathRewrite: {
+          "^/code": ""
+        },
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+      }
   }
     // proxy: {
     //     '/api': {

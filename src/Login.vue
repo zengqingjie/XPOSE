@@ -2,9 +2,9 @@
   <div class="login-wrap">
     <div class="login-cont">
       <div class="company-info">
-        <div class="company-name">XPOSE</div>
+        <div class="company-name"><img src="./assets/xpose_logo.png" alt=""></div>
         <div class="company-link">
-          <div>RGBlink</div>
+          <div><img src="./assets/rgbLink_logo.png" alt=""></div>
           <div>www.rgblink.com</div>
         </div>
       </div>
@@ -37,11 +37,13 @@
 
 <script>
 import Api from '@/utils/api';
+import websocket from '@/utils/websocket';
 export default {
   data() {
     return {
-      userName: 'Admin',
-      pwd: 'Admin',
+      socket: null,
+      userName: '',
+      pwd: '',
       languageList: [{ // 语言列表
         id: 1,
         label: '中文'
@@ -49,14 +51,88 @@ export default {
       language: 1 // 所选语言
     }
   },
+  mounted() {
+    // this.createWebsocket();
+    const params = this.$route.params;
+    if(params) {
+      this.userName = params.acount;
+      this.pwd = params.passwd;
+    }
+  },
   methods: {
     loginEvent() {
-      Api.login({m: '1', n: '22'}).then(res => {
+      const data = {
+        UserName: this.userName,
+        Passwd: this.pwd
+      }
+      Api.login(data).then(res => {
         console.log(res);
+        if(res.code == 200) {
+          // 登录成功创建websocket
+          this.createWebsocket();
+          this.$store.commit('setSessionId', res.data.SessionID);
+          this.$router.push({path: '/index'});
+        }
       });
-      // return;
-      this.$router.push({path: '/index'})
-    }
+    },
+    createWebsocket() {
+      const _this = this;
+      const herartBeat = {
+        timeout: 20000, //20s
+        timeoutObj: null,
+        reset: function(){
+          clearInterval(this.timeoutObj);
+          this.start();
+        },
+        start: function(){
+          this.timeoutObj = setInterval(function(){
+            if(_this.socket.readyState==1){
+              const json = {
+                "eventType": "HEART_BEAT",
+                "deviceId": '123456'
+              };
+              _this.socket.send(JSON.stringify(json));
+            }
+          }, this.timeout);
+        }
+      };
+      if(!window.WebSocket){
+        window.WebSocket = window.MozWebSocket;
+      }
+      //socket 准备
+      if(window.WebSocket){
+        const ip = this.$store.state.ip;
+        console.log(ip);
+        const wsUrl = process.env.VUE_APP_TITLE !== 'production' ? "ws://"+ip+":8800" : "ws://"+ip+":8800";
+        this.socket = new WebSocket(wsUrl);
+        // this.websocket.setWs(this.socket);
+        this.socket.onopen = function() {
+          console.log("服务器连接成功");
+          herartBeat.start();
+        };
+        this.socket.onclose = function(boolean) {
+          if (!boolean) {
+            _this.socket.close();
+            console.log("服务器连接关闭");
+          }
+        };
+        this.socket.onerror = function() {
+            console.log("服务器连接出错");
+        };
+        this.socket.onmessage = function(e) {
+          herartBeat.reset();
+          //接收服务器返回的数据
+          const res = JSON.parse(e.data);
+          
+          if (res.code == 0) {
+            const resData = JSON.parse(res.data);
+          }
+        };
+
+      }else{
+        alert("error");
+      }
+    },
   }
 }
 </script>
@@ -83,10 +159,21 @@ export default {
           color: #fff;
           font-size: 24px;
           font-weight: bold;
+          img {
+            display: block;
+            width: 140px;
+            height: 60px;
+          }
         }
         .company-link {
           color: #fff;
-          font-size: 14px;
+          font-size: 12px;
+          img {
+            display: block;
+            width: 100px;
+            height: 20px;
+            margin-bottom: 8px;
+          }
         }
       }
       .login-info {

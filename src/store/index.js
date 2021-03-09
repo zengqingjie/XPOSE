@@ -114,6 +114,8 @@ export default new Vuex.Store({
       }
     ],
     bankIndex: 0,
+    sessionId: '',
+    ip: '',
   },
   mutations: {
     // 设置拖出的设备列表
@@ -142,6 +144,14 @@ export default new Vuex.Store({
     // bank选中索引
     setBankIndex(state, num) {
       state.bankIndex = num;
+    },
+     // 会话id
+     setSessionId(state, id) {
+      state.sessionId = id;
+    },
+    // 设置ip
+    setIP(state, ip) {
+      state.ip = ip
     }
   },
   actions: {

@@ -6,6 +6,7 @@ import router from './router';
 import store from './store';
 import 'jquery-ui-dist/jquery-ui';
 import 'jquery-ui-dist/jquery-ui.min.css';
+import websocket from '@/utils/websocket';
 
 Vue.config.productionTip = false;
 Vue.use(ElementUI);
@@ -78,3 +79,5 @@ Vue.directive('longpress', {
     }
   }
 });
+
+Vue.prototype.websocket = websocket;

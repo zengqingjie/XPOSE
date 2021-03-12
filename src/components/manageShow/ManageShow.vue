@@ -80,7 +80,7 @@
           <div class="displayer">
             <div
               class="displayer-item"
-              :class="[index % 2 ? 'deep' :'shallow', item.status == false ? 'disable' : '', clickItemId == item.id ? 'show' : '']"
+              :class="[index % 2 ? 'deep' :'shallow', item.status == false ? 'disable' : '', clickItemId === item.id ? 'show' : '']"
               :key = item.id
               v-for="(item, index) in displayerList"
               :id="item.id"
@@ -354,12 +354,7 @@ export default {
     // this.resizableInit();
     this.toggleInit();
     
-    // 
-    customActive.Draggable('.displayer .displayer-item', {
-      connectToSortable : ".displayer-view",
-      handle: '.icon-view',
-      refreshPositions: true
-    });
+    
     customActive.Draggable('.data-list .data-item', {
       connectToSortable: '.container-view',
     });
@@ -434,7 +429,7 @@ export default {
     
               vm.displayerList.map(item => {
                 if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
-                  item.status = 'disable'
+                  item.status = false
                 }
               }); // 生成容器后改变显示器是否可用状态
               vm.$store.commit('setDisplayerList', vm.displayerList);
@@ -545,7 +540,6 @@ export default {
   methods: {
     // 获取显示器列表
     readOutputList() {
-      console.log('get');
       const _this = this;
       const readOutputListParams = {
         eventType: "readOutputList",
@@ -559,10 +553,11 @@ export default {
         if(result.code == 200 && result.data.eventType == 'readOutputList') {
           _this.$store.commit('setDisplayerList', result.data.output);
           _this.$nextTick(() => {
-            _this.draggableInit();
-            _this.sortableInit();
-            _this.droppableInit();
-            _this.toggleInit();
+            customActive.Draggable('.displayer .displayer-item', {
+              connectToSortable : ".displayer-view",
+              handle: '.icon-view',
+              refreshPositions: true
+            });
           });
         }
       }
@@ -740,6 +735,7 @@ export default {
               }
             });
             vm.$store.dispatch('setDisplayerList', vm.displayerList);
+            vm.$forceUpdate();
             vm.$nextTick(() => {
               vm.draggableInit();
               vm.sortableInit();
@@ -765,7 +761,7 @@ export default {
               let display = dataFormat.addWidget('display', {
                 parentId: displayer.parentId,
                 displayId: targetObj.id,
-                name: targetObj.name,
+                name: targetObj.outputType,
               });
               display.position = displayer.position;
               main.content.forEach((item, index) => {
@@ -777,9 +773,9 @@ export default {
               dataFormat.replaceDisplay(displayer.id);
               vm.displayerList.forEach(item => {
                 if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
-                  item.status = 'disable'
+                  item.status = false;
                 } else if(item.orChange != 0) {
-                  item.status = 'useable'
+                  item.status = true;
                 }
               })
               vm.$store.dispatch('setDisplayerList', vm.displayerList);

@@ -80,7 +80,7 @@
           <div class="displayer">
             <div
               class="displayer-item"
-              :class="[index % 2 ? 'deep' :'shallow', item.status == false ? 'disable' : '', clickItemId === item.id ? 'show' : '']"
+              :class="[index % 2 ? 'deep' :'shallow', item.status == true ? 'disable' : '', clickItemId == item.id ? 'show' : '']"
               :key = item.id
               v-for="(item, index) in displayerList"
               :id="item.id"
@@ -336,14 +336,10 @@ export default {
     }
   },
   created() {
-    if(!window.webSocket) {
-      const ip = JSON.parse(window.sessionStorage.getItem("ip"));
-      globalWs.connectSocket("ws://"+ip+":8800");
-    }
+
   },
   mounted() {
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
-    console.log(JSON.parse(window.sessionStorage.getItem("sessionId")));
     this.readOutputList();
     // 处理ws接收到的数据
     
@@ -434,7 +430,7 @@ export default {
     
               vm.displayerList.map(item => {
                 if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
-                  item.status = false
+                  item.status = true;
                 }
               }); // 生成容器后改变显示器是否可用状态
               vm.$store.commit('setDisplayerList', vm.displayerList);
@@ -501,6 +497,8 @@ export default {
     this.$root.bus.$off('deleteContainer');
     this.$root.bus.$on('deleteContainer', (container) => {
       dataFormat.removeWidgetId(container.id);
+      console.log(container);
+      return;
       this.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
       this.$message({
           type: 'success',
@@ -522,9 +520,9 @@ export default {
       console.log(dataFormat.getHasUseDisplayIds());
       this.displayerList.forEach(item => {
         if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
-          item.status = 'disable'
-        } else if(item.orChange != 0) {
-          item.status = 'useable'
+          item.status = true;
+        } else {
+          item.status = false;
         }
       })
       this.$store.dispatch('setDisplayerList', this.displayerList);
@@ -601,7 +599,7 @@ export default {
     },
     // 点击显示器
     displayerClick(obj) {
-      if (obj.status == false) return;
+      if (obj.status == true) return;
       this.clickItemId = obj.id;
     },
     
@@ -696,6 +694,9 @@ export default {
         zIndex: 100,
         stop: function(event, ui) {
           let container = dataFormat.widgetMap[$(this).attr('id')];
+          console.log(dataFormat.widgetMap);
+          console.log($(this).attr('id'));
+          console.log(container);
           container.position = ui.position;
           dataFormat.setWidget(container);
           vm.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
@@ -734,9 +735,9 @@ export default {
             vm.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
             vm.displayerList.forEach(item => {
               if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
-                item.status = false;
-              } else {
                 item.status = true;
+              } else {
+                item.status = false;
               }
             });
             vm.$store.dispatch('setDisplayerList', vm.displayerList);
@@ -778,9 +779,9 @@ export default {
               dataFormat.replaceDisplay(displayer.id);
               vm.displayerList.forEach(item => {
                 if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
-                  item.status = false;
-                } else {
                   item.status = true;
+                } else {
+                  item.status = false;
                 }
               })
               vm.$store.dispatch('setDisplayerList', vm.displayerList);

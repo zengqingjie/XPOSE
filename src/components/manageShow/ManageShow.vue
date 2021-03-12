@@ -752,8 +752,8 @@ export default {
           if ($(this).hasClass('displayer-view')) {
             // 被放置的显示器
             const displayer = dataFormat.getWidget(id);
-           
             let main = dataFormat.widgetMap[parentId]; // 最外层容器
+            console.log(displayer,main,id,parentId);
             const { wBase, hBase, zoom, col, row } = main.customFeature;
             const maxX = main.position.left + col * wBase * zoom.xRadio;
             const maxY = main.position.top + 24 + row * hBase * zoom.yRadio;
@@ -779,7 +779,7 @@ export default {
               vm.displayerList.forEach(item => {
                 if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
                   item.status = false;
-                } else if(item.orChange != 0) {
+                } else {
                   item.status = true;
                 }
               })

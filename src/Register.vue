@@ -1266,7 +1266,7 @@ export default {
       if(res.code == 200) {
         this.mac = res.data.mac;
         this.id = res.data.id;
-        window.localStorage.setItem("ip", JSON.stringify(res.data.ip));
+        window.sessionStorage.setItem("ip", JSON.stringify(res.data.ip));
       } else {
         this.$message.error(res.message);
       }

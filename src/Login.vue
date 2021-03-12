@@ -69,7 +69,7 @@ export default {
         if(res.code == 200) {
           // 登录成功创建websocket
           this.createWebsocket();
-          window.localStorage.setItem("sessionId", JSON.stringify(res.data.sessionID));
+          window.sessionStorage.setItem("sessionId", JSON.stringify(res.data.sessionID));
           this.$router.push({path: '/index'});
         }
       });
@@ -100,7 +100,7 @@ export default {
       }
       //socket 准备
       if(window.WebSocket){
-        const ip = JSON.parse(window.localStorage.getItem("ip"));
+        const ip = JSON.parse(window.sessionStorage.getItem("ip"));
         console.log(ip);
         const wsUrl = process.env.VUE_APP_TITLE !== 'production' ? "ws://"+ip+":8800" : "ws://"+ip+":8800";
         globalWs.connectSocket(wsUrl);

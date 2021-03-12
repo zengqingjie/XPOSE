@@ -335,16 +335,16 @@ export default {
       return dataFormat.curWindow || {};
     }
   },
-  mounted() {
-    this.sessionId = JSON.parse(window.localStorage.getItem("sessionId"));
-    console.log(JSON.parse(window.localStorage.getItem("sessionId")));
+  created() {
     if(!window.webSocket) {
-      const ip = JSON.parse(window.localStorage.getItem("ip"));
+      const ip = JSON.parse(window.sessionStorage.getItem("ip"));
       globalWs.connectSocket("ws://"+ip+":8800");
-      this.readOutputList();
-    } else {
-      this.readOutputList();
     }
+  },
+  mounted() {
+    this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
+    console.log(JSON.parse(window.sessionStorage.getItem("sessionId")));
+    this.readOutputList();
     // 处理ws接收到的数据
     
     const vm = this;
@@ -354,6 +354,11 @@ export default {
     // this.resizableInit();
     this.toggleInit();
     
+    customActive.Draggable('.displayer .displayer-item', {
+      connectToSortable : ".displayer-view",
+      handle: '.icon-view',
+      refreshPositions: true
+    });
     
     customActive.Draggable('.data-list .data-item', {
       connectToSortable: '.container-view',

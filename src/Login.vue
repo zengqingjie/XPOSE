@@ -37,7 +37,8 @@
 
 <script>
 import Api from '@/utils/api';
-import websocket from '@/utils/websocket';
+import globalWs from '@/utils/globalWs';
+import utils from '@/utils/utils';
 export default {
   data() {
     return {
@@ -52,25 +53,23 @@ export default {
     }
   },
   mounted() {
-    // this.createWebsocket();
     const params = this.$route.params;
     if(params) {
-      this.userName = params.acount;
+      this.userName = params.account;
       this.pwd = params.passwd;
     }
   },
   methods: {
     loginEvent() {
       const data = {
-        UserName: this.userName,
-        Passwd: this.pwd
+        userName: this.userName,
+        passwd: this.pwd
       }
       Api.login(data).then(res => {
-        console.log(res);
         if(res.code == 200) {
           // 登录成功创建websocket
           this.createWebsocket();
-          this.$store.commit('setSessionId', res.data.SessionID);
+          window.localStorage.setItem("sessionId", JSON.stringify(res.data.sessionID));
           this.$router.push({path: '/index'});
         }
       });
@@ -101,34 +100,11 @@ export default {
       }
       //socket 准备
       if(window.WebSocket){
-        const ip = this.$store.state.ip;
+        const ip = JSON.parse(window.localStorage.getItem("ip"));
         console.log(ip);
         const wsUrl = process.env.VUE_APP_TITLE !== 'production' ? "ws://"+ip+":8800" : "ws://"+ip+":8800";
-        this.socket = new WebSocket(wsUrl);
-        // this.websocket.setWs(this.socket);
-        this.socket.onopen = function() {
-          console.log("服务器连接成功");
-          herartBeat.start();
-        };
-        this.socket.onclose = function(boolean) {
-          if (!boolean) {
-            _this.socket.close();
-            console.log("服务器连接关闭");
-          }
-        };
-        this.socket.onerror = function() {
-            console.log("服务器连接出错");
-        };
-        this.socket.onmessage = function(e) {
-          herartBeat.reset();
-          //接收服务器返回的数据
-          const res = JSON.parse(e.data);
-          
-          if (res.code == 0) {
-            const resData = JSON.parse(res.data);
-          }
-        };
-
+        globalWs.connectSocket(wsUrl);
+        
       }else{
         alert("error");
       }

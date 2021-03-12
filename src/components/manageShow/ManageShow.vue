@@ -47,9 +47,9 @@
             <el-select v-model="modelVal" placeholder="请选择">
               <el-option
                 v-for="item in modelList"
-                :key="item.type"
+                :key="item.id"
                 :label="item.label"
-                :value="item.type">
+                :value="item.id">
               </el-option>
             </el-select>
           </div>
@@ -58,9 +58,9 @@
             <el-select v-model="separation" placeholder="请选择">
               <el-option
                 v-for="item in separationList"
-                :key="item.type"
+                :key="item.id"
                 :label="item.label"
-                :value="item.type">
+                :value="item.id">
               </el-option>
             </el-select>
             <div class="mar-left"><el-checkbox v-model="devideChecked">显示器</el-checkbox></div>
@@ -80,7 +80,7 @@
           <div class="displayer">
             <div
               class="displayer-item"
-              :class="[index % 2 ? 'deep' :'shallow', item.status == 'disable' ? 'disable' : '', clickItemId == item.id ? 'show' : '']"
+              :class="[index % 2 ? 'deep' :'shallow', item.status == false ? 'disable' : '', clickItemId == item.id ? 'show' : '']"
               :key = item.id
               v-for="(item, index) in displayerList"
               :id="item.id"
@@ -89,11 +89,11 @@
               <div class="item-left">
                 <span class="id-text">{{item.id}}</span>
                 <div class="icon-view"></div>
-                <span>{{item.name}}</span>
+                <span>{{item.outputType}}</span>
               </div>
               <div class="item-right">
-                <span>W:{{item.width}}</span>
-                <span>H:{{item.height}}</span>
+                <span>W:{{item.sizeW}}</span>
+                <span>H:{{item.sizeH}}</span>
               </div>
 
             </div>
@@ -184,6 +184,7 @@ import Container from '@/components/container/Container';
 import { mapState } from 'vuex';
 import { dataFormat } from '../../utils/dataFormat';
 import { customActive } from '../../utils/custom_active';
+import globalWs from '@/utils/globalWs';
 
 export default {
   data() {
@@ -191,15 +192,18 @@ export default {
       containerList: [],
       typeIndex: 0, // 参数类型
       modelList: [
-        { type: 1, label: '演示模式' },
-        { type: 2, label: '预监模式' }
+        { id: 0, label: '演示模式' , type: 'Presentation'},
+        { id: 1, label: '预监模式' , type: 'Preview'},
+        { id: 2, label: '矩阵模式' , type: 'Matrix'},
+        { id: 3, label: '旋转模式' , type: 'Rotation'},
+        { id: 4, label: '投影模式' , type: 'Blending'},
       ],  // 模式列表
-      modelVal: 1, // 模式
+      modelVal: 0, // 模式
       separationList: [
-        { type: 2, label: '2k' },
-        { type: 4, label: '4k' }
+        { id: 10, label: '2k' },
+        { id: 82, label: '4k' }
       ], // 分辨率列表
-      separation: 2, // 分辨率
+      separation: 10, // 分辨率
       devideChecked: true, // 容器是否创建显示器
       templateList: [
         { 
@@ -314,6 +318,7 @@ export default {
       vBorder: '',
       hBorder: '',
       inintPositionList: [],
+      sessionId: ''
     }
   },
   components: {
@@ -331,11 +336,17 @@ export default {
     }
   },
   mounted() {
-    // const json = {
-    //   ReadDeviceMsg: "0",
-    //   SessionID: this.$store.state.sessionId
-    // };
-    // this.websocket.ws.send(JSON.stringify(json));
+    this.sessionId = JSON.parse(window.localStorage.getItem("sessionId"));
+    console.log(JSON.parse(window.localStorage.getItem("sessionId")));
+    if(!window.webSocket) {
+      const ip = JSON.parse(window.localStorage.getItem("ip"));
+      globalWs.connectSocket("ws://"+ip+":8800");
+      this.readOutputList();
+    } else {
+      this.readOutputList();
+    }
+    // 处理ws接收到的数据
+    
     const vm = this;
     this.draggableInit();
     this.sortableInit();
@@ -361,27 +372,81 @@ export default {
         )
         if (item) {
           let hasUse = dataFormat.getHasUseDisplayIds(); // 使用过的显示器
-          let dList = vm.displayerList.filter(item => !hasUse.includes(item.id));
+          let dList = vm.displayerList.filter(item => !hasUse.includes(item.id)); // 过滤出可用的显示器
           const offset = {
             top: event.clientY - 66,
             left: event.clientX - 88
           }
-          let windows = dataFormat.addContainer(vm.devideChecked, offset, item, dList);
-          vm.selectedContainer = dataFormat.curWindow;
-          vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
-          vm.displayerList.map(item => {
-            if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
-              item.status = 'disable'
+          // 向ws发送添加容器信息
+          let separationW = 0;
+          let separationH = 0;
+          console.log(11);
+          // 根据分辨率设置基础宽高
+          switch(vm.separation) {
+            case 10:
+              separationW = 1920;
+              separationH = 1080;
+              break;
+            case 82:
+              separationW = 3840;
+              separationH = 2160;
+              break;
+          }
+          const containerW = item.col * separationW;
+          const containerH = item.row * separationH;
+          let modeType = '';
+          vm.modelList.some(item => {
+            if (item.id === vm.modelVal) {
+              modeType = item.type;
             }
-          }); // 生成容器后改变显示器是否可用状态
-          vm.$store.commit('setDisplayerList', vm.displayerList);
-          vm.$nextTick(() => {
-            vm.draggableInit();
-            vm.sortableInit();
-            vm.droppableInit();
-            // vm.resizableInit();
-            vm.toggleInit();
-          })
+          });
+          // 创建容器所需参数集合
+          const containerMsg = {
+            eventType: "createContainer", // 设置1个或多个容器
+            count: 1, // 容器数量，最大不超过输出口数量，
+            container: [ 
+              {
+                id: vm.$store.state.contaienrId, // 容器索引
+                posX: offset.left, // 容器左上角横坐标
+                posY: offset.top, // 容器左上角纵坐标
+                sizeW: containerW, // 容器总宽
+                sizeH: containerH, // 容器总高
+                mode: modeType, // 容器类型
+                modeEnum: 1, // 容器类型id
+              }
+            ],
+            sessionID: vm.sessionId
+          }
+          console.log(containerMsg);
+          //websocket 准备
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(containerMsg));
+          }
+          window.webSocket.onmessage = function(res) {
+            const result = JSON.parse(res.data);
+            console.log(result);
+            if(result.code == 200 && result.data.eventType == 'createContainer') {
+              // 创建完成更新视图
+              let windows = dataFormat.addContainer(vm.devideChecked, offset, item, dList);
+              vm.selectedContainer = dataFormat.curWindow;
+              vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
+              vm.$store.commit('setContainerId', vm.$store.state.contaienrId + 1);
+    
+              vm.displayerList.map(item => {
+                if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
+                  item.status = 'disable'
+                }
+              }); // 生成容器后改变显示器是否可用状态
+              vm.$store.commit('setDisplayerList', vm.displayerList);
+              vm.$nextTick(() => {
+                vm.draggableInit();
+                vm.sortableInit();
+                vm.droppableInit();
+                // vm.resizableInit();
+                vm.toggleInit();
+              })
+            }
+          }
         }
       }
     })
@@ -417,7 +482,6 @@ export default {
         })
       }
       container.content.map((item, index) => {
-        console.log(positionList[index].left, positionList[index].top);
         item.position.left = item.position.left == 0 ? 0 : item.position.left + (20 * (positionList[index].left / 200)) * data.zoom;
         item.position.top = item.position.top == 0 ? 0 : item.position.top + (12 * (positionList[index].top / 120)) * data.zoom;
         dataFormat.setWidget(item);
@@ -479,6 +543,30 @@ export default {
     });
   },
   methods: {
+    // 获取显示器列表
+    readOutputList() {
+      console.log('get');
+      const _this = this;
+      const readOutputListParams = {
+        eventType: "readOutputList",
+        sessionID: this.sessionId
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(readOutputListParams));
+      }
+      window.webSocket.onmessage = function(res) {
+        const result = JSON.parse(res.data);
+        if(result.code == 200 && result.data.eventType == 'readOutputList') {
+          _this.$store.commit('setDisplayerList', result.data.output);
+          _this.$nextTick(() => {
+            _this.draggableInit();
+            _this.sortableInit();
+            _this.droppableInit();
+            _this.toggleInit();
+          });
+        }
+      }
+    },
     toggleInit() {
       $(".displayer-view").hover(function() {
         $(this).find('.delete-displayer').show();
@@ -513,7 +601,7 @@ export default {
     },
     // 点击显示器
     displayerClick(obj) {
-      if (obj.status == 'disable') return;
+      if (obj.status == false) return;
       this.clickItemId = obj.id;
     },
     
@@ -635,7 +723,7 @@ export default {
             let display = dataFormat.addWidget('display', {
               parentId: parentId,
               displayId: targetObj.id,
-              name: targetObj.name,
+              name: targetObj.outputType,
             });
             display.position = {
               top: event.clientY - 64 - main.position.top - $(this)[0].offsetTop,
@@ -646,9 +734,9 @@ export default {
             vm.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
             vm.displayerList.forEach(item => {
               if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
-                item.status = 'disable'
-              } else if(item.orChange != 0) {
-                item.status = 'useable'
+                item.status = false;
+              } else {
+                item.status = true;
               }
             });
             vm.$store.dispatch('setDisplayerList', vm.displayerList);

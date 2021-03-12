@@ -89,6 +89,7 @@
 <script>
 import Api from '@/utils/api';
 import QRCode from 'qrcodejs2'  // 引入qrcode
+import utils from '@/utils/utils';
 export default {
   data() {
     return {
@@ -1265,7 +1266,7 @@ export default {
       if(res.code == 200) {
         this.mac = res.data.mac;
         this.id = res.data.id;
-        this.$store.commit('setIP', res.data.ip);
+        window.localStorage.setItem("ip", JSON.stringify(res.data.ip));
       } else {
         this.$message.error(res.message);
       }
@@ -1327,19 +1328,19 @@ export default {
     // 开始激活
     activateEvent() {
       const data = {
-        FirstName: this.surname,
-        LastName: this.name,
-        Email: this.email,
-        Company: this.company,
-        Country: this.countryList[this.country].lanText,
-        Key: this.activeCode
+        firstName: this.surname,
+        lastName: this.name,
+        email: this.email,
+        company: this.company,
+        country: this.countryList[this.country].lanText,
+        key: this.activeCode
       }
       Api.accountActivate(data).then(res => {
         if(res.code == 200) {
           this.$router.push({
             name: 'Login',
             params: {
-              acount: res.data.acount,
+              account: res.data.account,
               passwd: res.data.passwd,
             }
           });

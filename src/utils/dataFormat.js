@@ -100,7 +100,7 @@ export const dataFormat = {
       if (addDisplay) {
         let display = this.addDisplay({
           parentId: windows.id,
-          name: usableDisplay[index].name,
+          name: usableDisplay[index].outputType,
           displayId: usableDisplay[index].id,
           position: arr[index],
           signalNum: 2

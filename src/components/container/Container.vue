@@ -135,6 +135,7 @@ export default {
   position: absolute;
   border: 2px solid rgb(0, 196, 172);
   flex-direction: column;
+  transform: scale(1);
   .container-header {
     height: 24px;
     background: rgb(0, 196, 172);

@@ -336,11 +336,11 @@ export default {
     }
   },
   created() {
-
-  },
+    },
   mounted() {
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
     this.readOutputList();
+    console.log(this.displayerList);
     // 处理ws接收到的数据
     
     const vm = this;
@@ -367,8 +367,8 @@ export default {
           value => value.id === $(ui.draggable[0]).attr('id')
         )
         if (item) {
-          let hasUse = dataFormat.getHasUseDisplayIds(); // 使用过的显示器
-          let dList = vm.displayerList.filter(item => !hasUse.includes(item.id)); // 过滤出可用的显示器
+          console.log(vm.displayerList);
+          let dList = vm.displayerList.filter(item => item.status == false); // 过滤出可用的显示器
           const offset = {
             top: event.clientY - 66,
             left: event.clientX - 88
@@ -423,24 +423,82 @@ export default {
             console.log(result);
             if(result.code == 200 && result.data.eventType == 'createContainer') {
               // 创建完成更新视图
-              let windows = dataFormat.addContainer(vm.devideChecked, offset, item, dList);
-              vm.selectedContainer = dataFormat.curWindow;
-              vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
-              vm.$store.commit('setContainerId', vm.$store.state.contaienrId + 1);
-    
-              vm.displayerList.map(item => {
-                if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
-                  item.status = true;
+              if(vm.devideChecked) {
+                console.log(dList);
+                const createNum = item.row * item.col;
+                let posArr = [];
+                let outputList = [];
+                for (let i = 1; i <= item.row; i++) {
+                  for (let j = 1; j <= item.col; j++) {
+                    let position = { left: (j - 1) * 1920, top: (i - 1) * 1080 };
+                    posArr.push(position);
+                  }
                 }
-              }); // 生成容器后改变显示器是否可用状态
-              vm.$store.commit('setDisplayerList', vm.displayerList);
-              vm.$nextTick(() => {
-                vm.draggableInit();
-                vm.sortableInit();
-                vm.droppableInit();
-                // vm.resizableInit();
-                vm.toggleInit();
-              })
+                for (let index = 0; index < createNum; index++) {
+                  let display = {
+                    id: dList[index].id,
+                    posX: posArr[index].left,
+                    posY: posArr[index].top,
+                    sizeW: dList[index].sizeW,
+                    sizeH: dList[index].sizeH,
+                    containerId: vm.$store.state.contaienrId,
+                    outputType: dList[index].outputType,
+                    outputTypeEnum: dList[index].outputTypeEnum
+                  };
+                  outputList.push(display);
+                }
+
+                const outputMsg = {
+                  eventType: "setOutputMsg",
+                  count: createNum,
+                  output: outputList,
+                  sessionID: vm.sessionId
+                }
+                window.webSocket.send(JSON.stringify(outputMsg));
+                window.webSocket.onmessage = function(res) {
+                  const outputRes = JSON.parse(res.data);
+                  if(outputRes.code == 200 && outputRes.data.eventType == 'setOutputMsg') {
+                    let windows = dataFormat.addContainer(vm.devideChecked, offset, item, dList);
+                    vm.selectedContainer = dataFormat.curWindow;
+                    vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
+                    vm.$store.commit('setContainerId', vm.$store.state.contaienrId + 1);
+          
+                    vm.displayerList.map(item => {
+                      if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
+                        item.status = true;
+                      }
+                    }); // 生成容器后改变显示器是否可用状态
+                    vm.$store.commit('setDisplayerList', vm.displayerList);
+                    vm.$nextTick(() => {
+                      vm.draggableInit();
+                      vm.sortableInit();
+                      vm.droppableInit();
+                      // vm.resizableInit();
+                      vm.toggleInit();
+                    });
+                  }
+                }
+              }
+              else {
+                let windows = dataFormat.addContainer(vm.devideChecked, offset, item, dList);
+                vm.selectedContainer = dataFormat.curWindow;
+                vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
+                vm.$store.commit('setContainerId', vm.$store.state.contaienrId + 1);
+      
+                vm.displayerList.map(item => {
+                  if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
+                    item.status = true;
+                  }
+                }); // 生成容器后改变显示器是否可用状态
+                vm.$store.commit('setDisplayerList', vm.displayerList);
+                vm.$nextTick(() => {
+                  vm.draggableInit();
+                  vm.sortableInit();
+                  vm.droppableInit();
+                  // vm.resizableInit();
+                  vm.toggleInit();
+                });
+              }
             }
           }
         }

@@ -5,15 +5,18 @@
     :class="deviceId == dMsg.id ? 'light' : ''"
     :parentId="dMsg.parentId"
     :id="dMsg.id"
+    :displayerId="dMsg.displayId"
     v-if="dMsg"
     @click="clickDisplayer(dMsg.id)"
   >
     <div>显示器{{ dMsg.displayId }}</div>
-    <div v-if="pisition && dMsg.position"><span>x:{{dMsg.position.left}}</span><span>y:{{dMsg.position.top}}</span></div>
+    <div v-if="pisition && dMsg.realPos"><span>x:{{dMsg.realPos.left}}</span><span>y:{{dMsg.realPos.top}}</span></div>
+    <div v-if="dMsg.separation == 10"><span>w:1920</span><span>h:1080</span></div>
+    <div v-if="dMsg.separation == 82"><span>w:3840</span><span>h:2160</span></div>
     <div>{{dMsg.name}}</div>
     <span
       class="delete-displayer"
-      @click.stop="deleteDisplayer(dMsg.id, dMsg.parentId)"
+      @click.stop="deleteDisplayer(dMsg.displayId, dMsg.parentId)"
       >x</span
     >
   </div>

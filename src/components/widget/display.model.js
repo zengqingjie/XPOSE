@@ -5,9 +5,15 @@ export class Display extends Widget {
   constructor(config) {
     super(config);
     this.name = config.name || '显示器';
+    this.containerId = config.containerId || '';
+    this.sizeW = config.sizeW || null;
+    this.sizeH = config.sizeH || null;
+    this.outputTypeEnum = config.outputTypeEnum || null;
     this.displayId = config.displayId;
     this.position = config.position || null;
     this.signalNum = config.signalNum || 2;
+    this.realPos = config.realPos || null;
+    this.separation = config.separation || null;
     this.intersectList = config.intersect || [];
     this.customFeature = Object.assign({
       wBase: 200,

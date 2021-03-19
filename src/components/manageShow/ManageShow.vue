@@ -304,7 +304,7 @@ export default {
         }
       ], // 模板列表
       drageDisplayerList: [],
-      clickItemId: '',
+      clickItemId: null,
       templateItem: null, // 当前所选模板
       selectedContainer: null,
       selectedDisplayerId: '',
@@ -318,7 +318,12 @@ export default {
       vBorder: '',
       hBorder: '',
       inintPositionList: [],
-      sessionId: ''
+      sessionId: '',
+      readOutputListCheckKey: '', // 获取显示器列表随机key
+      createContainerCheckKey: '', // 创建容器随机key
+      setOutputMsgCheckKey: '', // 设置显示器随机key
+      rmContainerCheckKey: '', // 删除容器随机key
+      rmOutputFromContainerCheckKey: '', // 删除容器中的显示器随机key
     }
   },
   components: {
@@ -340,7 +345,6 @@ export default {
   mounted() {
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
     this.readOutputList();
-    console.log(this.displayerList);
     // 处理ws接收到的数据
     
     const vm = this;
@@ -376,7 +380,6 @@ export default {
           // 向ws发送添加容器信息
           let separationW = 0;
           let separationH = 0;
-          console.log(11);
           // 根据分辨率设置基础宽高
           switch(vm.separation) {
             case 10:
@@ -411,30 +414,28 @@ export default {
                 modeEnum: 1, // 容器类型id
               }
             ],
-            sessionID: vm.sessionId
+            sessionID: vm.sessionId,
+            checkKey: vm.getcheckKey('createContainer')
           }
-          console.log(containerMsg);
           //websocket 准备
           if (window.webSocket && window.webSocket.readyState == 1) {
             window.webSocket.send(JSON.stringify(containerMsg));
           }
           window.webSocket.onmessage = function(res) {
             const result = JSON.parse(res.data);
-            console.log(result);
-            if(result.code == 200 && result.data.eventType == 'createContainer') {
+            if(result.code == 200 && result.data.eventType == 'createContainer' && result.checkKey == vm.createContainerCheckKey) {
               // 创建完成更新视图
               if(vm.devideChecked) {
-                console.log(dList);
                 const createNum = item.row * item.col;
                 let posArr = [];
                 let outputList = [];
                 for (let i = 1; i <= item.row; i++) {
                   for (let j = 1; j <= item.col; j++) {
-                    let position = { left: (j - 1) * 1920, top: (i - 1) * 1080 };
+                    let position = { left: (j - 1) * separationW, top: (i - 1) * separationH };
                     posArr.push(position);
                   }
                 }
-                for (let index = 0; index < createNum; index++) {
+                for (let index = 0; index < (createNum <= dList.length ? createNum : dList.length); index++) {
                   let display = {
                     id: dList[index].id,
                     posX: posArr[index].left,
@@ -450,19 +451,19 @@ export default {
 
                 const outputMsg = {
                   eventType: "setOutputMsg",
-                  count: createNum,
+                  count: createNum <= dList.length ? createNum : dList.length,
                   output: outputList,
-                  sessionID: vm.sessionId
+                  sessionID: vm.sessionId,
+                  checkKey: vm.getcheckKey('setOutputMsg')
                 }
                 window.webSocket.send(JSON.stringify(outputMsg));
                 window.webSocket.onmessage = function(res) {
                   const outputRes = JSON.parse(res.data);
-                  if(outputRes.code == 200 && outputRes.data.eventType == 'setOutputMsg') {
-                    let windows = dataFormat.addContainer(vm.devideChecked, offset, item, dList);
+                  if(outputRes.code == 200 && outputRes.data.eventType == 'setOutputMsg' && outputRes.checkKey == vm.setOutputMsgCheckKey) {
+                    let windows = dataFormat.addContainer(vm.$store.state.contaienrId, vm.devideChecked, offset, item, dList, posArr, vm.separation);
                     vm.selectedContainer = dataFormat.curWindow;
                     vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
                     vm.$store.commit('setContainerId', vm.$store.state.contaienrId + 1);
-          
                     vm.displayerList.map(item => {
                       if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
                         item.status = true;
@@ -480,7 +481,7 @@ export default {
                 }
               }
               else {
-                let windows = dataFormat.addContainer(vm.devideChecked, offset, item, dList);
+                let windows = dataFormat.addContainer(vm.$store.state.contaienrId, vm.devideChecked, offset, item, dList);
                 vm.selectedContainer = dataFormat.curWindow;
                 vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
                 vm.$store.commit('setContainerId', vm.$store.state.contaienrId + 1);
@@ -554,36 +555,79 @@ export default {
     // 监听删除容器事件
     this.$root.bus.$off('deleteContainer');
     this.$root.bus.$on('deleteContainer', (container) => {
-      dataFormat.removeWidgetId(container.id);
-      console.log(container);
-      return;
-      this.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
-      this.$message({
-          type: 'success',
-          message: '已删除'
-        });
+      const that = this;
+      const rmContainerParams = {
+        eventType: "rmContainer",
+        count: 1,
+        container: [
+          { id: container.containerId }
+        ],
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey('rmContainer')
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(rmContainerParams));
+      }
+      window.webSocket.onmessage = function(res) {
+        const rmContainerRes = JSON.parse(res.data);
+        if(rmContainerRes.code == 200 && rmContainerRes.data.eventType == 'rmContainer' && rmContainerRes.checkKey == vm.rmContainerCheckKey) {
+          dataFormat.removeWidgetId(container.id);
+          container.content.map(Iitem => {
+            dataFormat.removeWidgetId(Iitem.id);
+          });
+          that.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
+          that.$message({
+            type: 'success',
+            message: '已删除'
+          });
+        }
+      }
     });
     // 删除显示器
     this.$root.bus.$off('deleteDisplayer');
     this.$root.bus.$on('deleteDisplayer', (data) => {
-      let contaienr = dataFormat.getWidget(data.cId);
-      contaienr.content.some((item, index) => {
-        if(item.id == data.dId) {
-          contaienr.content.splice(index, 1);
-          return true;
+      console.log(data);
+      const that = this;
+      const rmOutputFromContainerParams = {
+        eventType: "rmOutputFromContainer",
+        count: 1,
+        output: [
+          { id: data.dId }
+        ],
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey('rmOutputFromContainer')
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(rmOutputFromContainerParams));
+      }
+      window.webSocket.onmessage = function(res) {
+        const result = JSON.parse(res.data);
+        if((result.code == 200) && (result.data.eventType == 'rmOutputFromContainer') && (result.checkKey == that.rmOutputFromContainerCheckKey)) {
+          let contaienr = dataFormat.getWidget(data.cId);
+          console.log(contaienr);
+          contaienr.content.map((item, index) => {
+            if(item.displayId == data.dId) {
+              contaienr.content.splice(index, 1);
+            }
+          })
+          dataFormat.setWidget(contaienr);
+          dataFormat.replaceDisplay(data.dId);
+          that.showVessels.some(item => {
+            if(item.id == data.cId) {
+              item = contaienr;
+            }
+          })
+          that.$store.dispatch('setContainerList', vm.showVessels)
+          // this.displayerList.forEach(item => {
+          //   if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
+          //     item.status = true;
+          //   } else {
+          //     item.status = false;
+          //   }
+          // })
+          // this.$store.dispatch('setDisplayerList', this.displayerList);
         }
-      })
-      dataFormat.setWidget(contaienr);
-      dataFormat.replaceDisplay(data.dId);
-      console.log(dataFormat.getHasUseDisplayIds());
-      this.displayerList.forEach(item => {
-        if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
-          item.status = true;
-        } else {
-          item.status = false;
-        }
-      })
-      this.$store.dispatch('setDisplayerList', this.displayerList);
+      }
     });
 
     // 标识当前操作的容器
@@ -602,9 +646,11 @@ export default {
     // 获取显示器列表
     readOutputList() {
       const _this = this;
+      const randoms = this.getcheckKey();
       const readOutputListParams = {
         eventType: "readOutputList",
-        sessionID: this.sessionId
+        sessionID: this.sessionId,
+        checkKey: randoms
       }
       if (window.webSocket && window.webSocket.readyState == 1) {
         window.webSocket.send(JSON.stringify(readOutputListParams));
@@ -622,6 +668,35 @@ export default {
           });
         }
       }
+    },
+    // 生成随机随机checkKey
+    getcheckKey(type) {
+      let arr = new Array;
+      const arr1 = new Array("0","1","2","3","4","5","6","7","8","9");
+      let nonceStr=''
+      for(var i=0; i<8; i++){
+        var n = Math.floor(Math.random()*10);
+        arr[i] = arr1[n] ;
+        nonceStr += arr1[n];
+      }
+      switch (type) {
+        case 'createContainer': // 创建容器
+          this.createContainerCheckKey =  parseInt(nonceStr);
+          break;
+        case 'readOutputList':
+          this.readOutputListCheckKey = parseInt(nonceStr);
+          break;
+        case 'setOutputMsg':
+          this.setOutputMsgCheckKey = parseInt(nonceStr);
+          break;
+        case 'rmContainer':
+          this.rmContainerCheckKey = parseInt(nonceStr);
+          break;
+        case 'rmOutputFromContainer':
+          this.rmOutputFromContainerCheckKey = parseInt(nonceStr);
+          break;
+      }
+      return parseInt(nonceStr);
     },
     toggleInit() {
       $(".displayer-view").hover(function() {
@@ -752,9 +827,6 @@ export default {
         zIndex: 100,
         stop: function(event, ui) {
           let container = dataFormat.widgetMap[$(this).attr('id')];
-          console.log(dataFormat.widgetMap);
-          console.log($(this).attr('id'));
-          console.log(container);
           container.position = ui.position;
           dataFormat.setWidget(container);
           vm.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
@@ -783,10 +855,16 @@ export default {
               parentId: parentId,
               displayId: targetObj.id,
               name: targetObj.outputType,
+              separation: vm.separation,
+              signalNum: 2
             });
             display.position = {
               top: event.clientY - 64 - main.position.top - $(this)[0].offsetTop,
               left: event.clientX - 88 - main.position.left - $(this)[0].offsetLeft
+            }
+            display.realPos = {
+              top: Math.round(display.position.left * 9.6),
+              left: display.position.top * 9
             }
             main.content.push(display);
             dataFormat.setWidget(main);
@@ -812,7 +890,6 @@ export default {
             // 被放置的显示器
             const displayer = dataFormat.getWidget(id);
             let main = dataFormat.widgetMap[parentId]; // 最外层容器
-            console.log(displayer,main,id,parentId);
             const { wBase, hBase, zoom, col, row } = main.customFeature;
             const maxX = main.position.left + col * wBase * zoom.xRadio;
             const maxY = main.position.top + 24 + row * hBase * zoom.yRadio;
@@ -826,8 +903,10 @@ export default {
                 parentId: displayer.parentId,
                 displayId: targetObj.id,
                 name: targetObj.outputType,
+                separation: vm.separation
               });
               display.position = displayer.position;
+              display.realPos = displayer.realPos;
               main.content.forEach((item, index) => {
                 if(item.id == displayer.id) {
                   main.content.splice(index, 1, display);
@@ -835,6 +914,11 @@ export default {
               });
               dataFormat.setWidget(main);
               dataFormat.replaceDisplay(displayer.id);
+              vm.showVessels.some(cItem => {
+                if(cItem.containerId == main.containerId) {
+                  Object.assign(cItem, main);
+                }
+              })
               vm.displayerList.forEach(item => {
                 if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
                   item.status = true;
@@ -864,28 +948,59 @@ export default {
         delay: 100,
         snap: ".displayer-box",
         snapMode: 'inner',
-        snapTolerance: 15,
+        snapTolerance: 10,
         scroll: false,
         zIndex: 100,
         stop: function(event, ui) {
-          let displayer = dataFormat.widgetMap[$(this).attr('id')];
-          let container = dataFormat.getWidget([$(this).attr('parentId')]);
-          displayer.position = ui.position;
-          dataFormat.setWidget(displayer);
-          vm.showVessels.some(item => {
-            if (item.id === container.id) {
-              Object.assign(item, container);
-              return true;
+          let container = dataFormat.getWidget([$(this).attr('parentId')]); // 被拖拽显示器所属容器
+          const targetDid = $(this).attr('displayerId'); // 被拖拽显示器id
+          container.content.some(item => {
+            if(item.displayId == targetDid) {
+              item.position = ui.position;
+              item.realPos = {
+                top: Math.round(item.position.left * 9.6),
+                left: item.position.top * 9
+              }
+              const display = {
+                id: item.displayId,
+                posX: item.realPos.left,
+                posY: item.realPos.top,
+                sizeW: item.sizeW,
+                sizeH: item.sizeH,
+                containerId: vm.$store.state.contaienrId,
+                outputType: item.name,
+                outputTypeEnum: item.outputTypeEnum
+              };
+              const outputMsg = {
+                eventType: "setOutputMsg",
+                count: 1,
+                output: [display],
+                sessionID: vm.sessionId,
+                checkKey: vm.getcheckKey('setOutputMsg')
+              }
+              window.webSocket.send(JSON.stringify(outputMsg));
             }
           })
-          vm.$store.dispatch('setContainerList', vm.showVessels);
-          vm.$nextTick(() => {
-            vm.draggableInit();
-            vm.sortableInit();
-            vm.droppableInit();
-            // vm.resizableInit();
-            vm.toggleInit();
-          })
+          window.webSocket.onmessage = function(res) {
+            const outputRes = JSON.parse(res.data);
+            if(outputRes.code == 200 && outputRes.data.eventType == 'setOutputMsg' && outputRes.checkKey == vm.setOutputMsgCheckKey) {
+              dataFormat.setWidget(container);
+              vm.showVessels.some(item => {
+                if (item.id === container.id) {
+                  Object.assign(item, container);
+                  return true;
+                }
+              })
+              vm.$store.dispatch('setContainerList', vm.showVessels);
+              vm.$nextTick(() => {
+                vm.draggableInit();
+                vm.sortableInit();
+                vm.droppableInit();
+                // vm.resizableInit();
+                vm.toggleInit();
+              });
+            }
+          }
         }
       })
     },

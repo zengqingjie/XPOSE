@@ -77,12 +77,13 @@ export const dataFormat = {
    * @param {object} position 拖拽放置位置
    * @param {object} templateObj 拖拽模板
    */
-  addContainer(addDisplay = true, position, templateObj, usableDisplay = []) {
+  addContainer(id, addDisplay = true, position, templateObj, usableDisplay = [], realPos = [], separation) {
     let content = [];
     let childrenContent = [];
     const { col, row } = templateObj;
     let addNum = col * row;
     let windows = this.addWidget('windows', {
+      containerId: id,
       position,
       templateId: templateObj.id,
       customFeature: templateObj,
@@ -100,9 +101,15 @@ export const dataFormat = {
       if (addDisplay) {
         let display = this.addDisplay({
           parentId: windows.id,
+          containerId: id,
           name: usableDisplay[index].outputType,
+          outputTypeEnum: usableDisplay[index].outputTypeEnum,
           displayId: usableDisplay[index].id,
           position: arr[index],
+          realPos: realPos[index],
+          separation: separation,
+          sizeW: usableDisplay[index].sizeW,
+          sizeH: usableDisplay[index].sizeH,
           signalNum: 2
         });
         content.push(display);
@@ -133,7 +140,6 @@ export const dataFormat = {
     this.widgetList.forEach(item => {
       if (item.type === 'display') hasUseDisplay.push(item);
     })
-
     return hasUseDisplay.map(
       item => item.displayId
     )

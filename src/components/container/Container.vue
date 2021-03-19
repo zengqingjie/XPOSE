@@ -1,14 +1,14 @@
 <template>
   <div
     class="container-component"
-    v-if="cItem && cItem.templateId"
+    v-if="cItem"
     :style="setContainerStyle"
     @mousedown="emitSetContainer(cItem)"
     :id="cItem.id"
   >
     <div class="container-header">
       <span
-        >{{ index + 1 }}--(W:{{ cItem.customFeature.col * 1920 }} H:{{
+        >{{ cItem.containerId }}--(W:{{ cItem.customFeature.col * 1920 }} H:{{
           cItem.customFeature.row * 1080
         }})</span
       >

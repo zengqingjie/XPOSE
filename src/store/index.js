@@ -16,36 +16,7 @@ export default new Vuex.Store({
     showVessels: [], // 显示容器
     shareVessels: [], // 共享容器 （图层管理 && 场景管理）
     displayerList: [
-      // { id: 1, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-      // { id: 2, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-      // { id: 3, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-      // { id: 4, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-      // { id: 5, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-      // { id: 6, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-      // { id: 7, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-      // { id: 8, name: 'DVI', type: 'DVI', width: 1920, height:1080, status: 'usable' },
-      // { id: 9, name: 'HDMI', type: 'HDMI', width: 1920, height:1080, status: 'usable' },
-      // { id: 10, name: 'HDMI', type: 'HDMI', width: 1920, height:1080, status: 'usable' },
-      // { id: 11, name: 'HDMI', type: 'HDMI', width: 1920, height:1080, status: 'usable' },
-      // { id: 12, name: 'HDMI', type: 'HDMI', width: 1920, height:1080, status: 'usable' },
-      // { id: 13, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
-      // { id: 14, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
-      // { id: 15, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
-      // { id: 16, name: 'SDI', type: 'SDI', width: 1920, height:1080, status: 'usable' },
-      // { id: 17, name: 'HDMI 2.0', type: 'HDMI2.0', width: 1920, height:1080, status: 'disable', orChange: 0 },
-      // { id: 19, name: 'HDMI 2.0', type: 'HDMI2.0', width: 1920, height:1080, status: 'disable', orChange: 0 },
-      // { id: 21, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable', orChange: 0 },
-      // { id: 22, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable', orChange: 0 },
-      // { id: 23, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable', orChange: 0 },
-      // { id: 24, name: 'RS1', type: 'RS1', width: 1920, height:1080, status: 'disable', orChange: 0 },
-      // { id: 25, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
-      // { id: 26, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
-      // { id: 27, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
-      // { id: 28, name: 'HDBaseT', type: 'HDBaseT', width: 1920, height:1080, status: 'usable' },
-      // { id: 29, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable', orChange: 0 },
-      // { id: 30, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable', orChange: 0 },
-      // { id: 31, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable', orChange: 0 },
-      // { id: 32, name: 'H264', type: 'H264', width: 1920, height:1080, status: 'disable', orChange: 0 },
+      
     ], // 设备列表
     
     bankList: [

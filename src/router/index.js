@@ -22,6 +22,12 @@ const routes = [
     name: 'Index',
     component: () => import('@/views/Index.vue')
   },
+   // 切割
+   {
+    path: '/clip',
+    name: 'Clip',
+    component: () => import('@/views/Clip.vue')
+  },
 ]
 
 const router = new VueRouter({

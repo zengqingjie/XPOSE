@@ -8,7 +8,7 @@
           <div :class="leftIndex == 2 ? 'show' : ''" @click="paramsEvent(2)">信号</div>
         </div>
       </div>
-      <div class="params-cont">
+      <div class="params-conts">
         <div v-show="leftIndex == 0">
           <div
             v-for="(item, index) in containerList"
@@ -33,26 +33,22 @@
             <div
               class="signal-item"
               v-for="(item, index) in signalList"
-              :key="item.id"
+              :key="item.inputPort"
               :class="[index % 2 ? 'deep' : 'shallow', signalId == item.id ? 'show' : '']"
-              :id="item.id"
-              :type="item.type"
+              :id="item.inputPort"
+              :type="item.inputType"
               :index="index"
             >
-              <span class="order">{{index + 1}}</span>
+              <span class="order">{{item.inputPort}}</span>
               <div class="signal-icon">
-                <img src="../../assets/default/H264.png" alt="" v-if="item.type == 'H264'">
-                <img src="../../assets/default/HDBaseT.png" alt="" v-if="item.type == 'HDBaseT'">
-                <img src="../../assets/default/CVBS.png" alt="" v-if="item.type == 'CVBS'">
-                <img src="../../assets/default/SDI_12G.png" alt="" v-if="item.type == 'SDI_12G'">
-                <img src="../../assets/default/DVI.png" alt="" v-if="item.type == 'DVI'">
-                <img src="../../assets/default/HDMI1.4.png" alt="" v-if="item.type == 'HDMI14'">
-                <img src="../../assets/default/HDMI2.0.png" alt="" v-if="item.type == 'HDMI20'">
-                <img src="../../assets/default/DP1.2.png" alt="" v-if="item.type == 'DP12'">
-                <img src="../../assets/default/HDMI.png" alt="" v-if="item.type == 'HDMI'">
-                <img src="../../assets/default/SDI_D.png" alt="" v-if="item.type == 'SDI_D'">
+                <img src="../../assets/default/HDBaseT.png" alt="" v-if="item.inputType == 32">
+                <img src="../../assets/default/SDI_12G.png" alt="" v-if="item.inputType == 25">
+                <img src="../../assets/default/DVI.png" alt="" v-if="(item.inputType == 1) || (item.inputType == 16) || (item.inputType == 21)">
+                <img src="../../assets/default/HDMI1.4.png" alt="" v-if="item.inputType == 22">
+                <img src="../../assets/default/HDMI2.0.png" alt="" v-if="item.inputType == 24">
+                <img src="../../assets/default/DP1.2.png" alt="" v-if="(item.inputType == 23) || (item.inputType == 35)">
               </div>
-              <span>{{item.label}}</span>
+              <span>{{conversationFormate(item.format)}}</span>
             </div>
           </div>
         </div>
@@ -395,6 +391,7 @@
         </div>
       </div>
     </div>
+    <img :src="streamMedia" alt="" v-if="streamMedia">
   </div>
 </template>
 
@@ -450,7 +447,10 @@ export default {
       cjyj: false,
       kzyj: false,
       h264: false,
-      aoiData: null
+      aoiData: null,
+      sessionId: '', // 会话列表
+      readInputSignalListCheckKey: null,// 获取信号列表随机key
+      streamMedia: '',
     }
   },
   components: {
@@ -458,60 +458,67 @@ export default {
     Aoi
   },
   created() {
-    const signalList = [
-      {
-        id: 'XH_001',
-        type: 'H264',
-        label: '1920*1080@60',
-      },
-      {
-        id: 'XH_002',
-        type: 'HDBaseT',
-        label: '1920*1080@60',
-      },
-      {
-        id: 'XH_003',
-        type: 'CVBS',
-        label: '1920*1080@60',
-      },
-      {
-        id: 'XH_004',
-        type: 'SDI_12G',
-        label: '1920*1080@60',
-      },
-      {
-        id: 'XH_005',
-        type: 'DVI',
-        label: '1920*1080@60',
-      },
-      {
-        id: 'XH_006',
-        type: 'HDMI14',
-        label: '1920*1080@60',
-      },
-      {
-        id: 'XH_007',
-        type: 'HDMI20',
-        label: '1920*1080@60',
-      },
-      {
-        id: 'XH_008',
-        type: 'DP12',
-        label: '1920*1080@60',
-      },
-      {
-        id: 'XH_009',
-        type: 'HDMI',
-        label: '1920*1080@60',
-      },
-      {
-        id: 'XH_010',
-        type: 'SDI_D',
-        label: '1920*1080@60',
-      },
-    ];
-    this.signalList = signalList;
-
+    // const signalList = [
+    //   {
+    //     id: 'XH_001',
+    //     type: 'H264',
+    //     label: '1920*1080@60',
+    //   },
+    //   {
+    //     id: 'XH_002',
+    //     type: 'HDBaseT',
+    //     label: '1920*1080@60',
+    //   },
+    //   {
+    //     id: 'XH_003',
+    //     type: 'CVBS',
+    //     label: '1920*1080@60',
+    //   },
+    //   {
+    //     id: 'XH_004',
+    //     type: 'SDI_12G',
+    //     label: '1920*1080@60',
+    //   },
+    //   {
+    //     id: 'XH_005',
+    //     type: 'DVI',
+    //     label: '1920*1080@60',
+    //   },
+    //   {
+    //     id: 'XH_006',
+    //     type: 'HDMI14',
+    //     label: '1920*1080@60',
+    //   },
+    //   {
+    //     id: 'XH_007',
+    //     type: 'HDMI20',
+    //     label: '1920*1080@60',
+    //   },
+    //   {
+    //     id: 'XH_008',
+    //     type: 'DP12',
+    //     label: '1920*1080@60',
+    //   },
+    //   {
+    //     id: 'XH_009',
+    //     type: 'HDMI',
+    //     label: '1920*1080@60',
+    //   },
+    //   {
+    //     id: 'XH_010',
+    //     type: 'SDI_D',
+    //     label: '1920*1080@60',
+    //   },
+    // ];
+    // this.signalList = signalList;
+    
+    const ip = JSON.parse(window.sessionStorage.getItem("ip"));
+    this.streamMedia = `http://${ip}:8080/?action=stream`;
+    // 分割流媒体（3行8列）
+    this.clipMedia(3, 8);
+    
+    this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
+    this.getSignalList();
     const bankListData = this.$store.state.bankList;
     const bankStoreVal = this.$store.state.bankIndex;
 
@@ -721,6 +728,76 @@ export default {
     ]),
   },
   methods: {
+    clipMedia(row, col) {
+      let clipList = [];
+      for (let i = 0; i < row; i ++) {
+        for (let j = 0; j < col; j ++) {
+          clipList.push(
+            {
+              backgroundPositionX: -j * 240 + 'px' ,
+              backgroundPositionY: -i * 360 + 'px'
+            }
+          );
+        }
+      }
+      this.signalList.map((item, index) => {
+        item.clipArea = clipList[index];
+      })
+    },
+    // 读取左侧信号列表
+    getSignalList() {
+      const that = this;
+      const readInputSignalListParams = {
+        eventType: "readInputSignalList",
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey('readInputSignalList')
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(readInputSignalListParams));
+      }
+      window.webSocket.onmessage = function(res) {
+        const result = JSON.parse(res.data);
+        if((result.code == 200) && (result.data.eventType == 'readInputSignalList') && (result.checkKey == that.readInputSignalListCheckKey)) {
+          console.log('获取信号列表');
+          // that.$store.dispatch('setDisplayerList', result.data.output);
+          that.signalList = result.data.inputSignal;
+          that.$nextTick(() => {
+            that.signalInitDraggable();
+          });
+        }
+      }
+    },
+    // 生成随机随机checkKey
+    getcheckKey(type) {
+      let arr = new Array;
+      const arr1 = new Array("0","1","2","3","4","5","6","7","8","9");
+      let nonceStr=''
+      for(var i=0; i<8; i++){
+        var n = Math.floor(Math.random()*10);
+        arr[i] = arr1[n] ;
+        nonceStr += arr1[n];
+      }
+      switch (type) {
+        case 'readInputSignalList': // 创建容器
+          this.readInputSignalListCheckKey = parseInt(nonceStr);
+          break;
+      }
+      return parseInt(nonceStr);
+    },
+    // 分辨率转换
+    conversationFormate(formate) {
+      switch (formate) {
+        case 0:
+          return '720x480@60';
+          break;
+        case 10:
+          return '1920x1080@60';
+          break;
+        case 76:
+          return '3840x2160@60';
+          break;
+      }
+    },
     // 克隆
     deepCopy(obj) {
       let _obj = JSON.stringify(obj);
@@ -1073,6 +1150,10 @@ export default {
             background: rgb(26,188,156);
           }
         }
+      }
+      .params-conts {
+        overflow: auto;
+        height: calc(100vh - 120px);
       }
       .container-list-item {
         display: flex;

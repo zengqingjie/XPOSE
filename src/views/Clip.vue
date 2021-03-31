@@ -36,10 +36,14 @@ export default {
     display: flex;
     flex-wrap: wrap;
     > div {
+      // display: none;
       width: 240px;
       height: 360px;
       background: url('../assets/try.jpg') no-repeat;
       background-size: 1920px 1080px;
+    }
+    > div:first-child {
+      // display: block;
     }
   }
 </style>

@@ -67,7 +67,7 @@
         >
           <Aoi
             :aoi="aoiData"
-            :cId="item.id"
+            :cId="item.containerId"
           />
         </LayerContainer>
       </div>
@@ -450,7 +450,10 @@ export default {
       aoiData: null,
       sessionId: '', // 会话列表
       readInputSignalListCheckKey: null,// 获取信号列表随机key
+      setLayerCheckKey: null,//设置图层随机key
+      rmLayerCheckKey: null, //删除图层随机key
       streamMedia: '',
+      layerIds: [], // 创建图层可以用id
     }
   },
   components: {
@@ -513,7 +516,7 @@ export default {
     // this.signalList = signalList;
     
     const ip = JSON.parse(window.sessionStorage.getItem("ip"));
-    this.streamMedia = `http://${ip}:8080/?action=stream`;
+    // this.streamMedia = `http://${ip}:8080/?action=stream`;
     // 分割流媒体（3行8列）
     this.clipMedia(3, 8);
     
@@ -524,30 +527,50 @@ export default {
 
     const instanceData = this.$store.state.showVessels;
     bankListData.some((item, index) => {
-      if (item.containers) {
-        instanceData.forEach(ele => {
-          let culEle = item.containers.find(itemCon => itemCon.id === ele.id);
-          if(culEle) {
-            culEle.signalList.forEach(sItem => {
-              Object.assign(sItem.customFeature, ele.customFeature);
-              sItem.aoi.width = ele.customFeature.wBase;
-              sItem.aoi.height = ele.customFeature.hBase;
+      if(item.containers) { // 存在拷贝容器
+        item.containers.forEach((containerInfo, containerIndex) => {
+          // 是否存在显示管理已删除容器，如果存在则删除
+          const havedContainer = instanceData.find(showCitem => showCitem.containerId == containerInfo.containerId);
+          if(!havedContainer) {
+            item.containers.splice(containerIndex, 1);
+          }
+          // 是否删除容器中的显示器
+          containerInfo.content.map((disInfo, disIndex) => {
+            const referContainer = instanceData.find(item => item.containerId == containerInfo.containerId);
+            if(referContainer) {
+              const disObj = referContainer.content.find(dItem => dItem.displayId == disInfo.displayId);
+              if(!disObj) {
+                containerInfo.content.splice(disIndex, 1);
+              }
+            }
+          });
+        });
+        
+        // 显示管理可能修改容器数据，重新拷贝
+        instanceData.forEach((showCitem) => {
+          const copyObj = item.containers.find(copyCitem => copyCitem.containerId == showCitem.containerId);
+          if(copyObj) { // 重新拷贝已存在容器信息
+            copyObj.signalList.forEach(sItem => {
+              Object.assign(sItem.customFeature, showCitem.customFeature);
+              sItem.aoi.width = showCitem.customFeature.wBase;
+              sItem.aoi.height = showCitem.customFeature.hBase;
             });
-            Object.assign(culEle.content, ele.content);
-            Object.assign(culEle, {position: ele.position}, {customFeature: ele.customFeature});
-          }else {
-            item.containers.push(this.deepCopy(ele));
+            Object.assign(copyObj, {position: showCitem.position}, {customFeature: showCitem.customFeature});
+            Object.assign(copyObj.content, showCitem.content); // 拷贝显示器数据
+            copyObj.content.map(dItem => dItem.signalNum = 2);
+          }else { // 拷贝显示管理新添加容器
+            item.containers.push(this.deepCopy(showCitem))
           }
         });
-      } else {
+      } else { // 初次拷贝显示管理容器数据
         item.containers = this.deepCopy(instanceData);
       }
     });
     this.containerList = bankListData[bankStoreVal].containers;
-    this.containerList.some(item => {
+    this.containerList.map(item => {
       item.signalList.map(sItem => {
         sItem.aoi.status = false;
-        item.content.forEach(dItem => {
+        item.content.map(dItem => {
           if (this.isOverlap(sItem, dItem)) {
             dItem.signalNum = dItem.signalNum - 1;
             dItem.intersectList.push(sItem);
@@ -568,6 +591,8 @@ export default {
     this.signalInitDroppable();
     this.signalLayerDraggable();
     this.signalLayerResize();
+    // 可设置图层id集合
+    this.layerIdList();
     // 标识当前操作的容器
     this.$root.bus.$off('setSelectedContainer');
     this.$root.bus.$on('setSelectedContainer', (data) => {
@@ -616,33 +641,52 @@ export default {
     // 信号图层删除
     this.$root.bus.$off('deleteLayer');
     this.$root.bus.$on('deleteLayer', (data) => {
-      this.containerList.some(item => {
-        if (item.id == data.parentId) {
-          item.signalList.some((layer, index) => {
-            if (layer.id == data.id) {
-              item.signalList.splice(index, 1);
+      const vm = this;
+      const rmLayerParams = {
+        eventType: "rmLayer",
+        count: 1,
+        layer: [
+          { id: data.signalId }
+        ],
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey('rmLayer')
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(rmLayerParams));
+      }
+      window.webSocket.onmessage = function(res) {
+        const result = JSON.parse(res.data);
+        if(result.code == 200 && result.data.eventType == 'rmLayer' && result.checkKey == vm.rmLayerCheckKey) {
+          vm.containerList.some(item => {
+            if (item.containerId == data.parentId) {
+              item.signalList.some((layer, index) => {
+                if (layer.signalId == data.signalId) {
+                  item.signalList.splice(index, 1);
+                  return true;
+                }
+              })
+              return true;
+            }
+          });
+          vm.bankList.some((item, index) => {
+            if(index == vm.bankIndex) {
+              item.containers = vm.containerList;
               return true;
             }
           })
-          return true;
+          vm.$store.dispatch('setBankList', vm.bankList);
         }
-      });
-      this.bankList.some((item, index) => {
-        if(index == this.bankIndex) {
-          item.containers = this.containerList;
-          return true;
-        }
-      })
-      this.$store.dispatch('setBankList', this.bankList);
+      }
+
     });
 
     // 图层锁定状态
     this.$root.bus.$off('layerActive');
     this.$root.bus.$on('layerActive', (data) => {
       this.containerList.some(item => {
-        if (item.id == data.cId) {
+        if (item.containerId == data.cId) {
           item.signalList.some((layer, index) => {
-            if (layer.id == data.id) {
+            if (layer.signalId == data.sId) {
               layer.layerLock = data.status;
               return true;
             }
@@ -671,11 +715,10 @@ export default {
     // 显示aoi事件
     this.$root.bus.$off('aoiEvent');
     this.$root.bus.$on('aoiEvent', (data) => {
-      console.log(data);
       this.containerList.some(item => {
-        if (item.id === data.parentId) {
+        if (item.containerId == data.parentId) {
           item.signalList.forEach(single => {
-            if (single.id === data.id) {
+            if (single.signalId === data.signalId) {
               single.aoi.status = true;
               this.aoiData = single.aoi;
             } else {
@@ -699,10 +742,11 @@ export default {
     // 关闭aoi
     this.$root.bus.$off('closeAoi');
     this.$root.bus.$on('closeAoi', (data) => {
+      console.log(data);
       this.containerList.some(item => {
-        if (item.id == data.parentId) {
+        if (item.containerId == data.parentId) {
           item.signalList.map((layer, index) => {
-            if (layer.id == data.id) {
+            if (layer.signalId == data.id) {
               layer.aoi.status = false;
               this.aoiData = layer.aoi;
             }
@@ -728,6 +772,22 @@ export default {
     ]),
   },
   methods: {
+    // 可设置图层id
+    layerIdList() {
+      let existDisplays = [];
+      const existContainers = this.$store.state.showVessels;
+      existContainers.map(cItem => {
+        if(cItem.content) {
+          cItem.content.map(dItem => {
+            existDisplays.push(dItem);
+          })
+        }
+      });
+      for (let i = 1; i <= existDisplays.length * 8; i++) {
+        this.layerIds.push(i);
+      }
+    },
+    // 分割流媒体
     clipMedia(row, col) {
       let clipList = [];
       for (let i = 0; i < row; i ++) {
@@ -758,8 +818,6 @@ export default {
       window.webSocket.onmessage = function(res) {
         const result = JSON.parse(res.data);
         if((result.code == 200) && (result.data.eventType == 'readInputSignalList') && (result.checkKey == that.readInputSignalListCheckKey)) {
-          console.log('获取信号列表');
-          // that.$store.dispatch('setDisplayerList', result.data.output);
           that.signalList = result.data.inputSignal;
           that.$nextTick(() => {
             that.signalInitDraggable();
@@ -780,6 +838,12 @@ export default {
       switch (type) {
         case 'readInputSignalList': // 创建容器
           this.readInputSignalListCheckKey = parseInt(nonceStr);
+          break;
+        case 'setLayer':
+          this.setLayerCheckKey = parseInt(nonceStr);
+          break;
+        case 'rmLayer':
+          this.rmLayerCheckKey = parseInt(nonceStr);
           break;
       }
       return parseInt(nonceStr);
@@ -888,57 +952,121 @@ export default {
       $(".signal-model .signal-view").droppable({
         accept: '.signal-item',
         drop: function(event, ui) {
-          const targetObj = dataFormat.getWidget($(this).attr('id'));
-          const r = Math.floor(Math.random()*256);
-          const g = Math.floor(Math.random()*256);
-          const b = Math.floor(Math.random()*256);
-          const aoi = {
-            status: false,
-            position: targetObj.position,
-            parentId: targetObj.parentId,
-          };
-          const signal = dataFormat.addWidget('signal', {
-            parentId: targetObj.parentId,
-            signalId: $(ui.draggable[0]).attr('id'),
-            position: targetObj.position,
-            signalIndex: Number($(ui.draggable[0]).attr('index')),
-            bColor: `rgba(${r},${g},${b},0.6)`,
-            layerLock: false,
-            aoi
+          // 设置当前创建图层id
+          let usedLayerIds = []; // 使用过的图层id
+          let layerId = null;
+          vm.containerList.map(item => {
+            item.signalList.map(sItem => {
+              usedLayerIds.push(sItem.signalId);
+            });
           });
+          if(usedLayerIds.length > 0) {
+            vm.layerIds.some(id => {
+              if(!usedLayerIds.includes(id)) {
+                layerId = id;
+                return true;
+              }
+            })
+          } else {
+            layerId = 0;
+          }
 
-          const nowContainer = dataFormat.getWidget(targetObj.parentId);
-          signal.customFeature.wBase = nowContainer.customFeature.wBase;
-          signal.customFeature.hBase = nowContainer.customFeature.hBase;
-          signal.aoi.width = nowContainer.customFeature.wBase;
-          signal.aoi.height = nowContainer.customFeature.hBase;
-          signal.aoi.id = signal.id;
-          dataFormat.setWidget(signal);
-          
-          vm.bankList[vm.bankIndex].containers.some(item => {
-            if(item.id == targetObj.parentId) {
-              item.signalList.push(signal);
+          let targetObj = null;
+          const targetOutInputId = $(this).attr('outInputId');
+          const targetContainerId = $(this).attr('containerId')
+          vm.containerList.some(cItem => {
+            if(cItem.containerId == targetContainerId) {
+              cItem.content.map(dItem => {
+                if(dItem.displayId == targetOutInputId) {
+                  targetObj = dItem;
+                }
+              })
               return true;
             }
           });
-          vm.bankList[vm.bankIndex].containers.some(item => {
-            if(item.id == targetObj.parentId) {
-              item.content.forEach(dItem => {
-                if (vm.isOverlap(signal, dItem)) {
-                  dItem.signalNum = dItem.signalNum - 1;
-                  dItem.intersectList.push(signal);
+          const setLayerParams = {
+            eventType: "setLayer",
+            count: 1,
+            layer: [
+              {
+                id: layerId,
+                cropPosX: targetObj.realPos.left,
+                cropPosY: targetObj.realPos.top,
+                cropSizeW: targetObj.sizeW,
+                cropSizeH: targetObj.sizeH,
+                scalePosX: targetObj.realPos.left,
+                scalePosY: targetObj.realPos.left,
+                scaleSizeW: targetObj.sizeW,
+                scaleSizeH: targetObj.sizeH, 
+                inputPort:  $(ui.draggable[0]).attr('id'),
+                containerId: targetContainerId
+              }
+            ],
+            sessionID: vm.sessionId,
+            checkKey: vm.getcheckKey('setLayer')
+          }
+          // websocket 准备
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(setLayerParams));
+          }
+          window.webSocket.onmessage = function(res) {
+            const resData = JSON.parse(res.data);
+            if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
+              const r = Math.floor(Math.random()*256);
+              const g = Math.floor(Math.random()*256);
+              const b = Math.floor(Math.random()*256);
+              const aoi = {
+                status: false,
+                position: targetObj.position,
+                parentId: targetContainerId,
+              };
+              const signal = dataFormat.addWidget('signal', {
+                parentId: targetContainerId,
+                signalId: layerId,
+                position: targetObj.position,
+                signalIndex: Number($(ui.draggable[0]).attr('index')),
+                bColor: `rgba(${r},${g},${b},0.6)`,
+                layerLock: false,
+                aoi,
+                realPos: targetObj.realPos,
+                sizeW: targetObj.sizeW,
+                sizeH: targetObj.sizeH,
+                inputPort: $(ui.draggable[0]).attr('id')
+              });
+
+              const nowContainer = vm.$store.state.showVessels.find(cItem => cItem.containerId == targetContainerId);
+              signal.customFeature.wBase = nowContainer.customFeature.wBase;
+              signal.customFeature.hBase = nowContainer.customFeature.hBase;
+              signal.aoi.width = nowContainer.customFeature.wBase;
+              signal.aoi.height = nowContainer.customFeature.hBase;
+              signal.aoi.id = signal.signalId;
+              dataFormat.setWidget(signal);
+              vm.bankList[vm.bankIndex].containers.some(item => {
+                if(item.containerId == targetObj.containerId) {
+                  item.signalList.push(signal);
+                  return true;
                 }
               });
-              return true;
+              vm.bankList[vm.bankIndex].containers.some(item => {
+                if(item.containerId == targetObj.containerId) {
+                  item.content.forEach(dItem => {
+                    if (vm.isOverlap(signal, dItem)) {
+                      dItem.signalNum = dItem.signalNum - 1;
+                      dItem.intersectList.push(signal);
+                    }
+                  });
+                  return true;
+                }
+              });
+              vm.containerList = vm.bankList[vm.bankIndex].containers;
+    
+              vm.$nextTick(() => {
+                vm.signalLayerDraggable();
+                vm.signalLayerResize();
+              })
+              vm.$store.dispatch('setBankList', vm.bankList);
             }
-          });
-          vm.containerList = vm.bankList[vm.bankIndex].containers;
-
-          vm.$nextTick(() => {
-            vm.signalLayerDraggable();
-            vm.signalLayerResize();
-          })
-          vm.$store.dispatch('setBankList', vm.bankList);
+          }
         }
       })
     },
@@ -949,44 +1077,89 @@ export default {
         scroll: false,
         zIndex: 100,
         stop: function(event, ui) {
+          // 被移动的图层
           const containerId = $(this).attr('containerId');
-          const signalId = $(this).attr('signalId');
           const id = $(this).attr('id');
-          vm.containerList.some(item => {
-            if (item.id == containerId) {
-              item.signalList.some((layer, index) => {
-                if (layer.id == id) {
-                  layer.position = ui.position;
-                  layer.aoi.position = ui.position;
-                  item.content.forEach(dItem => {
-                    if (vm.isOverlap(layer, dItem)) {
-                      const isBelong = dItem.intersectList.find(iItem => iItem === layer);
-                      if(!isBelong) {
-                        dItem.signalNum = dItem.signalNum - 1;
-                        dItem.intersectList.push(layer);
+          const signalId = $(this).attr('signalId');
+          let movedLayer = null;
+          vm.containerList.some(cItem => {
+            if(cItem.containerId == containerId) {
+              movedLayer = cItem.signalList.find(sItem => sItem.signalId == signalId);
+              return true;
+            }
+          })
+          // websocket 准备
+          const setLayerParams = {
+            eventType: "setLayer",
+            count: 1,
+            layer: [
+              {
+                id: movedLayer.signalId,
+                cropPosX: movedLayer.realPos.left,
+                cropPosY: movedLayer.realPos.top,
+                cropSizeW: movedLayer.sizeW,
+                cropSizeH: movedLayer.sizeH,
+                scalePosX: Math.round(ui.position.left * 9.6),
+                scalePosY: ui.position.top * 9,
+                scaleSizeW: movedLayer.sizeW,
+                scaleSizeH: movedLayer.sizeH, 
+                inputPort:  movedLayer.inputPort,
+                containerId: containerId
+              }
+            ],
+            sessionID: vm.sessionId,
+            checkKey: vm.getcheckKey('setLayer')
+          } 
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(setLayerParams));
+          }
+          window.webSocket.onmessage = function(res) {
+            const resData = JSON.parse(res.data);
+            if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
+              vm.containerList.some(item => {
+                if (item.containerId == containerId) {
+                  item.signalList.some((layer, index) => {
+                    if (layer.id == id) {
+                      layer.position = ui.position;
+                      layer.aoi.position = ui.position;
+                      layer.realPos = {
+                        left: Math.round(ui.position.left * 9.6),
+                        top: ui.position.top * 9
                       }
-                    } else {
-                      const isBelong = dItem.intersectList.find(iItem => iItem === layer);
-                      if(isBelong) {
-                        dItem.signalNum = dItem.signalNum + 1;
-                        const iItemIndex = dItem.intersectList.findIndex(iItem => iItem !== layer);
-                        dItem.intersectList.splice(iItemIndex, 1);
-                      }
+                      item.content.map(dItem => {
+                        if (vm.isOverlap(layer, dItem)) {
+                          console.log('进来');
+                          const isBelong = dItem.intersectList.find(iItem => iItem.signalId == layer.signalId);
+                          if(!isBelong) {
+                            dItem.signalNum = dItem.signalNum - 1;
+                            dItem.intersectList.push(layer);
+                          }
+                        } else {
+                          console.log('出去');
+                          const isBelong = dItem.intersectList.find(iItem => iItem.signalId == layer.signalId);
+                          if(isBelong) {
+                            dItem.signalNum = dItem.signalNum + 1;
+                            const iItemIndex = dItem.intersectList.findIndex(iItem => iItem.signalId != layer.signalId);
+                            dItem.intersectList.splice(iItemIndex, 1);
+                          }
+                        }
+                      })
+                      return true;
                     }
                   })
                   return true;
                 }
+              });
+              vm.bankList.some((item, index) => {
+                if(index == vm.bankIndex) {
+                  item.containers = vm.containerList;
+                  return true;
+                }
               })
-              return true;
+              vm.$store.dispatch('setBankList', vm.bankList);
             }
-          });
-          vm.bankList.some((item, index) => {
-            if(index == vm.bankIndex) {
-              item.containers = vm.containerList;
-              return true;
-            }
-          })
-          vm.$store.dispatch('setBankList', vm.bankList);
+          }
+         
         }
       })
     },
@@ -998,14 +1171,16 @@ export default {
         minHeight: 32,
         resize: function(event, ui) {
           const containerId = $(this).attr('containerId');
-          const signalId = $(this).attr('signalId');
           const id = $(this).attr('id');
+          const signalId = $(this).attr('signalId');
           vm.containerList.some(item => {
-            if (item.id == containerId) {
+            if (item.containerId == containerId) {
               item.signalList.some((layer, index) => {
                 if (layer.id == id) {
                   layer.customFeature.wBase = ui.size.width;
                   layer.customFeature.hBase = ui.size.height;
+                  layer.sizeW = Math.floor(ui.size.width * 9.6);
+                  layer.sizeH = ui.size.width * 9;
                   item.content.forEach(dItem => {
                     if (vm.isOverlap(layer, dItem)) {
                       const isBelong = dItem.intersectList.find(iItem => iItem === layer);
@@ -1035,6 +1210,85 @@ export default {
             }
           })
           vm.$store.dispatch('setBankList', vm.bankList);
+        },
+        stop: function(event, ui) {
+          const containerId = $(this).attr('containerId');
+          const id = $(this).attr('id');
+          const signalId = $(this).attr('signalId');
+          let movedLayer = null;
+          vm.containerList.some(cItem => {
+            if(cItem.containerId == containerId) {
+              movedLayer = cItem.signalList.find(sItem => sItem.signalId == signalId);
+              return true;
+            }
+          })
+          // websocket 准备
+          const setLayerParams = {
+            eventType: "setLayer",
+            count: 1,
+            layer: [
+              {
+                id: movedLayer.signalId,
+                cropPosX: movedLayer.realPos.left,
+                cropPosY: movedLayer.realPos.top,
+                cropSizeW: movedLayer.sizeW,
+                cropSizeH: movedLayer.sizeH,
+                scalePosX: movedLayer.realPos.left,
+                scalePosY: movedLayer.realPos.top,
+                scaleSizeW: ui.size.width * 9.6,
+                scaleSizeH: ui.size.height * 9, 
+                inputPort:  movedLayer.inputPort,
+                containerId: containerId
+              }
+            ],
+            sessionID: vm.sessionId,
+            checkKey: vm.getcheckKey('setLayer')
+          } 
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(setLayerParams));
+          }
+          window.webSocket.onmessage = function(res) {
+            const resData = JSON.parse(res.data);
+            if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
+              vm.containerList.some(item => {
+                if (item.containerId == containerId) {
+                  item.signalList.some((layer, index) => {
+                    if (layer.id == id) {
+                      layer.customFeature.wBase = ui.size.width;
+                      layer.customFeature.hBase = ui.size.height;
+                      layer.sizeW = Math.floor(ui.size.width * 9.6);
+                      layer.sizeH = ui.size.width * 9;
+                      item.content.forEach(dItem => {
+                        if (vm.isOverlap(layer, dItem)) {
+                          const isBelong = dItem.intersectList.find(iItem => iItem === layer);
+                          if(!isBelong) {
+                            dItem.signalNum = dItem.signalNum - 1;
+                            dItem.intersectList.push(layer);
+                          }
+                        } else {
+                          const isBelong = dItem.intersectList.find(iItem => iItem === layer);
+                          if(isBelong) {
+                            dItem.signalNum = dItem.signalNum + 1;
+                            const iItemIndex = dItem.intersectList.findIndex(iItem => iItem !== layer);
+                            dItem.intersectList.splice(iItemIndex, 1);
+                          }
+                        }
+                      })
+                      return true;
+                    }
+                  })
+                  return true;
+                }
+              });
+              vm.bankList.some((item, index) => {
+                if(index == vm.bankIndex) {
+                  item.containers = vm.containerList;
+                  return true;
+                }
+              })
+              vm.$store.dispatch('setBankList', vm.bankList);
+            }
+          }
         }
       })
     },
@@ -1046,13 +1300,44 @@ export default {
         stop: function(event, ui) {
           const cid = $(this).attr('cId');
           const sid = $(this).attr('sId');
-          const changeCitem = vm.containerList.find(item => item.id === cid);
-          let changeSitem = changeCitem.signalList.find(item => item.id === sid);
-          changeSitem.aoi.position = ui.position;
-          vm.$nextTick(() => {
-            vm.signalAOIDraggable();
-            vm.signalAOIResize();
-          });
+          const changeCitem = vm.containerList.find(item => item.containerId == cid);
+          let changeSitem = changeCitem.signalList.find(item => item.signalId == sid);
+
+          const setLayerParams = {
+            eventType: "setLayer",
+            count: 1,
+            layer: [
+              {
+                id: changeSitem.signalId,
+                cropPosX: Math.round(ui.position.left * 9.6),
+                cropPosY: ui.position.top * 9,
+                cropSizeW: changeSitem.aoi.width * 9.6, 
+                cropSizeH: changeSitem.aoi.height * 9,
+                scalePosX: changeSitem.realPos.left,
+                scalePosY: changeSitem.realPos.left,
+                scaleSizeW: changeSitem.sizeW,
+                scaleSizeH: changeSitem.sizeH, 
+                inputPort:  changeSitem.inputPort,
+                containerId: Number(changeSitem.parentId)
+              }
+            ],
+            sessionID: vm.sessionId,
+            checkKey: vm.getcheckKey('setLayer')
+          }
+          // websocket 准备
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(setLayerParams));
+          }
+          window.webSocket.onmessage = function(res) {
+            const resData = JSON.parse(res.data);
+            if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
+              changeSitem.aoi.position = ui.position;
+              vm.$nextTick(() => {
+                vm.signalAOIDraggable();
+                vm.signalAOIResize();
+              });
+            }
+          }
         }
       })
     },
@@ -1064,14 +1349,58 @@ export default {
         resize: function(event, ui) {
           const cid = $(this).attr('cId');
           const sid = $(this).attr('sId');
-          const changeCitem = vm.containerList.find(item => item.id === cid);
-          let changeSitem = changeCitem.signalList.find(item => item.id === sid);
+          const changeCitem = vm.containerList.find(item => item.containerId == cid);
+          let changeSitem = changeCitem.signalList.find(item => item.signalId == sid);
           changeSitem.aoi.width = ui.size.width;
           changeSitem.aoi.height = ui.size.height;
           vm.$nextTick(() => {
             vm.signalAOIDraggable();
             vm.signalAOIResize();
           });
+        },
+        stop: function(event, ui) {
+          const cid = $(this).attr('cId');
+          const sid = $(this).attr('sId');
+          const changeCitem = vm.containerList.find(item => item.containerId == cid);
+          let changeSitem = changeCitem.signalList.find(item => item.signalId == sid);
+          console.log(changeSitem);
+          const setLayerParams = {
+            eventType: "setLayer",
+            count: 1,
+            layer: [
+              {
+                id: changeSitem.signalId,
+                cropPosX: Math.round(changeSitem.position.left * 9.6),
+                cropPosY: changeSitem.position.top * 9,
+                cropSizeW: ui.size.width * 9.6, 
+                cropSizeH: Math.floor(ui.size.height * 9),
+                scalePosX: changeSitem.realPos.left,
+                scalePosY: changeSitem.realPos.left,
+                scaleSizeW: changeSitem.sizeW,
+                scaleSizeH: changeSitem.sizeH, 
+                inputPort:  changeSitem.inputPort,
+                containerId: Number(changeSitem.parentId)
+              }
+            ],
+            sessionID: vm.sessionId,
+            checkKey: vm.getcheckKey('setLayer')
+          }
+          // websocket 准备
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(setLayerParams));
+          }
+          window.webSocket.onmessage = function(res) {
+            const resData = JSON.parse(res.data);
+            if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
+              changeSitem.aoi.width = ui.size.width;
+              changeSitem.aoi.height = ui.size.height;
+              vm.$nextTick(() => {
+                vm.signalAOIDraggable();
+                vm.signalAOIResize();
+              });
+            }
+          }
+
         }
       })
     },

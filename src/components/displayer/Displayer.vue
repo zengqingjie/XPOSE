@@ -7,7 +7,7 @@
     :id="dMsg.id"
     :displayerId="dMsg.displayId"
     v-if="dMsg"
-    @click="clickDisplayer(dMsg.id)"
+    @click="clickDisplayer(dMsg)"
   >
     <div>显示器{{ dMsg.displayId }}</div>
     <div v-if="pisition && dMsg.realPos"><span>x:{{dMsg.realPos.left}}</span><span>y:{{dMsg.realPos.top}}</span></div>
@@ -78,8 +78,8 @@ export default {
       this.$root.bus.$emit("deleteDisplayer", data);
     },
     // 选中单个显示器
-    clickDisplayer(id) {
-      this.$root.bus.$emit("clickDisplayer", id);
+    clickDisplayer(display) {
+      this.$root.bus.$emit("clickDisplayer", display);
     },
   },
 };

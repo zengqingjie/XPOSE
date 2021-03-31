@@ -14,21 +14,21 @@
       <img src="../../assets/layer_aoi.png" alt="" v-if="!layerInfo.layerLock" @click="aoiEvent(layerInfo)">
       <img
         :src="layerInfo.layerLock ? require('../../assets/layer_lock.png') : require('../../assets/layer_unlock.png')"
-        @click="lockEvent(layerInfo.parentId, layerInfo.id)"
+        @click="lockEvent(layerInfo.parentId, layerInfo.signalId, layerInfo.id)"
         alt=""
       >
       <img src="../../assets/layer_tile.png" alt="" v-if="!layerInfo.layerLock">
       <img src="../../assets/layer_maximize.png" alt="" v-if="!layerInfo.layerLock" @click="fullScreen(layerInfo)">
       <img src="../../assets/layer_delete.png" alt="" v-if="!layerInfo.layerLock" @click="deleteLayer(layerInfo)">
     </div>
-    <div>信号 {{layerInfo.signalIndex}}</div>
+    <div>信号 {{layerInfo.signalId}}</div>
     <div>
-      <span>x:{{layerInfo.position.left}}</span>
-      <span>y:{{layerInfo.position.top}}</span>
+      <span>x:{{layerInfo.realPos.left}}</span>
+      <span>y:{{layerInfo.realPos.top}}</span>
     </div>
     <div>
-      <span>w:{{layerInfo.customFeature.wBase}}</span>
-      <span>y:{{layerInfo.customFeature.hBase}}</span>
+      <span>w:{{layerInfo.sizeW}}</span>
+      <span>y:{{layerInfo.sizeH}}</span>
     </div>
     <div>Order:xx</div>
   </div>
@@ -61,10 +61,11 @@ export default {
     init() {
       this.layerInfo = this.info;
     },
-    lockEvent(cId, id) {
+    lockEvent(cId, sId, id) {
       const data = {
         status: !this.layerInfo.layerLock,
         cId,
+        sId,
         id
       }
       this.$root.bus.$emit('layerActive', data);

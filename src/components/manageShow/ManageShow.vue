@@ -604,6 +604,16 @@ export default {
               cItem.content = [];
               that.showVessels.splice(cIndex, 1);
               that.$store.dispatch('setContainerList', that.showVessels);
+              if(that.showVessels.length == 0) {
+                const bankList = that.$store.state.bankList;
+                bankList.map(bItem => {
+                  if(bItem.containers) {
+                    delete bItem.containers;
+                  }
+                });
+                that.$store.dispatch('setBankList', bankList);
+              }
+
               that.$message({
                 type: 'success',
                 message: '已删除'
@@ -680,7 +690,7 @@ export default {
     // 点击显示器
     this.$root.bus.$off('clickDisplayer');
     this.$root.bus.$on('clickDisplayer', (data) => {
-      this.selectedDisplayerId = data;
+      this.selectedDisplayerId = data.id;
     });
     
     window.webSocket.onmessage = function(res) {
@@ -1068,8 +1078,8 @@ export default {
             if(item.displayId == targetDid) {
               item.position = ui.position;
               item.realPos = {
-                top: Math.round(item.position.left * 9.6),
-                left: item.position.top * 9
+                left: Math.round(item.position.left * 9.6),
+                top: item.position.top * 9
               }
               const display = {
                 id: item.displayId,

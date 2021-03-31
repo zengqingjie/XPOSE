@@ -8,11 +8,15 @@ export class Signal extends Widget {
     this.signal = config.signal;
     this.position = config.position || null;
     this.signalIndex = config.signalIndex || '',
-    this.signalId = config.signalId || '',
+    this.signalId = config.signalId,
     this.bColor = config.bColor || '',
     this.layerLock = config.layerLock || false,
     this.full = config.full || false,
     this.aoi = config.aoi || null;
+    this.realPos = config.realPos || null;
+    this.sizeW = config.sizeW || null;
+    this.sizeH = config.sizeH || null;
+    this.inputPort = config.inputPort;
     this.customFeature = Object.assign({
       wBase: 200,
       hBase: 120,

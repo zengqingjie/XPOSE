@@ -5,6 +5,8 @@
     :class="deviceId == dMsg.id ? 'light' : ''"
     :parentId="dMsg.parentId"
     :id="dMsg.id"
+    :outInputId="dMsg.displayId"
+    :containerId="dMsg.containerId"
     v-if="dMsg"
   >
     <div class="signal-num">

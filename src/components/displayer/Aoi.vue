@@ -1,6 +1,6 @@
 <template>
   <div class="aoi"
-    v-if="aoi && aoi.status && aoi.parentId === cId"
+    v-if="aoi && aoi.status && aoi.parentId == cId"
     :style="setStyle"
     :cId="aoi.parentId"
     :sId="aoi.id"
@@ -18,7 +18,7 @@ export default {
       default: null
     },
     cId: {
-      type: String,
+      type: String | Number,
     }
   },
   computed: {

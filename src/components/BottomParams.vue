@@ -35,6 +35,13 @@ export default {
       cHeight: ''
     }
   },
+  mounted() {
+    // 点击显示器
+    this.$root.bus.$off('clickDisplayer');
+    this.$root.bus.$on('clickDisplayer', (data) => {
+      console.log(111);
+    });
+  },
   methods: {
     changInput(e, type) {
       let val = e.target.value.trim();

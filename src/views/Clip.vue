@@ -38,6 +38,7 @@ export default {
   },
   methods: {
     init() {
+     this.clipList.map(item => console.log(item.left, item.top))
       let img = new Image();
       img.src = require('../assets/111.jpg');
       const positionInfo = this.clipList;
@@ -45,13 +46,21 @@ export default {
       $('.clip-wrap div').each(function() {
         canvasBoxs.push($(this).children()[0]);
       })
-      img.onload = () => {
+      
+      if(img.complete) {
         canvasBoxs.forEach((canvas, index) => {
-          console.log(canvas);
           const context = canvas.getContext('2d');
           context.drawImage(img, positionInfo[index].left, positionInfo[index].top, 480, 270);
         })
+      } else {
+        img.onload = () => {
+          canvasBoxs.forEach((canvas, index) => {
+            const context = canvas.getContext('2d');
+            context.drawImage(img, positionInfo[index].left, positionInfo[index].top, 480, 270);
+          })
+        }
       }
+      
 
       // let img = new Image();
       // img.src = require('../assets/111.jpg');

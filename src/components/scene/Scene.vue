@@ -9,6 +9,7 @@
           :index="index"
           :id="item.id"
           :signalModelShow="true"
+          :clipList="clipList"
         />
       </div>
       <div class="bank-view">
@@ -24,7 +25,7 @@
                 class="signalContainer-item"
                 v-for="(cItem) in item.containers"
                 :key="cItem.id"
-                :style="setSignalStyle(cItem)"
+                :style="setContainerStyle(cItem)"
               >
                 <div
                   class="signal-layer"
@@ -346,10 +347,38 @@ export default {
           save: false
         }
       ],
+      clipList: [], // 流媒体切割列表
     }
   },
-  mounted() {},
+  created() {
+    // 分割流媒体（3行8列）
+    this.clipMedia(4, 4);
+  },
+  mounted() {
+
+  },
   methods: {
+     // 分割流媒体
+    clipMedia(row, col) {
+      console.log('分割');
+      let clips = [];
+      for (let i = 0; i < row; i ++) {
+        for (let j = 0; j < col; j ++) {
+          clips.push(
+            {
+              backgroundPositionX: -j * (1920 / col) + 'px' ,
+              backgroundPositionY: -i * (1080 / row) + 'px',
+              width: (1920 / col) + 'px',
+              height: (1080 / row) + 'px',
+              zoom: 192 / (1920 / col),
+              width: 100 + '%',
+              height: 100 + '%',
+            }
+          );
+        }
+      }
+      this.clipList = clips;
+    },
     typeSelect(num) {
       this.typeIndex = num;
     },
@@ -368,11 +397,24 @@ export default {
       })
     },
     // 设置bank内显示区域样式
-    setSignalStyle(item) {
+    setContainerStyle(item) {
       const { row, col, wBase, hBase } = item.customFeature;
       const { left, top } = item.position;
       const width = col * wBase / 10;
       const height = row * hBase / 10;
+      return {
+        'width': width + 'px',
+        'height': height + 'px',
+        'top': top / 10 + 'px',
+        'left': left / 10 + 'px'
+      }
+    },
+    // 设置bank内显示区域样式
+    setSignalStyle(item) {
+      const { row, col, wBase, hBase } = item.customFeature;
+      const { left, top } = item.position;
+      const width = wBase / 10;
+      const height = hBase / 10;
       return {
         'width': width + 'px',
         'height': height + 'px',

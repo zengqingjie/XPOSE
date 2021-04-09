@@ -31,6 +31,11 @@
       <span>y:{{layerInfo.sizeH}}</span>
     </div>
     <div>Order:xx</div>
+    <img
+      class="movie"
+      v-if="layerInfo"
+      :style="pictureStyle"
+    />
   </div>
 </template>
 
@@ -45,6 +50,10 @@ export default {
     },
     container: {
       type: Object
+    },
+    clipList: {
+      type: Array,
+      default: []
     }
   },
   data() {
@@ -52,14 +61,23 @@ export default {
       positionHead: false,
       layerInfo: null,
       aoi: false,
+      pictureStyle: null
     }
   },
   mounted() {
     this.init();
+    this.setPictureStyle();
   },
   methods: {
     init() {
       this.layerInfo = this.info;
+    },
+    setPictureStyle() {
+      if(this.layerInfo.inputPort > this.clipList.length) {
+        this.pictureStyle = this.clipList[0];
+      } else {
+        this.pictureStyle = this.clipList[this.layerInfo.inputPort];
+      }
     },
     lockEvent(cId, sId, id) {
       const data = {
@@ -127,12 +145,20 @@ export default {
       align-items: center;
       padding: 0 12px;
       background: rgba(0, 0, 0, 0.5);
+      z-index: 99;
       img {
         display: block;
         margin-left: 10px;
         width: 16px;
         height: 16px;
       }
+    }
+    .movie {
+      position: absolute;
+      left: 0;
+      top: 0;
+      background: url('http://192.168.0.122:4080/?action=stream') no-repeat;
+      background-size: 1920px 1080px;
     }
   }
 </style>

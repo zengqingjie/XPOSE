@@ -26,7 +26,6 @@
         :showInfo="floatStatus"
         :nowMenuId="menuInfo && menuInfo.id"
       />
-      <BottomParams/>
     </div>
     <div
       v-if="floatStatus"
@@ -47,7 +46,6 @@ import DetailShow from '@/components/deviceDetailShow/DetailShow';
 import ManageShow from '@/components/manageShow/ManageShow';
 import Layer from '@/components/layer/Layer';
 import Scene from '@/components/scene/Scene';
-import BottomParams from '@/components/BottomParams';
 export default {
   data() {
     return {
@@ -63,7 +61,6 @@ export default {
     ManageShow, // 显示管理
     Layer, // 图层管理
     Scene, // 场景管理
-    BottomParams
   },
   created() {
     this.init();

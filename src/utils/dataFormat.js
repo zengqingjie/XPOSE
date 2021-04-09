@@ -93,7 +93,7 @@ export const dataFormat = {
     let arr = [];
     for (let i = 1; i <= row; i++) {
       for (let j = 1; j <= col; j++) {
-        let position = { left: (j - 1) * 200, top: (i - 1) * 120 };
+        let position = { left: (j - 1) * 192, top: (i - 1) * 108 };
         arr.push(position);
       }
     }

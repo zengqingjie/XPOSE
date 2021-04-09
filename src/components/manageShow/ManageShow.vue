@@ -1,180 +1,185 @@
 <template>
   <div class="manageShow-wrap">
-    <div class="container-view">
-      <div class="default-view" v-if="showVessels.length == 0">
-        <div class="title">创建一个容器</div>
-        <div class="tips-box">
-          <div class="tips-item">
-            <div>*<span>打开设置界面，选择模板设置选项</span></div>
-            <em>-<span>选择容器模式</span></em>
-            <em>-<span>选择容器分辨率</span> </em>
-            <em>-<span>选择自动创建显示器</span> </em>
-            <em>-<span>选择容器的行和列数</span> </em>
-          </div>
-          <div class="tips-item">
-            <div>*<span>拖拉出容器列表到此处</span></div>
-          </div>
-          <div class="tips-item">
-            <div>*<span>移动、配置这些显示器参数</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="container-box" v-if="showVessels.length > 0">
-        <Container
-          v-for="(item, index) in showVessels" :key="index"
-          :cItem="item"
-          :index="index"
-          :id="item.id"
-          :style="{borderColor: item.id == (selectedContainer && selectedContainer.id) ? 'red' : ''}"
-          :deviceId="selectedDisplayerId"
-        />
-      </div>
-
-    </div>
-    <div class="right-view" v-show="!showInfo && nowMenuId == '003'">
-      <div class="params-type" v-dragscroll>
-        <div class="flex-box">
-          <div :class="typeIndex == 0 ? 'show' : ''" @click="typeSelect(0)">模板</div>
-          <div :class="typeIndex == 1 ? 'show' : ''" @click="typeSelect(1)">显示器</div>
-          <div :class="typeIndex == 2 ? 'show' : ''" @click="typeSelect(2)">显示系统</div>
-          <div :class="typeIndex == 3 ? 'show' : ''" @click="typeSelect(3)">参数</div>
-        </div>
-      </div>
-      <div class="params-conts">
-        <div v-show="typeIndex == 0">
-          <div class="input-view">
-            <span>模式</span>
-            <el-select v-model="modelVal" placeholder="请选择">
-              <el-option
-                v-for="item in modelList"
-                :key="item.id"
-                :label="item.label"
-                :value="item.id">
-              </el-option>
-            </el-select>
-          </div>
-          <div class="input-view">
-            <span>分辨率</span>
-            <el-select v-model="separation" placeholder="请选择">
-              <el-option
-                v-for="item in separationList"
-                :key="item.id"
-                :label="item.label"
-                :value="item.id">
-              </el-option>
-            </el-select>
-            <div class="mar-left"><el-checkbox v-model="devideChecked">显示器</el-checkbox></div>
-          </div>
-          <div
-            class="data-list"
-          >
-            <div class="data-item" v-for="(item, index) in templateList" :key="index" :id="item.id">
-              <span class="index-text">{{index + 1}}</span>
-              <div class="icon-view"></div>
-              <span>{{item.row}} x {{item.col}} ({{separation == 2 ? (1920 * item.col) : (3840 * item.col)}} x {{separation == 2 ? (1080 * item.row) : (2160 * item.row)}})</span>
-              <!-- <span class="create-container" @click="createContainer(item)">创建</span> -->
+    <div class="section">
+      <div class="container-view">
+        <div class="default-view" v-if="showVessels.length == 0">
+          <div class="title">创建一个容器</div>
+          <div class="tips-box">
+            <div class="tips-item">
+              <div>*<span>打开设置界面，选择模板设置选项</span></div>
+              <em>-<span>选择容器模式</span></em>
+              <em>-<span>选择容器分辨率</span> </em>
+              <em>-<span>选择自动创建显示器</span> </em>
+              <em>-<span>选择容器的行和列数</span> </em>
+            </div>
+            <div class="tips-item">
+              <div>*<span>拖拉出容器列表到此处</span></div>
+            </div>
+            <div class="tips-item">
+              <div>*<span>移动、配置这些显示器参数</span></div>
             </div>
           </div>
         </div>
-        <div v-show="typeIndex == 1" class="box">
-          <div class="displayer">
+        <div class="container-box" v-if="showVessels.length > 0">
+          <Container
+            v-for="(item, index) in showVessels" :key="index"
+            :cItem="item"
+            :index="index"
+            :id="item.id"
+            :style="{borderColor: item.id == (selectedContainer && selectedContainer.id) ? 'red' : ''}"
+            :deviceId="selectedDisplayerId"
+          />
+        </div>
+
+      </div>
+      <div class="right-view" v-show="!showInfo && nowMenuId == '003'">
+        <div class="params-type" v-dragscroll>
+          <div class="flex-box">
+            <div :class="typeIndex == 0 ? 'show' : ''" @click="typeSelect(0)">模板</div>
+            <div :class="typeIndex == 1 ? 'show' : ''" @click="typeSelect(1)">显示器</div>
+            <div :class="typeIndex == 2 ? 'show' : ''" @click="typeSelect(2)">显示系统</div>
+            <div :class="typeIndex == 3 ? 'show' : ''" @click="typeSelect(3)">参数</div>
+          </div>
+        </div>
+        <div class="params-conts">
+          <div v-show="typeIndex == 0">
+            <div class="input-view">
+              <span>模式</span>
+              <el-select v-model="modelVal" placeholder="请选择">
+                <el-option
+                  v-for="item in modelList"
+                  :key="item.id"
+                  :label="item.label"
+                  :value="item.id">
+                </el-option>
+              </el-select>
+            </div>
+            <div class="input-view">
+              <span>分辨率</span>
+              <el-select v-model="separation" placeholder="请选择">
+                <el-option
+                  v-for="item in separationList"
+                  :key="item.id"
+                  :label="item.label"
+                  :value="item.id">
+                </el-option>
+              </el-select>
+              <div class="mar-left"><el-checkbox v-model="devideChecked">显示器</el-checkbox></div>
+            </div>
             <div
-              class="displayer-item"
-              :class="[index % 2 ? 'deep' :'shallow', item.status == true ? 'disable' : '', clickItemId == item.id ? 'show' : '']"
-              :key = item.id
-              v-for="(item, index) in displayerList"
-              :id="item.id"
-              @click="displayerClick(item)"
+              class="data-list"
             >
-              <div class="item-left">
-                <span class="id-text">{{item.id}}</span>
+              <div class="data-item" v-for="(item, index) in templateList" :key="index" :id="item.id">
+                <span class="index-text">{{index + 1}}</span>
                 <div class="icon-view"></div>
-                <span>{{item.outputType}}</span>
+                <span>{{item.row}} x {{item.col}} ({{separation == 2 ? (1920 * item.col) : (3840 * item.col)}} x {{separation == 2 ? (1080 * item.row) : (2160 * item.row)}})</span>
+                <!-- <span class="create-container" @click="createContainer(item)">创建</span> -->
               </div>
-              <div class="item-right">
-                <span>W:{{item.sizeW}}</span>
-                <span>H:{{item.sizeH}}</span>
-              </div>
-
             </div>
           </div>
-        </div>
-        <div v-show="typeIndex == 2">
-          <template v-if="showVessels.length > 0">
-            <div
-              class="system-info"
-              v-for="(item, index) in showVessels"
-              :key="item.id"
-            >
-              <div class="sys-name">
-                <div class="left-view">
-                  <span>{{index + 1}}</span>
-                  <span class="text-view">{{item.name ? item.name : '显示容器'+ (index + 1)}}</span>
-                  <input type="text" v-model="containerName" class="name-input">
+          <div v-show="typeIndex == 1" class="box">
+            <div class="displayer">
+              <div
+                class="displayer-item"
+                :class="[index % 2 ? 'deep' :'shallow', item.status == true ? 'disable' : '', clickItemId == item.id ? 'show' : '']"
+                :key = item.id
+                v-for="(item, index) in displayerList"
+                :id="item.id"
+                @click="displayerClick(item)"
+              >
+                <div class="item-left">
+                  <span class="id-text">{{item.id}}</span>
+                  <div class="icon-view"></div>
+                  <span>{{item.outputType}}</span>
                 </div>
-                <div class="right-view" @click="clickEdit"><i class="iconfont iconedit_name_icon" /></div>
-                <div class="right-view-sure" @click="(e) => sureEdit(e, item)"><i class="iconfont iconsure_edit" /></div>
-              </div>
-              <div class="info-box">
-                <span>X:{{item.position.left}}</span>
-                <span>Y:{{item.position.top}}</span>
-                <span>W:{{item.customFeature.col*1920}}</span>
-                <span>H:{{item.customFeature.row*1080}}</span>
+                <div class="item-right">
+                  <span>W:{{item.sizeW}}</span>
+                  <span>H:{{item.sizeH}}</span>
+                </div>
+
               </div>
             </div>
-          </template>
-          <template v-if="showVessels.length == 0">
-            <div class="empty-box">无已用容器</div>
-          </template>
+          </div>
+          <div v-show="typeIndex == 2">
+            <template v-if="showVessels.length > 0">
+              <div
+                class="system-info"
+                v-for="(item, index) in showVessels"
+                :key="item.id"
+              >
+                <div class="sys-name">
+                  <div class="left-view">
+                    <span>{{index + 1}}</span>
+                    <span class="text-view">{{item.name ? item.name : '显示容器'+ (index + 1)}}</span>
+                    <input type="text" v-model="containerName" class="name-input">
+                  </div>
+                  <div class="right-view" @click="clickEdit"><i class="iconfont iconedit_name_icon" /></div>
+                  <div class="right-view-sure" @click="(e) => sureEdit(e, item)"><i class="iconfont iconsure_edit" /></div>
+                </div>
+                <div class="info-box">
+                  <span>X:{{item.position.left}}</span>
+                  <span>Y:{{item.position.top}}</span>
+                  <span>W:{{item.customFeature.col*1920}}</span>
+                  <span>H:{{item.customFeature.row*1080}}</span>
+                </div>
+              </div>
+            </template>
+            <template v-if="showVessels.length == 0">
+              <div class="empty-box">无已用容器</div>
+            </template>
+          </div>
+          <div v-show="typeIndex == 3" style="padding: 0 12px">
+            <div class="params-obj">
+              <span>序号</span>
+              <div>显示器xxxx</div>
+            </div>
+            <div class="params-style">缩放</div>
+            <div class="params-style-input">
+              <span>起始点X</span>
+              <input type="text" v-model="startX" @input="(e) => changInput(e, 'startX')">
+            </div>
+            <div class="params-style-input">
+              <span>起始点Y</span>
+              <input type="text" :value="startY" @input="(e) => changInput(e, 'startY')">
+            </div>
+            <div class="params-style-input">
+              <span>宽度</span>
+              <input type="text" :value="displayerWidth" @input="(e) => changInput(e, 'dWidth')">
+            </div>
+            <div class="params-style-input">
+              <span>高度</span>
+              <input type="text" :value="displayerHeight" @input="(e) => changInput(e, 'dHeight')">
+            </div>
+            <div class="params-style">边框</div>
+            <div class="params-style-input">
+              <span>顶边框</span>
+              <input type="text" v-model="vBorder">
+            </div>
+            <div class="params-style-input">
+              <span>底边框</span>
+              <input type="text" v-model="vBorder">
+            </div>
+            <div class="params-style-input">
+              <span>左边框</span>
+              <input type="text" v-model="hBorder">
+            </div>
+            <div class="params-style-input">
+              <span>右边框</span>
+              <input type="text" v-model="hBorder">
+            </div>
+          </div>
         </div>
-        <div v-show="typeIndex == 3" style="padding: 0 12px">
-          <div class="params-obj">
-            <span>序号</span>
-            <div>显示器xxxx</div>
-          </div>
-          <div class="params-style">缩放</div>
-          <div class="params-style-input">
-            <span>起始点X</span>
-            <input type="text" v-model="startX">
-          </div>
-          <div class="params-style-input">
-            <span>起始点Y</span>
-            <input type="text" v-model="startY">
-          </div>
-          <div class="params-style-input">
-            <span>宽度</span>
-            <input type="text" v-model="displayerWidth">
-          </div>
-          <div class="params-style-input">
-            <span>高度</span>
-            <input type="text" v-model="displayerHeight">
-          </div>
-          <div class="params-style">边框</div>
-          <div class="params-style-input">
-            <span>顶边框</span>
-            <input type="text" v-model="vBorder">
-          </div>
-          <div class="params-style-input">
-            <span>底边框</span>
-            <input type="text" v-model="vBorder">
-          </div>
-          <div class="params-style-input">
-            <span>左边框</span>
-            <input type="text" v-model="hBorder">
-          </div>
-          <div class="params-style-input">
-            <span>右边框</span>
-            <input type="text" v-model="hBorder">
-          </div>
+        <div class="params-footer">
+          <div v-if="typeIndex == 0">自定义</div>
+          <div v-if="typeIndex == 2">清空全部</div>
+          <div v-if="typeIndex == 3" @click="setDisplayProp">设置</div>
+          <div @click="hideRightView">返回</div>
         </div>
-      </div>
-      <div class="params-footer">
-        <div v-if="typeIndex == 0">自定义</div>
-        <div v-if="typeIndex == 2">清空全部</div>
-        <div v-if="typeIndex == 3">设置</div>
-        <div @click="hideRightView">返回</div>
       </div>
     </div>
+    <BottomParams
+      :display="displayObj"
+    />
   </div>
 </template>
 
@@ -184,6 +189,7 @@ import Container from '@/components/container/Container';
 import { mapState } from 'vuex';
 import { dataFormat } from '../../utils/dataFormat';
 import { customActive } from '../../utils/custom_active';
+import BottomParams from '@/components/BottomParams';
 import globalWs from '@/utils/globalWs';
 
 export default {
@@ -324,10 +330,12 @@ export default {
       setOutputMsgCheckKey: '', // 设置显示器随机key
       rmContainerCheckKey: '', // 删除容器随机key
       rmOutputFromContainerCheckKey: '', // 删除容器中的显示器随机key
+      displayObj: null, // 点击显示器传递的显示器对象
     }
   },
   components: {
     Container,
+    BottomParams
   },
   props: ['showInfo', 'nowMenuId'],
   computed: {
@@ -558,8 +566,8 @@ export default {
         })
       }
       container.content.map((item, index) => {
-        item.position.left = item.position.left == 0 ? 0 : item.position.left + (20 * (positionList[index].left / 200)) * data.zoom;
-        item.position.top = item.position.top == 0 ? 0 : item.position.top + (12 * (positionList[index].top / 120)) * data.zoom;
+        item.position.left = item.position.left == 0 ? 0 : item.position.left + (20 * (positionList[index].left / 192)) * data.zoom;
+        item.position.top = item.position.top == 0 ? 0 : item.position.top + (12 * (positionList[index].top / 108)) * data.zoom;
         dataFormat.setWidget(item);
       })
      
@@ -691,6 +699,51 @@ export default {
     this.$root.bus.$off('clickDisplayer');
     this.$root.bus.$on('clickDisplayer', (data) => {
       this.selectedDisplayerId = data.id;
+      this.displayObj = data;
+      this.startX = data.realPos.left;
+      this.startY = data.realPos.top;
+      this.displayerWidth = data.sizeW;
+      this.displayerHeight = data.sizeH;
+    });
+
+    // 设置显示器数据
+    this.$root.bus.$off('setDisplayInfo');
+    this.$root.bus.$on('setDisplayInfo', (data) => {
+      const vm = this;
+      const display = {
+        id: data.displayId,
+        posX: data.realPos.left,
+        posY: data.realPos.top,
+        sizeW: data.sizeW,
+        sizeH: data.sizeH,
+        containerId: data.contaienrId,
+        outputType: data.outputType,
+        outputTypeEnum: data.outputTypeEnum
+      };
+      const outputMsg = {
+        eventType: "setOutputMsg",
+        count: 1,
+        output: [display],
+        sessionID: vm.sessionId,
+        checkKey: vm.getcheckKey('setOutputMsg')
+      }
+      window.webSocket.send(JSON.stringify(outputMsg));
+      
+      window.webSocket.onmessage = function(res) {
+        const outputRes = JSON.parse(res.data);
+        if(outputRes.code == 200 && outputRes.data.eventType == 'setOutputMsg' && outputRes.checkKey == vm.setOutputMsgCheckKey) {
+          let container = vm.showVessels.find(cItem => cItem.containerId == data.containerId); // 点击显示器所在容器
+          let displayIndex = container.content.findIndex(dItem => dItem.displayId == data.displayId); // 点击的显示器
+          container.content.splice(displayIndex, 1, data);
+          vm.showVessels.some(cItem => {
+            if(cItem.containerId == data.containerId) {
+              Object.assign(cItem, container);
+              return true;
+            }
+          })
+          vm.$store.dispatch('setContainerList', vm.showVessels);
+        }
+      }
     });
     
     window.webSocket.onmessage = function(res) {
@@ -709,6 +762,71 @@ export default {
     }
   },
   methods: {
+    // 点击设置，修改显示数据
+    setDisplayProp() {
+      let display = this.displayObj;
+      if(display) {
+        display.sizeW = this.displayerWidth ? this.displayerWidth : display.sizeW;
+        display.sizeH = this.displayerHeight ? this.displayerHeight : display.sizeH;
+        display.realPos.left = this.startX ? this.startX : display.realPos.left;
+        display.realPos.top = this.startY ? this.startY : display.realPos.top;
+        display.position.left = this.startX ? this.startX / 10 : display.position.left;
+        display.position.top = this.startY ? this.startY / 10 : display.position.top;
+  
+        const vm = this;
+        const displayParams = {
+          id: display.displayId,
+          posX: display.realPos.left,
+          posY: display.realPos.top,
+          sizeW: display.sizeW,
+          sizeH: display.sizeH,
+          containerId: display.contaienrId,
+          outputType: display.outputType,
+          outputTypeEnum: display.outputTypeEnum
+        };
+        const outputMsg = {
+          eventType: "setOutputMsg",
+          count: 1,
+          output: [displayParams],
+          sessionID: vm.sessionId,
+          checkKey: vm.getcheckKey('setOutputMsg')
+        }
+        window.webSocket.send(JSON.stringify(outputMsg));
+        
+        window.webSocket.onmessage = function(res) {
+          const outputRes = JSON.parse(res.data);
+          if(outputRes.code == 200 && outputRes.data.eventType == 'setOutputMsg' && outputRes.checkKey == vm.setOutputMsgCheckKey) {
+            let container = vm.showVessels.find(cItem => cItem.containerId == display.containerId); // 点击显示器所在容器
+            let displayIndex = container.content.findIndex(dItem => dItem.displayId == display.displayId); // 点击的显示器
+            container.content.splice(displayIndex, 1, display);
+            vm.showVessels.some(cItem => {
+              if(cItem.containerId == display.containerId) {
+                Object.assign(cItem, container);
+                return true;
+              }
+            })
+            vm.$store.dispatch('setContainerList', vm.showVessels);
+          }
+        }
+      }
+    },
+    // 输入框事件
+    changInput(e, type) {
+      let val = e.target.value.trim().replace(/\D/ig, '').replace(/^[0]/, 1);
+      if(type == 'startX') {
+        this.startX = val;
+      }
+      if(type == 'startY') {
+        this.startY = val;
+      }
+      if(type == 'dWidth') {
+        this.displayerWidth = val;
+      }
+      if(type == 'dHeight') {
+        this.displayerHeight =val;
+      }
+      this.$forceUpdate();
+    },
     // 获取显示器列表
     readOutputList() {
       const _this = this;
@@ -907,8 +1025,8 @@ export default {
             const uiTop = event.clientY - 64 - container.position.top - $(this)[0].offsetTop;
             const display = {
               id: targetObj.id,
-              posX: Math.round(uiLeft * 9.6),
-              posY: uiTop * 9,
+              posX: Math.round(uiLeft * 10),
+              posY: uiTop * 10,
               sizeW: targetObj.sizeW,
               sizeH: targetObj.sizeH,
               containerId: vm.$store.state.contaienrId,
@@ -941,8 +1059,8 @@ export default {
                   left: uiLeft
                 }
                 newDisplay.realPos = {
-                  left: Math.round(newDisplay.position.left * 9.6),
-                  top: newDisplay.position.top * 9
+                  left: Math.round(newDisplay.position.left * 10),
+                  top: newDisplay.position.top * 10
                 }
                 container.content.push(newDisplay);
                 vm.showVessels.map(cItem => {
@@ -1078,8 +1196,8 @@ export default {
             if(item.displayId == targetDid) {
               item.position = ui.position;
               item.realPos = {
-                left: Math.round(item.position.left * 9.6),
-                top: item.position.top * 9
+                left: Math.round(item.position.left * 10),
+                top: item.position.top * 10
               }
               const display = {
                 id: item.displayId,
@@ -1151,353 +1269,358 @@ export default {
     background: rgb(27,36,54);
     color: #fff;
     height: calc(100% - 96px);
-    .container-view {
-      position: relative;
-      padding: 24px;
-      overflow: auto;
+    flex-direction: column;
+    .section {
+      display: flex;
       flex: 1;
-      > .ghost {
-        display: none !important;
-      }
-      > .default-view {
-        height: 100%;
+      .container-view {
+        position: relative;
+        padding: 24px;
+        overflow: auto;
         flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        color: #999;
-        .title {
-          width: 320px;
-          text-align: center;
-          margin-bottom: 20px;
+        > .ghost {
+          display: none !important;
         }
-        .tips-box {
-          padding-top: 12px;
-          border-top: 1px solid #999;
-          .tips-item {
-            display: flex;
-            flex-direction: column;
-            margin-top: 12px;
-            div {
-              span {
-                margin-left: 20px;
+        > .default-view {
+          height: 100%;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          color: #999;
+          .title {
+            width: 320px;
+            text-align: center;
+            margin-bottom: 20px;
+          }
+          .tips-box {
+            padding-top: 12px;
+            border-top: 1px solid #999;
+            .tips-item {
+              display: flex;
+              flex-direction: column;
+              margin-top: 12px;
+              div {
+                span {
+                  margin-left: 20px;
+                }
               }
-            }
-            em {
-              padding-left: 28px;
-              font-style: normal;
-              margin-top: 8px;
-              span {
-                margin-left: 16px;
+              em {
+                padding-left: 28px;
+                font-style: normal;
+                margin-top: 8px;
+                span {
+                  margin-left: 16px;
+                }
               }
             }
           }
         }
+        > .container-box {
+          position: relative;
+          box-sizing: border-box;
+        }
       }
-      > .container-box {
+      .right-view {
         position: relative;
-        box-sizing: border-box;
-      }
-    }
-    .right-view {
-      position: relative;
-      width: 320px;
-      height: 100%;
-      background: rgb(22,28,44);
-      border-left: 1px solid #000;
-      .params-type {
-        position: relative;
-        overflow: hidden;
         width: 320px;
-        height: 32px;
-        border-top: 1px solid #000;
-        .flex-box {
-          position: absolute;
-          display: flex;
-          div {
-            display: inline-block;
-            width: 100px;
-            height: 32px;
-            line-height: 32px;
-            flex-shrink: 0;
-            border-right: 1px solid #000;
-            border-bottom: 1px solid #000;
-            text-align: center;
+        height: 100%;
+        background: rgb(22,28,44);
+        border-left: 1px solid #000;
+        .params-type {
+          position: relative;
+          overflow: hidden;
+          width: 320px;
+          height: 32px;
+          border-top: 1px solid #000;
+          .flex-box {
+            position: absolute;
+            display: flex;
+            div {
+              display: inline-block;
+              width: 100px;
+              height: 32px;
+              line-height: 32px;
+              flex-shrink: 0;
+              border-right: 1px solid #000;
+              border-bottom: 1px solid #000;
+              text-align: center;
+              color: #999;
+              font-size: 12px;
+              box-sizing: border-box;
+              background: rgb(24,30,44);
+            }
+            .show {
+              position: relative;
+              background: rbg(22,28,44);
+              color: #fff;
+              border-bottom: none;
+            }
+            .show::before {
+              display: block;
+              content: '';
+              position: absolute;
+              width: 100px;
+              height: 1px;
+              top: 0;
+              background: rgb(26,188,156);
+            }
+          }
+        }
+        .params-conts {
+          > div {
+            padding-top: 16px;
+            .input-view {
+              display: flex;
+              align-items: center;
+              padding: 0 32px;
+              margin-bottom: 16px;
+              span {
+                width: 80px;
+                color: #ccc;
+                flex-shrink: 0;
+                font-size: 12px;
+              }
+              /deep/ .el-input__inner {
+                width: 108px;
+                height: 24px;
+              }
+              /deep/ .el-input__icon {
+                line-height: 24px;
+              }
+              .mar-left {
+                margin-left: 12px;
+                /deep/ .el-checkbox__input.is-checked .el-checkbox__inner {
+                  background: rgb(26,188,156);
+                  border-color: rgb(26,188,156);
+                }
+                /deep/ .el-checkbox__input.is-checked+.el-checkbox__label {
+                  color: rgb(26,188,156);
+                }
+              }
+            }
+          }
+          .data-list {
+            padding-top: 16px;
+            .data-item {
+              display: flex;
+              align-items: center;
+              padding: 0 16px;
+              color: #999;
+              font-size: 12px;
+              margin-bottom: 12px;
+              cursor: move;
+              .index-text {
+                width: 16px;
+              }
+              .icon-view {
+                width: 24px;
+                height: 24px;
+                background: #999;
+                border-radius: 4px;
+                margin-left: 24px;
+                margin-right: 48px;
+              }
+              .create-container {
+                margin-left: 16px;
+                padding: 2px 12px;
+                border-radius: 4px;
+                background: rgb(26,188,156);
+                color: #fff;
+                cursor: pointer;
+              }
+            }
+          }
+          .displayer-item {
+            padding: 0 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 24px;
             color: #999;
             font-size: 12px;
-            box-sizing: border-box;
-            background: rgb(24,30,44);
+            > div {
+              display: flex;
+              align-items: center;
+              .id-text {
+                width: 20px;
+              }
+              .icon-view {
+                width: 42px;
+                height: 16px;
+                border-radius: 4px;
+                background: #999;
+                margin: 0 16px;
+                cursor: pointer;
+              }
+            }
+          }
+          .deep {
+            background: rgb(22,28,44);
+          }
+          .shallow {
+            background: rgb(24,31,48);
+          }
+          .disable {
+            color: rgb(40,42,49);
+            background: rgb(16,21,35);
+            > div {
+              .icon-view {
+                background: rgb(40,42,49);
+              }
+            }
           }
           .show {
-            position: relative;
-            background: rbg(22,28,44);
             color: #fff;
-            border-bottom: none;
+            background: rgb(23,76,78);
           }
-          .show::before {
-            display: block;
-            content: '';
-            position: absolute;
-            width: 100px;
-            height: 1px;
-            top: 0;
-            background: rgb(26,188,156);
+          .displayer-item:hover {
+            color: #fff;
+            background: rgb(22,48,58);
           }
-        }
-      }
-      .params-conts {
-        > div {
-          padding-top: 16px;
-          .input-view {
+          .disable:hover {
+            color: #999;
+            background: rgb(16,21,35);
+          }
+          .show:hover {
+            background: rgb(23,76,78);
+          }
+          .empty-box {
+            padding: 8px;
+            color: #fff;
+            font-size: 12px;
+          }
+          .system-info {
+            padding: 10px 0;
+            font-size: 12px;
+            color: #999;
+            background: rgb(24,31,48);
+            > div {
+              display: flex;
+              align-items: center;
+            }
+            .sys-name {
+              justify-content: space-between;
+              padding: 0 12px;
+              margin-bottom: 8px;
+              height: 24px;
+              .left-view {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                span {
+                  margin-right: 10px;
+                }
+                input {
+                  display: none;
+                  width: 106px;
+                  padding: 4px 0;
+                  border: 1px solid springgreen;
+                  background: rgb(22,28,44);
+                  border-radius: 4px;
+                  appearance: none;
+                  outline: none;
+                  color: #fff;
+                  text-indent: 1em;
+                  font-size: 12px;
+                }
+              }
+              .right-view,
+              .right-view-sure {
+                width: 20px;
+                height: 20px;
+                line-height: 20px;
+                text-align: center;
+                background: rgb(0,196,172);
+                border-radius: 4px;
+                cursor: pointer;
+                i {
+                  color: #fff;
+                  font-size: 12px;
+                }
+              }
+              .right-view-sure {
+                display: none;
+              }
+            }
+            .info-box {
+              span {
+                display: flex;
+                flex: 1;
+                justify-content: center;
+                align-items: center;
+              }
+            }
+          }
+          .system-info:hover {
+            background: rgb(22,48,58);
+            color: #fff;
+          }
+          .params-obj,
+          .params-style,
+          .params-style-input {
             display: flex;
             align-items: center;
-            padding: 0 32px;
-            margin-bottom: 16px;
+            font-size: 12px;
+          }
+          .params-obj {
+            height: 36px;
+            border-bottom: 1px solid #000;
             span {
               width: 80px;
-              color: #ccc;
-              flex-shrink: 0;
-              font-size: 12px;
             }
-            /deep/ .el-input__inner {
-              width: 108px;
-              height: 24px;
-            }
-            /deep/ .el-input__icon {
-              line-height: 24px;
-            }
-            .mar-left {
-              margin-left: 12px;
-              /deep/ .el-checkbox__input.is-checked .el-checkbox__inner {
-                background: rgb(26,188,156);
-                border-color: rgb(26,188,156);
-              }
-              /deep/ .el-checkbox__input.is-checked+.el-checkbox__label {
-                color: rgb(26,188,156);
-              }
+            div {
+              color: rgb(26,169,143);
             }
           }
-        }
-        .data-list {
-          padding-top: 16px;
-          .data-item {
-            display: flex;
-            align-items: center;
-            padding: 0 16px;
-            color: #999;
-            font-size: 12px;
-            margin-bottom: 12px;
-            cursor: move;
-            .index-text {
-              width: 16px;
-            }
-            .icon-view {
-              width: 24px;
-              height: 24px;
-              background: #999;
-              border-radius: 4px;
-              margin-left: 24px;
-              margin-right: 48px;
-            }
-            .create-container {
-              margin-left: 16px;
-              padding: 2px 12px;
-              border-radius: 4px;
-              background: rgb(26,188,156);
-              color: #fff;
-              cursor: pointer;
-            }
+          .params-style {
+            height: 28px;
+            color: rgb(8,159,186);
           }
-        }
-        .displayer-item {
-          padding: 0 16px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          height: 24px;
-          color: #999;
-          font-size: 12px;
-          > div {
-            display: flex;
-            align-items: center;
-            .id-text {
-              width: 20px;
-            }
-            .icon-view {
-              width: 42px;
-              height: 16px;
-              border-radius: 4px;
-              background: #999;
-              margin: 0 16px;
-              cursor: pointer;
-            }
-          }
-        }
-        .deep {
-          background: rgb(22,28,44);
-        }
-        .shallow {
-          background: rgb(24,31,48);
-        }
-        .disable {
-          color: rgb(40,42,49);
-          background: rgb(16,21,35);
-          > div {
-            .icon-view {
-              background: rgb(40,42,49);
-            }
-          }
-        }
-        .show {
-          color: #fff;
-          background: rgb(23,76,78);
-        }
-        .displayer-item:hover {
-          color: #fff;
-          background: rgb(22,48,58);
-        }
-        .disable:hover {
-          color: #999;
-          background: rgb(16,21,35);
-        }
-        .show:hover {
-          background: rgb(23,76,78);
-        }
-        .empty-box {
-          padding: 8px;
-          color: #fff;
-          font-size: 12px;
-        }
-        .system-info {
-          padding: 10px 0;
-          font-size: 12px;
-          color: #999;
-          background: rgb(24,31,48);
-          > div {
-            display: flex;
-            align-items: center;
-          }
-          .sys-name {
-            justify-content: space-between;
-            padding: 0 12px;
-            margin-bottom: 8px;
-            height: 24px;
-            .left-view {
-              flex: 1;
-              display: flex;
-              align-items: center;
-              span {
-                margin-right: 10px;
-              }
-              input {
-                display: none;
-                width: 106px;
-                padding: 4px 0;
-                border: 1px solid springgreen;
-                background: rgb(22,28,44);
-                border-radius: 4px;
-                appearance: none;
-                outline: none;
-                color: #fff;
-                text-indent: 1em;
-                font-size: 12px;
-              }
-            }
-            .right-view,
-            .right-view-sure {
-              width: 20px;
-              height: 20px;
-              line-height: 20px;
-              text-align: center;
-              background: rgb(0,196,172);
-              border-radius: 4px;
-              cursor: pointer;
-              i {
-                color: #fff;
-                font-size: 12px;
-              }
-            }
-            .right-view-sure {
-              display: none;
-            }
-          }
-          .info-box {
+          .params-style-input {
+            margin-top: 10px;
             span {
-              display: flex;
-              flex: 1;
-              justify-content: center;
-              align-items: center;
+              width: 80px;
+            }
+            input {
+              width: 120px;
+              border: 1px solid rgb(52,73,94);
+              border-radius: 4px;
+              background: rgb(22,28,44);
+              padding: 6px 8px;
+              color: #fff;
+              font-size: 12px;
+              outline: none;
+              appearance: none;
+            }
+            input:focus {
+              border: 1px solid rgb(26,188,156)
             }
           }
         }
-        .system-info:hover {
-          background: rgb(22,48,58);
-          color: #fff;
-        }
-        .params-obj,
-        .params-style,
-        .params-style-input {
+        .params-footer {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          border-top: 1px solid #333;
+          height: 42px;
           display: flex;
           align-items: center;
-          font-size: 12px;
-        }
-        .params-obj {
-          height: 36px;
-          border-bottom: 1px solid #000;
-          span {
-            width: 80px;
-          }
-          div {
-            color: rgb(26,169,143);
-          }
-        }
-        .params-style {
-          height: 28px;
-          color: rgb(8,159,186);
-        }
-        .params-style-input {
-          margin-top: 10px;
-          span {
-            width: 80px;
-          }
-          input {
-            width: 120px;
-            border: 1px solid rgb(52,73,94);
-            border-radius: 4px;
-            background: rgb(22,28,44);
-            padding: 6px 8px;
+          justify-content: flex-end;
+          > div {
+            width: 100px;
+            height: 24px;
+            margin-right: 12px;
+            border-radius: 12px;
+            line-height: 24px;
+            text-align: center;
+            background: rgb(26,188,156);
             color: #fff;
             font-size: 12px;
-            outline: none;
-            appearance: none;
+            cursor: pointer;
           }
-          input:focus {
-            border: 1px solid rgb(26,188,156)
-          }
-        }
-      }
-      .params-footer {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        border-top: 1px solid #333;
-        height: 42px;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        > div {
-          width: 100px;
-          height: 24px;
-          margin-right: 12px;
-          border-radius: 12px;
-          line-height: 24px;
-          text-align: center;
-          background: rgb(26,188,156);
-          color: #fff;
-          font-size: 12px;
-          cursor: pointer;
         }
       }
     }

@@ -18,8 +18,8 @@ export class Signal extends Widget {
     this.sizeH = config.sizeH || null;
     this.inputPort = config.inputPort;
     this.customFeature = Object.assign({
-      wBase: 200,
-      hBase: 120,
+      wBase: 192,
+      hBase: 108,
       zoom: {
         xRadio: 1,
         yRadio: 1
@@ -31,8 +31,8 @@ export class Signal extends Widget {
         hZoom: 0,
       },
       resize: {
-        width: 200,
-        height: 120
+        width: 192,
+        height: 108
       }
     }, config.customFeature)
   }

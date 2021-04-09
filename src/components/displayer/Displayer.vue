@@ -1,8 +1,8 @@
 <template>
   <div
     class="displayer-view"
+    :class="deviceId == dMsg.id ? 'border-style' : ''"
     :style="setStyle"
-    :class="deviceId == dMsg.id ? 'light' : ''"
     :parentId="dMsg.parentId"
     :id="dMsg.id"
     :displayerId="dMsg.displayId"
@@ -19,6 +19,7 @@
       @click.stop="deleteDisplayer(dMsg.displayId, dMsg.parentId)"
       >x</span
     >
+    <div class="border-view" v-if="deviceId == dMsg.id"></div>
   </div>
 </template>
 
@@ -54,8 +55,8 @@ export default {
     setStyle() {
       if (this.dMsg.position) {
         return {
-          width: this.size.width + 'px',
-          height: this.size.height + 'px',
+          width: this.dMsg.sizeW / 10 + 'px',
+          height: this.dMsg.sizeH / 10 + 'px',
           left: this.dMsg.position.left + 'px',
           top: this.dMsg.position.top + 'px',
           position: 'absolute'
@@ -108,8 +109,17 @@ export default {
     font-weight: bold;
     cursor: pointer;
   }
+  .border-view {
+    position: absolute;
+    border: 3px solid rgb(0, 252, 255);
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    box-sizing: border-box;
+  }
 }
-.light {
-  border: 3px solid rgb(0, 252, 255);
+.border-style {
+  border: none;
 }
 </style>

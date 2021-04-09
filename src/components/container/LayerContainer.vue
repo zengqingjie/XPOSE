@@ -36,6 +36,7 @@
         :key="layer.id"
         :info="layer"
         :container="cItem"
+        :clipList="clipList"
       >
       </SignalLayer>
       <slot></slot>
@@ -71,7 +72,11 @@ export default {
     aoiData: {
       type: Object,
       default: null
-    }
+    },
+    clipList: {
+      type: Array,
+      default: []
+    },
   },
   components: {
     Displayer,

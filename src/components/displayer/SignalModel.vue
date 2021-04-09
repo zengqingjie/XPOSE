@@ -10,7 +10,7 @@
     v-if="dMsg"
   >
     <div class="signal-num">
-      <span>{{dMsg.signalNum}}</span>
+      <span>{{2 - dMsg.intersectList.length}}</span>
       <div>[{{dMsg.displayId}}]</div>
     </div>
   </div>

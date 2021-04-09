@@ -14,8 +14,8 @@ export class Windows extends Widget {
     };
     this.positionZoom = 1;
     this.customFeature = Object.assign({
-      wBase: 200,
-      hBase: 120,
+      wBase: 192,
+      hBase: 108,
       zoom: {
         xRadio: 1,
         yRadio: 1

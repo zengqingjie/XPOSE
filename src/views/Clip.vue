@@ -49,7 +49,7 @@ export default {
         canvasBoxs.forEach((canvas, index) => {
           console.log(canvas);
           const context = canvas.getContext('2d');
-          context.drawImage(img, positionInfo[0].left, positionInfo[0].top, 480, 270);
+          context.drawImage(img, positionInfo[index].left, positionInfo[index].top, 480, 270);
         })
       }
 

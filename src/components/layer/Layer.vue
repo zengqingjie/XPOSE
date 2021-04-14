@@ -1111,20 +1111,20 @@ export default {
                 vm.signalLayerResize();
                 // 初始化绘制流媒体画面
                 let img = new Image();
-                img.src = vm.streamMedia;
                 console.log(img);
                 console.log(signal);
                 const canvas = $('#'+signal.id).find('canvas')[0];
                 console.log(canvas);
-                if(img.complete) {
-                  console.log('完成');
-                  const context = canvas.getContext('2d');
-                  console.log(canvas.width);
-                  window.setInterval(() => {
-                    context.drawImage(img, vm.clipList[signal.inputPort - 1].left, vm.clipList[signal.inputPort - 1].top, 480, 270, 0, 0, 192, 108);
-                  }, 1000 / 60);
-                  return;
-                }
+                img.onload = null
+                // if(img.complete) {
+                //   console.log('完成');
+                //   const context = canvas.getContext('2d');
+                //   console.log(canvas.width);
+                //   window.setInterval(() => {
+                //     context.drawImage(img, vm.clipList[signal.inputPort - 1].left, vm.clipList[signal.inputPort - 1].top, 480, 270, 0, 0, 192, 108);
+                //   }, 1000 / 60);
+                //   return;
+                // }
                 img.onload = () => {
                   console.log('加载');
                   const context = canvas.getContext('2d');
@@ -1133,6 +1133,7 @@ export default {
                     context.drawImage(img, vm.clipList[signal.inputPort - 1].left, vm.clipList[signal.inputPort - 1].top, 480, 270, 0, 0, 192, 108);
                   }, 1000 / 60);
                 }
+                img.src = vm.streamMedia;
               })
               vm.$store.dispatch('setBankList', vm.bankList);
             }

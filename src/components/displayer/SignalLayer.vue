@@ -28,18 +28,15 @@
     </div>
     <div>
       <span>w:{{layerInfo.sizeW}}</span>
-      <span>y:{{layerInfo.sizeH}}</span>
+      <span>h:{{layerInfo.sizeH}}</span>
     </div>
     <div>Order:xx</div>
-    <img
-      class="movie"
-      v-if="layerInfo"
-      :style="pictureStyle"
-    />
+    <canvas width="192" height="108" :inputPort="layerInfo.inputPort"></canvas>
   </div>
 </template>
 
 <script>
+import $ from "jquery";
 export default {
   props: {
     info: {
@@ -52,8 +49,7 @@ export default {
       type: Object
     },
     clipList: {
-      type: Array,
-      default: []
+      type: Array
     }
   },
   data() {
@@ -61,23 +57,19 @@ export default {
       positionHead: false,
       layerInfo: null,
       aoi: false,
-      pictureStyle: null
+      streamMedia: ''
     }
+  },
+  created() {
+    const ip = JSON.parse(window.sessionStorage.getItem("ip"));
+    this.streamMedia = `http://${ip}:4080/?action=stream`;
   },
   mounted() {
     this.init();
-    this.setPictureStyle();
   },
   methods: {
     init() {
       this.layerInfo = this.info;
-    },
-    setPictureStyle() {
-      if(this.layerInfo.inputPort > this.clipList.length) {
-        this.pictureStyle = this.clipList[0];
-      } else {
-        this.pictureStyle = this.clipList[this.layerInfo.inputPort];
-      }
     },
     lockEvent(cId, sId, id) {
       const data = {
@@ -107,8 +99,8 @@ export default {
   computed: {
     setStyle() {
       return {
-        width: this.layerInfo.customFeature.wBase + 'px',
-        height: this.layerInfo.customFeature.hBase + 'px',
+        width: this.layerInfo.sizeW / 10+ 'px',
+        height: this.layerInfo.sizeH / 10 + 'px',
         left: this.layerInfo.position.left + 'px',
         top: this.layerInfo.position.top + 'px',
         background: this.layerInfo.bColor
@@ -153,12 +145,17 @@ export default {
         height: 16px;
       }
     }
-    .movie {
+    > div {
+      > span {
+        margin-right: 8px;
+      }
+    }
+    canvas {
       position: absolute;
       left: 0;
       top: 0;
-      background: url('http://192.168.0.122:4080/?action=stream') no-repeat;
-      background-size: 1920px 1080px;
+      width: 100%;
+      height: 100%;
     }
   }
 </style>

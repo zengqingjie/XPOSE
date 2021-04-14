@@ -35,11 +35,13 @@
                 v-for="(item, index) in signalList"
                 :key="item.inputPort"
                 :class="[index % 2 ? 'deep' : 'shallow', signalId == item.id ? 'show' : '']"
-                :id="item.inputPort"
-                :type="item.inputType"
-                :index="index"
               > 
-                <div class="signal-item">
+                <div
+                  class="signal-item"
+                  :id="item.inputPort"
+                  :type="item.inputType"
+                  :index="index"
+                >
                   <span class="order">{{item.inputPort}}</span>
                   <div class="signal-icon">
                     <img src="../../assets/default/HDBaseT.png" alt="" v-if="item.inputType == 32">
@@ -54,7 +56,7 @@
                 <div
                   class="movie"
                   v-if="h264"
-                  :style="clipList[index] ? clipList[index] : clipList[0]"
+                  :style="signalClipList[index] ? signalClipList[index] : signalClipList[0]"
                 ></div>
               </div>
             </div>
@@ -468,6 +470,7 @@ export default {
       streamMedia: '',
       layerIds: [], // 创建图层可以用id
       clipList: [], // 流媒体切割列表
+      imgObj: null
     }
   },
   components: {
@@ -478,6 +481,11 @@ export default {
   created() {
     const ip = JSON.parse(window.sessionStorage.getItem("ip"));
     this.streamMedia = `http://${ip}:4080/?action=stream`;
+    let img = new Image();
+    img.src = `http://${ip}:4080/?action=stream`;
+    img.onload = () => {
+      this.imgObj = img;
+    }
     // 分割流媒体（3行8列）
     this.clipMedia(4, 4);
     
@@ -549,6 +557,22 @@ export default {
     this.$nextTick(() => {
       this.signalLayerDraggable();
       this.signalLayerResize();
+      // 初始化绘制流媒体画面
+      let img = new Image();
+      img.src = this.streamMedia;
+      let canvasBoxs = [];
+      $('.signal-layer-item canvas').each(function() {
+        canvasBoxs.push($(this)[0]);
+      });
+      img.onload = () => {
+        canvasBoxs.forEach((canvas, index) => {
+          const context = canvas.getContext('2d');
+          const inputPort = Number($(canvas).attr('inputPort'));
+          window.setInterval(() => {
+          context.drawImage(img, this.clipList[inputPort-1].left, this.clipList[inputPort-1].top, 480, 270, 0, 0, 192, 108);
+        }, 1000 / 60)
+        })
+      }
     });
   },
   mounted() {
@@ -762,6 +786,9 @@ export default {
     ]),
   },
   methods: {
+    canvasDraw() {
+      const canvas = document.querySelectorAll('.signal-layer-item')
+    },
     // 可设置图层id
     layerIdList() {
       let existDisplays = [];
@@ -780,9 +807,16 @@ export default {
     // 分割流媒体
     clipMedia(row, col) {
       let clips = [];
+      let signalClipList = [];
       for (let i = 0; i < row; i ++) {
         for (let j = 0; j < col; j ++) {
           clips.push(
+            {
+              left: j * ( 1920 / col),
+              top: i * (1080 / row),
+            }
+          );
+          signalClipList.push(
             {
               backgroundPositionX: -j * (1920 / col) + 'px' ,
               backgroundPositionY: -i * (1080 / row) + 'px',
@@ -790,10 +824,11 @@ export default {
               height: (1080 / row) + 'px',
               zoom: 192 / (1920 / col),
             }
-          );
+          )
         }
       }
       this.clipList = clips;
+      this.signalClipList = signalClipList;
     },
     // 读取左侧信号列表
     getSignalList() {
@@ -984,7 +1019,7 @@ export default {
 
           let targetObj = null;
           const targetOutInputId = $(this).attr('outInputId');
-          const targetContainerId = $(this).attr('containerId')
+          const targetContainerId = $(this).attr('containerId');
           vm.containerList.some(cItem => {
             if(cItem.containerId == targetContainerId) {
               cItem.content.map(dItem => {
@@ -1074,6 +1109,30 @@ export default {
               vm.$nextTick(() => {
                 vm.signalLayerDraggable();
                 vm.signalLayerResize();
+                // 初始化绘制流媒体画面
+                let img = new Image();
+                img.src = vm.streamMedia;
+                console.log(img);
+                console.log(signal);
+                const canvas = $('#'+signal.id).find('canvas')[0];
+                console.log(canvas);
+                if(img.complete) {
+                  console.log('完成');
+                  const context = canvas.getContext('2d');
+                  console.log(canvas.width);
+                  window.setInterval(() => {
+                    context.drawImage(img, vm.clipList[signal.inputPort - 1].left, vm.clipList[signal.inputPort - 1].top, 480, 270, 0, 0, 192, 108);
+                  }, 1000 / 60);
+                  return;
+                }
+                img.onload = () => {
+                  console.log('加载');
+                  const context = canvas.getContext('2d');
+                  console.log(canvas.width);
+                  window.setInterval(() => {
+                    context.drawImage(img, vm.clipList[signal.inputPort - 1].left, vm.clipList[signal.inputPort - 1].top, 480, 270, 0, 0, 192, 108);
+                  }, 1000 / 60);
+                }
               })
               vm.$store.dispatch('setBankList', vm.bankList);
             }
@@ -1184,7 +1243,7 @@ export default {
                   layer.customFeature.wBase = ui.size.width;
                   layer.customFeature.hBase = ui.size.height;
                   layer.sizeW = Math.floor(ui.size.width * 10);
-                  layer.sizeH = ui.size.width * 10;
+                  layer.sizeH = ui.size.height * 10;
                   item.content.forEach(dItem => {
                     if (vm.isOverlap(layer, dItem)) {
                       const isBelong = dItem.intersectList.find(iItem => iItem === layer);
@@ -1264,7 +1323,7 @@ export default {
               moveLayer.customFeature.wBase = ui.size.width;
               moveLayer.customFeature.hBase = ui.size.height;
               moveLayer.sizeW = Math.floor(ui.size.width * 10);
-              moveLayer.sizeH = ui.size.width * 10;
+              moveLayer.sizeH = ui.size.height * 10;
               // 重新判断图层相交显示器
               moveBelongContainer.content.map(display => {
                 if(vm.isOverlap(moveLayer, display)) { // 判断是否相交
@@ -1532,12 +1591,12 @@ export default {
             justify-content: center;
             align-items: center;
           }
-          .movie {
-            width: 100%;
-            height: 108px;
-            background: url('http://192.168.0.122:4080/?action=stream') no-repeat;
-            background-size: 1920px 1080px;
-          }
+        }
+        .movie {
+          width: 100%;
+          height: 108px;
+          background: url('http://192.168.0.122:4080/?action=stream') no-repeat;
+          background-size: 1920px 1080px;
         }
         .signal-item:hover {
           color: #fff;

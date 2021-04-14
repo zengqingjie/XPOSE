@@ -27,7 +27,7 @@ export default {
       sessionStorage.setItem("widgetMap",JSON.stringify(dataFormat.widgetMap));
       sessionStorage.setItem("_curWindows",JSON.stringify(dataFormat._curWindows));
       sessionStorage.setItem("store",JSON.stringify(this.$store.state));
-
+      window.clearInterval();
     })
   }
 }

@@ -10,6 +10,8 @@
       />
       <DetailShow
         v-if="menuInfo && menuInfo.id == '002'"
+        :showInfo="floatStatus"
+        :nowMenuId="menuInfo && menuInfo.id"
       />
       <ManageShow
         v-if="menuInfo && menuInfo.id == '003'"

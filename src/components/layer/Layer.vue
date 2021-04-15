@@ -402,7 +402,7 @@
         </div>
       </div>
     </div>
-    <!-- <img :src="streamMedia" alt="" v-if="streamMedia"> -->
+    <!-- <img :src="streamMedia" alt="" v-show="false" id="hideImg"> -->
     
     <BottomParams/>
   </div>
@@ -483,9 +483,7 @@ export default {
     this.streamMedia = `http://${ip}:4080/?action=stream`;
     let img = new Image();
     img.src = `http://${ip}:4080/?action=stream`;
-    img.onload = () => {
-      this.imgObj = img;
-    }
+    this.imgObj = img;
     // 分割流媒体（3行8列）
     this.clipMedia(4, 4);
     
@@ -962,7 +960,23 @@ export default {
               this.signalLayerResize();
             }
           })
-        })
+        });
+        // 初始化绘制流媒体画面
+        let img = new Image();
+        img.src = this.streamMedia;
+        let canvasBoxs = [];
+        $('.signal-layer-item canvas').each(function() {
+          canvasBoxs.push($(this)[0]);
+        });
+        img.onload = () => {
+          canvasBoxs.forEach((canvas, index) => {
+            const context = canvas.getContext('2d');
+            const inputPort = Number($(canvas).attr('inputPort'));
+            window.setInterval(() => {
+            context.drawImage(img, this.clipList[inputPort-1].left, this.clipList[inputPort-1].top, 480, 270, 0, 0, 192, 108);
+          }, 1000 / 60)
+          })
+        }
       })
     },
     // 容器显示与否
@@ -1110,30 +1124,13 @@ export default {
                 vm.signalLayerDraggable();
                 vm.signalLayerResize();
                 // 初始化绘制流媒体画面
-                let img = new Image();
-                console.log(img);
-                console.log(signal);
+                
                 const canvas = $('#'+signal.id).find('canvas')[0];
-                console.log(canvas);
-                img.onload = null
-                // if(img.complete) {
-                //   console.log('完成');
-                //   const context = canvas.getContext('2d');
-                //   console.log(canvas.width);
-                //   window.setInterval(() => {
-                //     context.drawImage(img, vm.clipList[signal.inputPort - 1].left, vm.clipList[signal.inputPort - 1].top, 480, 270, 0, 0, 192, 108);
-                //   }, 1000 / 60);
-                //   return;
-                // }
-                img.onload = () => {
-                  console.log('加载');
-                  const context = canvas.getContext('2d');
-                  console.log(canvas.width);
-                  window.setInterval(() => {
-                    context.drawImage(img, vm.clipList[signal.inputPort - 1].left, vm.clipList[signal.inputPort - 1].top, 480, 270, 0, 0, 192, 108);
-                  }, 1000 / 60);
-                }
-                img.src = vm.streamMedia;
+
+                const context = canvas.getContext('2d');
+                window.setInterval(() => {
+                  context.drawImage(vm.imgObj, vm.clipList[signal.inputPort - 1].left, vm.clipList[signal.inputPort - 1].top, 480, 270, 0, 0, 192, 108);
+                }, 1000 / 60);
               })
               vm.$store.dispatch('setBankList', vm.bankList);
             }

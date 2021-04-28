@@ -63,7 +63,7 @@ export default {
         },
         {
           id: "006",
-          title: "设置", 
+          title: "系统设置", 
           className: "iconsetting",
           show_icon: require('../../assets/aside_mune/aside_set_show.png'),
           usable_icon: require('../../assets/aside_mune/aside_set_usable.png')

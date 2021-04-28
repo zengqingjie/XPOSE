@@ -28,6 +28,11 @@
         :showInfo="floatStatus"
         :nowMenuId="menuInfo && menuInfo.id"
       />
+      <SystemSettings
+        v-if="menuInfo && menuInfo.id == '006'"
+        :showInfo="floatStatus"
+        :nowMenuId="menuInfo && menuInfo.id"
+      />
     </div>
     <div
       v-if="floatStatus"
@@ -48,6 +53,7 @@ import DetailShow from '@/components/deviceDetailShow/DetailShow';
 import ManageShow from '@/components/manageShow/ManageShow';
 import Layer from '@/components/layer/Layer';
 import Scene from '@/components/scene/Scene';
+import SystemSettings from '@/components/SystemSettings';
 export default {
   data() {
     return {
@@ -63,6 +69,7 @@ export default {
     ManageShow, // 显示管理
     Layer, // 图层管理
     Scene, // 场景管理
+    SystemSettings // 系统设置
   },
   created() {
     this.init();

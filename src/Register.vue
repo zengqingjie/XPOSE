@@ -1337,6 +1337,8 @@ export default {
       }
       Api.accountActivate(data).then(res => {
         if(res.code == 200) {
+          sessionStorage.setItem("account",JSON.stringify(res.data.account));
+          sessionStorage.setItem("passwd",JSON.stringify(res.data.passwd));
           this.$router.push({
             name: 'Login',
             params: {

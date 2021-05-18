@@ -341,7 +341,7 @@ export default {
       cancelLockTips: true,
       guideTips: true,
       // 通讯
-      communicationRadio: '1',
+      communicationRadio: 1,
       // 自动直切
       autoCut: true,
       // 扩展状态
@@ -677,10 +677,22 @@ export default {
     },
     // 权限全选
     setUserRightAll() {
+      this.nowUserRight.right.map(item => {
+        item.checked = true;
+        item.childs.map(cItem => {
+          cItem.checked = true;
+        });
+      });
       this.$refs.tree.setCheckedKeys([1, 2, 3, 4, 5, 6 ,7]);
     },
     // 权限全取消
     cancelUserRightAll() {
+      this.nowUserRight.right.map(item => {
+        item.checked = false;
+        item.childs.map(cItem => {
+          cItem.checked = false;
+        });
+      });
       this.$refs.tree.setCheckedKeys([]);
     },
     // 取消设置权限

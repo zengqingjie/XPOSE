@@ -1185,7 +1185,7 @@ export default {
             }
             /deep/ .el-input__inner {
               width: 140px;
-              height: 30px;
+              height: 32px;
               padding: 0 12px;
               font-size: 12px;
             }

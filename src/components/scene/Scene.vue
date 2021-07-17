@@ -75,6 +75,7 @@
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               :width="100"
+              @change="sceneParamsChange('display')"
             >
             </el-switch>
           </div>
@@ -85,6 +86,7 @@
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               :width="100"
+              @change="sceneParamsChange('blackOut')"
             >
             </el-switch>
           </div>
@@ -96,29 +98,43 @@
               inactive-color="#2C384F"
               :width="100"
               :disabled="copyContainer"
+              @change="sceneParamsChange('keepSwap')"
+            >
+            </el-switch>
+          </div>
+          <div class="params-style-input">
+            <span>预设场景</span>
+            <el-switch
+              v-model="presetScene"
+              active-color="#1ABC9C"
+              inactive-color="#2C384F"
+              :width="100"
+              @change="sceneParamsChange('presetScene')"
             >
             </el-switch>
           </div>
           <hr style="border: 1px solid #000;margin:8px auto">
           <div class="params-style-input">
-            <span>{{setOpacity}}%</span>
+            <span>{{opacityPercent}}%</span>
           </div>
           <div class="opacity-slider">
-            <img :src="scenceOpacity == 100 ? require('../../assets/redlight_on.png') : require('../../assets/redlight_off.png')" alt="">
+            <img :src="scenceOpacity == 128 ? require('../../assets/redlight_on.png') : require('../../assets/redlight_off.png')" alt="">
             <div class="block">
               <el-slider
                 v-model="scenceOpacity"
                 :show-tooltip="false"
                 vertical
+                :max="128"
                 height="150px"
+                @change="sliderChange"
               >
               </el-slider>
             </div>
             <img :src="scenceOpacity ? require('../../assets/redlight_off.png') : require('../../assets/redlight_on.png')" alt="">
           </div>
           <div class="switch-view">
-            <div :class="((scenceOpacity == 0) || (scenceOpacity == 100)) ? 'show' : ''">直切</div>
-            <div :class="((scenceOpacity == 0) || (scenceOpacity == 100)) ? 'show' : ''">切换</div>
+            <div :class="((scenceOpacity == 0) || (scenceOpacity == 128)) ? 'show' : ''"  @click="setTakeType(2)">直切</div>
+            <div :class="((scenceOpacity == 0) || (scenceOpacity == 128)) ? 'show' : ''"  @click="setTakeType(1)">切换</div>
           </div>
         </div>
         <div v-if="typeIndex == 1">
@@ -201,7 +217,7 @@
         <div v-if="typeIndex == 5">热键</div>
       </div>
       <div class="params-footer">
-        <div v-if="typeIndex == 0">设置</div>
+        <div v-if="typeIndex == 0" @click="setEvent(typeIndex)">设置</div>
         <div v-if="typeIndex == 4">设置</div>
         <div @click="hideRightView">返回</div>
       </div>
@@ -211,6 +227,7 @@
 </template>
 
 <script>
+import $ from "jquery";
 import { mapState } from 'vuex';
 import LayerContainer from '@/components/container/LayerContainer';
 
@@ -226,7 +243,9 @@ export default {
       sliderTime: 0, // 切换时间
       darkScence: false, // 黑场
       keepReplace: false, // 保持交换
+      presetScene: false,
       scenceOpacity: 0,
+      takeType: 0,
       pageLoad: true,
       documentSrc: '',
       documentName: '',
@@ -347,32 +366,155 @@ export default {
           save: false
         }
       ],
+      opacityPercent: 0,
+      streamMedia: '',
       clipList: [], // 流媒体切割列表
+      sessionId: ''
     }
   },
   created() {
-    // 分割流媒体（3行8列）
-    this.clipMedia(4, 4);
+    // 分割流媒体（4行6列）
+    this.clipMedia(4, 6);
+    this.streamMedia = 'http://192.168.0.117:5005/?action=stream';
+    // 初始化绘制流媒体画面
+    this.$nextTick(() => {
+      if(this.streamMedia && this.clipList.length > 0) {
+        let img = new Image();
+        img.src = this.streamMedia;
+        let canvasBoxs = [];
+        $('.signal-layer-item canvas').each(function() {
+          canvasBoxs.push($(this)[0]);
+        });
+        
+        img.onload = () => renderImg();
+        let renderImg = () => {
+          canvasBoxs.forEach((canvas, index) => {
+            const context = canvas.getContext('2d');
+            const inputPort = Number($(canvas).attr('inputPort'));
+            context.drawImage(img, this.clipList[inputPort-1].left, this.clipList[inputPort-1].top, 320, 270, 0, 0, 192, 108);
+          })
+          window.requestAnimationFrame(renderImg);
+        }
+      }
+    })
   },
   mounted() {
-
+    this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
+    this.opacityPercent = this.opacityPercent.toFixed(2);
   },
   methods: {
-     // 分割流媒体
+    setEvent(typeIndex) {
+      if (typeIndex == 0) {
+        this.setSwitchTime();
+      }
+    },
+    // 设置切换时间
+    setSwitchTime() {
+      if(Number(this.sliderTime)) {
+        const params = {
+          eventType: 'setTakeSetting',
+          sceneId: this.$store.state.bankIndex,
+          fadeTime: this.sliderTime * 1000,
+          checkKey: this.getcheckKey(),
+          sessionID: this.sessionId
+        }
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
+        }
+      }
+    },
+    // 场景参数变化
+    sceneParamsChange(type) {
+      let params = null;
+      if(type == 'display') {
+        params = {
+          eventType: 'setTakeSetting',
+          sceneId: this.$store.state.bankIndex,
+          display: this.copyContainer,
+          keepSwap: this.copyContainer ? false : this.keepReplace,
+          checkKey: this.getcheckKey(),
+          sessionID: this.sessionId
+        }
+      }
+      if(type == 'blackOut') {
+        params = {
+          eventType: 'setTakeSetting',
+          sceneId: this.$store.state.bankIndex,
+          blackOut: this.darkScence,
+          checkKey: this.getcheckKey(),
+          sessionID: this.sessionId
+        }
+      }
+      if(type == 'keepSwap') {
+        params = {
+          eventType: 'setTakeSetting',
+          sceneId: this.$store.state.bankIndex,
+          keepSwap: this.keepReplace,
+          checkKey: this.getcheckKey(),
+          sessionID: this.sessionId
+        }
+      }
+      if(type == 'presetScene') {
+        params = {
+          eventType: 'setTakeSetting',
+          sceneId: this.$store.state.bankIndex,
+          presetScene: this.presetScene,
+          checkKey: this.getcheckKey(),
+          sessionID: this.sessionId
+        }
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 操作杆发生滑动
+    sliderChange(value) {
+      this.opacityPercent = (value / 128 * 100 ).toFixed(2);
+      if(value > 0 && value != 128) {
+        this.setTakeType(3);
+      } else {
+        this.setTakeType(4);
+      }
+    },
+    setTakeType(num) {
+      this.takeType = num;
+      this.setTakeSetting();
+    },
+    // 生成随机随机checkKey
+    getcheckKey(type) {
+      let arr = new Array;
+      const arr1 = new Array("0","1","2","3","4","5","6","7","8","9");
+      let nonceStr=''
+      for(var i=0; i<8; i++){
+        var n = Math.floor(Math.random()*10);
+        arr[i] = arr1[n] ;
+        nonceStr += arr1[n];
+      }
+      switch (type) {
+        case 'readInputSignalList': // 创建容器
+          this.readInputSignalListCheckKey = parseInt(nonceStr);
+          break;
+        case 'setLayer':
+          this.setLayerCheckKey = parseInt(nonceStr);
+          break;
+        case 'rmLayer':
+          this.rmLayerCheckKey = parseInt(nonceStr);
+          break;
+        case 'setLayerFreeze':
+          this.setLayerFreezeCheckKey = parseInt(nonceStr);
+          break;
+      }
+      return parseInt(nonceStr);
+    },
+    // 分割流媒体
     clipMedia(row, col) {
-      console.log('分割');
       let clips = [];
       for (let i = 0; i < row; i ++) {
         for (let j = 0; j < col; j ++) {
           clips.push(
             {
-              backgroundPositionX: -j * (1920 / col) + 'px' ,
-              backgroundPositionY: -i * (1080 / row) + 'px',
-              width: (1920 / col) + 'px',
-              height: (1080 / row) + 'px',
-              zoom: 192 / (1920 / col),
-              width: 100 + '%',
-              height: 100 + '%',
+              left: j * ( 1920 / col),
+              top: i * (1080 / row),
             }
           );
         }
@@ -425,6 +567,43 @@ export default {
     changeBank (bank, index){
       this.containerList = bank.containers;
       this.$store.commit('setBankIndex', index);
+      const params = {
+        eventType: 'setTakeSetting',
+        sceneId: this.$store.state.bankIndex,
+        presetScene: this.presetScene,
+        checkKey: this.getcheckKey(),
+        sessionID: this.sessionId
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    setTakeSetting() {
+      let containers = [];
+      this.containerList.map(item => {
+        const sceneC = {
+          id: item.containerId,
+          takeType: this.takeType,
+          alpha: this.scenceOpacity
+        }
+        containers.push(sceneC);
+      })
+      const params = {
+        eventType: 'setTakeSetting',
+        sceneId: this.$store.state.bankIndex,
+        fadeTime: this.sliderTime * 1000,
+        display: this.copyContainer,
+        keepSwap: this.copyContainer ? false : this.keepReplace,
+        blackOut: this.darkScence,
+        presetScene: this.presetScene,
+        checkKey: this.getcheckKey(),
+        sessionID: this.sessionId,
+        count: 1,
+        container: containers,
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
     },
   },
   computed: {
@@ -432,9 +611,6 @@ export default {
       'bankList',
       'bankIndex'
     ]),
-    setOpacity() {
-      return (this.scenceOpacity).toFixed(2)
-    }
   }
 }
 </script>

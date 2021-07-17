@@ -78,6 +78,7 @@ export const dataFormat = {
    * @param {object} templateObj 拖拽模板
    */
   addContainer(id, addDisplay = true, position, templateObj, usableDisplay = [], realPos = [], separation) {
+    console.log(id);
     let content = [];
     let childrenContent = [];
     const { col, row } = templateObj;
@@ -97,7 +98,8 @@ export const dataFormat = {
         arr.push(position);
       }
     }
-    for (let index = 0; index < addNum; index++) {
+    const displayLen = usableDisplay.length > addNum ? addNum : usableDisplay.length;
+    for (let index = 0; index < displayLen; index++) {
       if (addDisplay) {
         let display = this.addDisplay({
           parentId: windows.id,

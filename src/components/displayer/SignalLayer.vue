@@ -9,6 +9,7 @@
     :id="layerInfo.id"
     @mouseenter="mouseEnter"
     @mouseleave="mouseLeave"
+    @click.stop="getLayer(layerInfo)"
   >
     <div class="position-head" v-if="positionHead">
       <img src="../../assets/layer_aoi.png" alt="" v-if="!layerInfo.layerLock" @click="aoiEvent(layerInfo)">
@@ -21,7 +22,7 @@
       <img src="../../assets/layer_maximize.png" alt="" v-if="!layerInfo.layerLock" @click="fullScreen(layerInfo)">
       <img src="../../assets/layer_delete.png" alt="" v-if="!layerInfo.layerLock" @click="deleteLayer(layerInfo)">
     </div>
-    <div>信号 {{layerInfo.signalId}}</div>
+    <div>信号 {{layerInfo.inputPort}}</div>
     <div>
       <span>x:{{layerInfo.realPos.left}}</span>
       <span>y:{{layerInfo.realPos.top}}</span>
@@ -30,7 +31,7 @@
       <span>w:{{layerInfo.sizeW}}</span>
       <span>h:{{layerInfo.sizeH}}</span>
     </div>
-    <div>Order:xx</div>
+    <div>Order:{{layerInfo.order}}</div>
     <canvas width="192" height="108" :inputPort="layerInfo.inputPort"></canvas>
   </div>
 </template>
@@ -62,7 +63,7 @@ export default {
   },
   created() {
     const ip = JSON.parse(window.sessionStorage.getItem("ip"));
-    this.streamMedia = `http://${ip}:4080/?action=stream`;
+    this.streamMedia = `http://${ip}:5005/?action=stream`;
   },
   mounted() {
     this.init();
@@ -94,6 +95,9 @@ export default {
     },
     aoiEvent(layer) {
       this.$root.bus.$emit('aoiEvent', layer);
+    },
+    getLayer(layer) {
+      this.$root.bus.$emit('getLayerInfo', layer);
     }
   },
   computed: {

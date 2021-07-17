@@ -31,6 +31,10 @@ export default {
     display: {
       type: Object,
       default: null
+    },
+    signal: {
+      type: Object,
+      default: null
     }
   },
   data() {
@@ -40,7 +44,8 @@ export default {
       vNum: '',
       dWidth: '',
       dHeight: '',
-      displayInfo: null
+      displayInfo: null,
+      signalInfo: null
     }
   },
   mounted() {
@@ -48,13 +53,24 @@ export default {
   },
   methods: {
     dataChange() {
-      console.log(this.display);
-      this.displayInfo = this.display;
-      this.devideName = '显示器' + this.display.displayId;
-      this.dWidth = this.display.sizeW;
-      this.dHeight = this.display.sizeH;
-      this.hNum = this.display.realPos.left;
-      this.vNum = this.display.realPos.top;
+      this.displayInfo = null;
+      this.signalInfo = null;
+      if (this.display) {
+        this.displayInfo = this.display;
+        this.devideName = '显示器' + this.display.displayId;
+        this.dWidth = this.display.sizeW;
+        this.dHeight = this.display.sizeH;
+        this.hNum = this.display.realPos.left;
+        this.vNum = this.display.realPos.top;
+      }
+      if (this.signal) {
+        this.signalInfo = this.signal;
+        this.devideName = '信号' + this.signal.inputPort;
+        this.dWidth = this.signal.sizeW;
+        this.dHeight = this.signal.sizeH;
+        this.hNum = this.signal.realPos.left;
+        this.vNum = this.signal.realPos.top;
+      }
     },
     changInput(e, type) {
       let val = e.target.value.trim().replace(/\D/ig, '').replace(/^[0]/, 1);
@@ -76,6 +92,7 @@ export default {
     //点击确定
     setDisplay() {
       let display = this.displayInfo;
+      let signal = this.signalInfo;
       if(display) {
         display.sizeW = this.dWidth ? this.dWidth : display.sizeW;
         display.sizeH = this.dHeight ? this.dHeight : display.sizeH;
@@ -85,11 +102,26 @@ export default {
         display.position.top = this.vNum ?  (this.vNum / 10) : display.position.top;
         this.$root.bus.$emit('setDisplayInfo', display);
       }
+      if (signal) {
+        signal.sizeW = this.dWidth ? this.dWidth : signal.sizeW;
+        signal.sizeH = this.dHeight ? this.dHeight : signal.sizeH;
+        signal.realPos.left = this.hNum ? this.hNum : signal.realPos.left;
+        signal.realPos.top = this.vNum ? this.vNum : signal.realPos.top;
+        signal.position.left = this.hNum ? (this.hNum / 10) : signal.position.left;
+        signal.position.top = this.vNum ?  (this.vNum / 10) : signal.position.top;
+        this.$root.bus.$emit('setSignalInfo', signal);
+      }
     }
   },
   watch: {
     display() {
       this.dataChange();
+    },
+    signal: {
+      handler() {
+        this.dataChange();
+      },
+      deep: true
     }
   }
 }

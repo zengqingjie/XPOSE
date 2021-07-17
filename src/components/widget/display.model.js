@@ -5,7 +5,7 @@ export class Display extends Widget {
   constructor(config) {
     super(config);
     this.name = config.name || '显示器';
-    this.containerId = config.containerId || '';
+    this.containerId = config.containerId;
     this.sizeW = config.sizeW || null;
     this.sizeH = config.sizeH || null;
     this.outputTypeEnum = config.outputTypeEnum || null;

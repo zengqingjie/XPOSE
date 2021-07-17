@@ -8,7 +8,7 @@
   >
     <div class="container-header">
       <span
-        >{{ cItem.containerId }}--(W:{{ cItem.customFeature.col * 1920 }} H:{{
+        >{{ cItem.containerId + 1 }}--(W:{{ cItem.customFeature.col * 1920 }} H:{{
           cItem.customFeature.row * 1080
         }})</span
       >

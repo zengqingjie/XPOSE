@@ -42,6 +42,7 @@
     >
       <img src="../assets/setting_none.png" alt="">
     </div>
+    <!-- <div class="save-btn" @click="saveUiData">同步哈哈哈哈</div> -->
   </div>
 </template>
 
@@ -54,6 +55,7 @@ import ManageShow from '@/components/manageShow/ManageShow';
 import Layer from '@/components/layer/Layer';
 import Scene from '@/components/scene/Scene';
 import SystemSettings from '@/components/SystemSettings';
+import Api from '../utils/api';
 export default {
   data() {
     return {
@@ -75,6 +77,21 @@ export default {
     this.init();
   },
   methods: {
+    // 保存ui数据
+    saveUiData() {
+      let data = {
+        state: this.$store.state
+      }
+      data.state.displayerList = [];
+      Api.saveUiData(JSON.stringify(data)).then(res => {
+        if(res.code == 200) {
+           console.log('save success')
+          } else {
+            console.log('save error')
+          }
+      });
+      console.log(data);
+    },
     init() {
       this.$root.bus.$off('titleInfo');
       this.$root.bus.$on('titleInfo', (data) => {
@@ -122,6 +139,16 @@ export default {
         width: 28px;
         height: 28px;
       }
+    }
+    .save-btn {
+      position: absolute;
+      left: 0px;
+      bottom: 160px;
+      width: 64px;
+      height: 64px;
+      background: red;
+      color: #fff;
+      cursor: pointer;
     }
     .hegihter {
       bottom: 220px;

@@ -16,7 +16,11 @@ export class Signal extends Widget {
     this.realPos = config.realPos || null;
     this.sizeW = config.sizeW || null;
     this.sizeH = config.sizeH || null;
+    this.cropW = config.cropW;
+    this.cropH = config.cropH;
     this.inputPort = config.inputPort;
+    this.order = config.order;
+    this.layerAlpha = config.layerAlpha;
     this.customFeature = Object.assign({
       wBase: 192,
       hBase: 108,

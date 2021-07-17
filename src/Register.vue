@@ -1261,16 +1261,19 @@ export default {
   },
   created() {},
   mounted() {
+    this.mac = JSON.parse(window.sessionStorage.getItem("mac"));
+    this.id = JSON.parse(window.sessionStorage.getItem("id"));
+    console.log(this.mac, this.id);
     // 获取mac,ip信息
-    Api.getMacAddress().then(res => {
-      if(res.code == 200) {
-        this.mac = res.data.mac;
-        this.id = res.data.id;
-        window.sessionStorage.setItem("ip", JSON.stringify(res.data.ip));
-      } else {
-        this.$message.error(res.message);
-      }
-    });
+    // Api.getMacAddress().then(res => {
+    //   if(res.code == 200) {
+    //     this.mac = res.data.mac;
+    //     this.id = res.data.id;
+    //     window.sessionStorage.setItem("ip", JSON.stringify(res.data.ip));
+    //   } else {
+    //     this.$message.error(res.message);
+    //   }
+    // });
   },
   methods: {
     // 开始注册

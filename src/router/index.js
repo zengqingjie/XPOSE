@@ -4,22 +4,25 @@ import VueRouter from 'vue-router'
 Vue.use(VueRouter)
 
 const routes = [
-  // 注册
-  {
-    path: '/',
-    name: 'Register',
-    component: () => import('../Register.vue')
-  },
   // 登录
   {
-    path: '/login',
+    path: '/',
     name: 'Login',
     component: () => import('../Login.vue')
+  },
+  // 注册
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('../Register.vue')
   },
   // 主页
   {
     path: '/index',
     name: 'Index',
+    meta: {
+      requiresAuth: true
+    },
     component: () => import('@/views/Index.vue')
   },
    // 切割
@@ -28,12 +31,27 @@ const routes = [
     name: 'Clip',
     component: () => import('@/views/Clip.vue')
   },
+  {
+    path: '*',
+    name: 'notFound',
+    component: () => import('@/views/NotFound.vue')
+  }
 ]
 
 const router = new VueRouter({
-  mode: 'history',
+  mode: 'hash',
   base: process.env.BASE_URL,
   routes
-})
+});
+
+router.beforeEach((to, from, next) => {
+  // const isLogin = JSON.parse(window.sessionStorage.getItem("isLogin"));
+  const isLogin = true; //调试
+  if(!isLogin && to.meta.requiresAuth) {
+    next('/');
+  } else {
+    next();
+  }
+});
 
 export default router

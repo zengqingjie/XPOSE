@@ -7,28 +7,40 @@
 <script>
 import { dataFormat } from './utils/dataFormat';
 import globalWs from '@/utils/globalWs';
+import Api from '@/utils/api';
+
 export default {
   created () {
     const ip = JSON.parse(window.sessionStorage.getItem("ip"));
     if(ip) {
       globalWs.connectSocket("ws://"+ip+":8800");
-    }
+    }                  
+
     //在页面加载时读取sessionStorage里的状态信息
     if (sessionStorage.getItem("store") ) {
       this.$store.replaceState(Object.assign({}, this.$store.state,JSON.parse(sessionStorage.getItem("store"))));
       dataFormat.widgetList = JSON.parse(sessionStorage.getItem("widgetList")) || [];
       dataFormat.widgetMap = JSON.parse(sessionStorage.getItem("widgetMap")) || {};
       dataFormat._curWindows = JSON.parse(sessionStorage.getItem("_curWindows")) || {};
+      
+      Api.getUiData().then(res => {
+        if(res.code == 200) {
+           console.log('get success')
+          } else {
+            console.log('set error')
+          }
+      });
     } 
 
     //在页面刷新时将vuex里的信息保存到sessionStorage里
-    window.addEventListener("beforeunload",()=>{
+    window.onbeforeunload = () => {
+      
       sessionStorage.setItem("widgetList",JSON.stringify(dataFormat.widgetList));
       sessionStorage.setItem("widgetMap",JSON.stringify(dataFormat.widgetMap));
       sessionStorage.setItem("_curWindows",JSON.stringify(dataFormat._curWindows));
       sessionStorage.setItem("store",JSON.stringify(this.$store.state));
       window.clearInterval();
-    })
+    }
   }
 }
 </script>

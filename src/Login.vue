@@ -30,6 +30,7 @@
           </el-select>
         </div>
         <div class="login-btn" @click="loginEvent">现在开始</div>
+        <div class="register-btn" @click="goRegisterPage">去注册</div>
       </div>
     </div>
   </div>
@@ -53,6 +54,18 @@ export default {
     }
   },
   mounted() {
+    // 获取mac,ip信息
+    Api.getMacAddress().then(res => {
+      if(res.code == 200) {
+        this.mac = res.data.mac;
+        this.id = res.data.id;
+        window.sessionStorage.setItem("ip", JSON.stringify(res.data.ip));
+        window.sessionStorage.setItem("mac", JSON.stringify(res.data.mac));
+      } else {
+        this.$message.error(res.message);
+      }
+    });
+
     const params = this.$route.params;
     if(params) {
       this.userName = params.account;
@@ -61,18 +74,29 @@ export default {
   },
   methods: {
     loginEvent() {
-      const data = {
-        userName: this.userName,
-        passwd: this.pwd
-      }
-      Api.login(data).then(res => {
-        if(res.code == 200) {
-          // 登录成功创建websocket
-          this.createWebsocket();
-          window.sessionStorage.setItem("sessionId", JSON.stringify(res.data.sessionID));
-          this.$router.push({path: '/index'});
+      if(this.userName && this.pwd) {
+        const data = {
+          userName: this.userName,
+          passwd: this.pwd
         }
-      });
+        Api.login(data).then(res => {
+          if(res.code == 200) {
+            // 登录成功创建websocket
+            this.createWebsocket();
+            window.sessionStorage.setItem("sessionId", JSON.stringify(res.data.sessionID));
+            window.sessionStorage.setItem("isLogin", JSON.stringify(true));
+            window.sessionStorage.setItem("account", JSON.stringify(this.userName));
+            window.sessionStorage.setItem("passwd", JSON.stringify(this.pwd));
+            this.$router.push({path: '/index'});
+          }
+        });
+      } else {
+        this.$message.error('用户名或密码错误')
+      }
+    },
+    // 去注册
+    goRegisterPage() {
+      this.$router.push({path: '/register'});
     },
     createWebsocket() {
       const _this = this;
@@ -202,6 +226,15 @@ export default {
           text-align: center;
           color: #fff;
           font-size: 16px;
+          cursor: pointer;
+        }
+        .register-btn {
+          width: 75%;
+          margin: 20px auto 0;
+          display: flex;
+          justify-content: flex-end;
+          color: rgb(26,188,156);
+          font-size: 14px;
           cursor: pointer;
         }
       }

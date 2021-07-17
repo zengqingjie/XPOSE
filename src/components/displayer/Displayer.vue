@@ -6,6 +6,7 @@
     :parentId="dMsg.parentId"
     :id="dMsg.id"
     :displayerId="dMsg.displayId"
+    :containerId="dMsg.containerId"
     v-if="dMsg"
     @click="clickDisplayer(dMsg)"
   >

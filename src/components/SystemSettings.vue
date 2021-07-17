@@ -1,18 +1,18 @@
 <template>
   <div class="system-setting">
     <div class="main-info">
-      <div class="info-box">
+      <div class="info-box" v-if="userRightInfo">
         <div class="info-item">
           <div class="title">系统信息</div>
           <div class="mesg">
             <span>软件版本</span>
-            <span class="green-text">2.0.3.45</span>
+            <span class="green-text">{{userRightInfo.systemInfo.softwareVersion}}</span>
           </div>
           <div class="mesg">
             <span>语言</span>
-            <el-select v-model="languageVal">
+            <el-select v-model="userRightInfo.systemInfo.languageId">
               <el-option
-                v-for="item in language"
+                v-for="item in userRightInfo.systemInfo.languageList"
                 :key="item.id"
                 :label="item.label"
                 :value="item.id"
@@ -31,10 +31,10 @@
         <div class="info-item">
           <div class="title">权限设置</div>
           <div class="mesg">
-            <input type="text" v-model="account" placeholder="用户名">
+            <input type="text" v-model="userRightInfo.rightSet.userName" placeholder="用户名">
           </div>
           <div class="mesg">
-            <input type="password" v-model="password" placeholder="密码">
+            <input type="password" v-model="userRightInfo.rightSet.password" placeholder="密码">
             <div class="green-btn" v-if="loginStatus" @click="logoutEvent">注销</div>
             <div class="green-btn" v-if="!loginStatus" @click="loginEvent">用户登录</div>
           </div>
@@ -42,10 +42,17 @@
         <div class="info-item">
           <div class="title">通讯设置</div>
           <div class="mesg radio">
-            <el-radio-group v-model="communicationRadio">
-              <el-radio :label="1">串口通信</el-radio>
-              <el-radio :label="2">网络通信</el-radio>
-              <el-radio :label="3">以上两者</el-radio>
+            <el-radio-group
+              v-model="userRightInfo.communicationId"
+              @change="radioChange"
+            >
+              <el-radio
+                v-for="item in userRightInfo.communicationSet"
+                :key="item.id"
+                :label="item.id"
+              >
+                {{item.label}}
+              </el-radio>
             </el-radio-group>
              <div class="green-btn">设置</div>
           </div>
@@ -55,22 +62,24 @@
           <div class="mesg">
             <span>解锁提示</span>
             <el-switch
-              v-model="cancelLockTips"
+              v-model="userRightInfo.mesgTips.cancelLockTips"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               active-text="打开"
               inactive-text="关闭"
+              @change="mesgTipsChange"
             >
             </el-switch>
           </div>
           <div class="mesg">
             <span>引导提示</span>
             <el-switch
-              v-model="guideTips"
+              v-model="userRightInfo.mesgTips.guideTips"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               active-text="打开"
               inactive-text="关闭"
+              @change="mesgTipsChange"
             >
             </el-switch>
           </div>
@@ -80,11 +89,12 @@
           <div class="mesg">
             <span>自动直切</span>
             <el-switch
-              v-model="autoCut"
+              v-model="userRightInfo.layerManage.autoStraightCut"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               active-text="打开"
               inactive-text="关闭"
+              @change="manageLayer"
             >
             </el-switch>
           </div>
@@ -96,12 +106,13 @@
           <div class="mesg">
             <el-checkbox-group
               v-model="checkedDevice"
+              @change="deviceChangeEvent"
             >
               <el-checkbox
                 v-for="device in devices"
-                :label="device"
-                :key="device"
-              >{{device}}</el-checkbox>
+                :label="device.deviceName"
+                :key="device.id"
+              >{{device.deviceName}}</el-checkbox>
             </el-checkbox-group>
           </div>
         </div>
@@ -204,7 +215,7 @@
               @click="userClickEvent(index)"
             >
               <div>{{item.userName}}</div>
-              <div>{{item.pwd}}</div>
+              <div>{{item.password}}</div>
               <div class="around">
                 <img
                   :src="userIndex == index ? require('../assets/account_edit.png') : require('../assets/account_edit_gray.png')" 
@@ -247,7 +258,7 @@
               <span>密码</span>
               <input
                 type="text"
-                :value="editObj.pwd"
+                :value="editObj.password"
                 @input="(e) => changeInput(e, 'changePwd')"
               >
             </div>
@@ -319,10 +330,13 @@ export default {
   data() {
     return {
       typeIndex: 0,
+      userRightInfo: null,
       // 设置设备数目
       deviceNum: 0,
       checkedDevice: [],
-      devices: ['newX'],
+      devices: [
+        { id: 0, deviceName: 'newX', isChecked: false },
+      ],
       deviceIp: [
         {id: 0, label: '=========='},
         {id: 1, label: '192.168.0.122'},
@@ -440,20 +454,147 @@ export default {
         label: 'label'
       },
       nowUserRight: null,
+      sessionId: '',
     }
   },
   mounted() {
+    const that = this;
+    this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
+
     const userName = JSON.parse(sessionStorage.getItem("account")) || 'Admin';
     this.account = userName;
     const pwd = JSON.parse(sessionStorage.getItem("passwd")) || 'admin';
     this.password = pwd;
+
     this.loginStatus = pwd ? true : false;
     let userList = this.userList;
-    userList.push({userName: this.account, pwd: this.password, right: this.deepCopy(this.rightList)});
-    userList.push({userName: 'cyx', pwd: '321', right: this.deepCopy(this.rightList)});
+    userList.push({userName: this.account, password: this.password, right: this.deepCopy(this.rightList)});
+    userList.push({userName: 'cyx', password: '321', right: this.deepCopy(this.rightList)});
     this.userList = userList;
+
+    this.getUserRight();
+
+    // ws信息处理
+    window.webSocket.onmessage = function(res) {
+      const result = JSON.parse(res.data);
+      // 获取管理员权限信息
+      if((result.code == 200) && (result.data.eventType == 'getUserRight')) {
+        console.log(result);
+        that.userRightInfo = result.data;
+      }
+      // 设置模块用户登录
+      if((result.code == 200) && (result.data.eventType == 'rightSetLogin')) {
+        console.log(result);
+        that.$message.success('登录成功');
+        that.loginStatus = true;
+        that.typeIndex = 1;
+        that.getUserRight();
+      }
+      // 设置模块用户注销
+      if((result.code == 200) && (result.data.eventType == 'rightSetLogout')) {
+        console.log(result);
+        that.$message.success('注销成功');
+        that.loginStatus = false;
+        that.password = '';
+        sessionStorage.setItem("passwd",JSON.stringify(''));
+        that.typeIndex = 0;
+      }
+      // 通讯设置
+      if((result.code == 200) && (result.data.eventType == 'setCommunication')) {
+        console.log(result);
+      }
+      // 提示信息
+      if((result.code == 200) && (result.data.eventType == 'setMesgTips')) {
+        console.log(result);
+      }
+      // 图层管理
+      if((result.code == 200) && (result.data.eventType == 'manageLayer')) {
+        console.log(result);
+      }
+      // 搜索设备
+      if((result.code == 200) && (result.data.eventType == 'setFindDeviceType')) {
+        console.log(result);
+      }
+      // 设置多控数目
+      if((result.code == 200) && (result.data.eventType == 'setMoreCtrlNum')) {
+        console.log(result);
+        that.deviceList = result.data.moreCtrlList;
+      }
+      // 编辑用户信息
+      if((result.code == 200) && (result.data.eventType == 'editUser')) {
+        console.log(result);
+        let userList = that.userList;
+        const editObj = that.editObj;
+        userList.some((item, index) => {
+          if(item.userName == editObj.userName) {
+            item.password = editObj.password;
+            return true;
+          }
+        });
+        that.$message.success('用户信息已更新');
+        that.userList = userList;
+        that.editType = '';
+      }
+      // 设置模块新增用户
+      if((result.code == 200) && (result.data.eventType == 'addUser')) {
+        console.log(result);
+        that.userList = result.data.userList;
+        that.editType = '';
+        that.clearUserInfo();
+        that.$message.success('用户新增成功');
+      }
+      // 删除设置模块用户账号
+      if((result.code == 200) && (result.data.eventType == 'deleteUser')) {
+        console.log(result);
+        let userList = that.userList;
+        userList = userList.filter((item, index) => index != that.deleteUserIndex);
+        that.userList = userList;
+        that.deleteUserIndex = null;
+      }
+    }
   },
   methods: {
+    //获取管理员权限信息
+    getUserRight() {
+      const params = {
+        eventType: "getUserRight",
+        userName: this.account,
+        passWord: this.password,
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 生成随机随机checkKey
+    getcheckKey(type) {
+      let arr = new Array;
+      const arr1 = new Array("0","1","2","3","4","5","6","7","8","9");
+      let nonceStr=''
+      for(var i=0; i<8; i++){
+        var n = Math.floor(Math.random()*10);
+        arr[i] = arr1[n] ;
+        nonceStr += arr1[n];
+      }
+      switch (type) {
+        case 'readInputSignalList': // 创建容器
+          this.readInputSignalListCheckKey = parseInt(nonceStr);
+          break;
+        case 'setLayer':
+          this.setLayerCheckKey = parseInt(nonceStr);
+          break;
+        case 'rmLayer':
+          this.rmLayerCheckKey = parseInt(nonceStr);
+          break;
+        case 'setLayerFreeze':
+          this.setLayerFreezeCheckKey = parseInt(nonceStr);
+          break;
+        default:
+          break;
+      }
+      return parseInt(nonceStr);
+    },
     // 克隆
     deepCopy(obj) {
       let _obj = JSON.stringify(obj);
@@ -465,20 +606,87 @@ export default {
     },
     // 注销
     logoutEvent() {
-      this.$message.success('注销成功');
-      this.loginStatus = false;
-      this.password = '';
-      sessionStorage.setItem("passwd",JSON.stringify(''));
-      this.typeIndex = 0;
+       const params = {
+          eventType: "rightSetLogout",
+          userName: this.account,
+          password: this.password,
+          sessionID: this.sessionId,
+          checkKey: this.getcheckKey()
+        }
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
+        }
     },
     // 用户登录
     loginEvent() {
       if(this.account && this.password) {
-        this.$message.success('登录成功');
-        this.loginStatus = true;
-        this.typeIndex = 1;
+        const params = {
+          eventType: "rightSetLogin",
+          userName: this.account,
+          password: this.password,
+          sessionID: this.sessionId,
+          checkKey: this.getcheckKey()
+        }
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
+        }
       } else {
         this.$message.error('用户名或密码错误');
+      }
+    },
+    // 通讯设置change事件
+    radioChange(value) {
+      const params = {
+        eventType: "setCommunication",
+        communicationId: value,
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 信息提示change事件
+    mesgTipsChange() {
+      const params = {
+        eventType: "setMesgTips",
+        cancelLockTips: this.userRightInfo.mesgTips.cancelLockTips,
+        guideTips: this.userRightInfo.mesgTips.guideTips,
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 图层管理change事件
+    manageLayer(status) {
+      const params = {
+        eventType: "manageLayer",
+        autoStraightCut: status,
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 搜索设备change事件
+    deviceChangeEvent(list) {
+      this.devices.map(dItem => {
+        const isChecked = list.find(item => item == dItem.deviceName);
+        if(isChecked) {
+          dItem.isChecked = true;
+        }
+      });
+      const params = {
+        eventType: "setFindDeviceType",
+        checkedDevices: this.devices,
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 容器参数类型切换
@@ -496,17 +704,14 @@ export default {
     },
     // 设置数目
     setNum() {
-      const num = this.deviceNum;
-      const dataList = [];
-      if(num > 0) {
-        for (let i = 0; i < num; i++) {
-          const device = {
-            selectIdIndex: 0,
-            connect: false
-          }
-          dataList.push(device);
-        }
-        this.deviceList = dataList;
+      const params = {
+        eventType: "setMoreCtrlNum",
+        moreCtrlNum: this.deviceNum,
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 断开所有连接
@@ -542,10 +747,16 @@ export default {
     },
     // 确认删除
     sureDelete() {
-      let userList = this.userList;
-      userList = userList.filter((item, index) => index != this.deleteUserIndex);
-      this.userList = userList;
-      this.deleteUserIndex = null;
+      const params = {
+        eventType: "deleteUser",
+        userName: this.userList[this.deleteUserIndex].userName,
+        password: this.userList[this.deleteUserIndex].password,
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
     },
     // 取消删除
     cancelDelete() {
@@ -603,9 +814,8 @@ export default {
     // 输入框事件
     changeInput(e, type) {
       const value = e.target.value;
-      console.log(value);
       if(type == 'changePwd') {
-        this.editObj.pwd = value;
+        this.editObj.password = value;
       }
       if(type == 'userName') {
         this.newUserName = value;
@@ -622,17 +832,22 @@ export default {
       if (this.editType == 'edit') {
         let userList = this.userList;
         const editObj = this.editObj;
-        userList.some(item => {
+        userList.some((item, index) => {
           if(item.userName == editObj.userName) {
-            item.pwd = editObj.pwd;
-            return true;
+            const params = {
+              eventType: "editUser",
+              userId: index,
+              userName: editObj.userName,
+              password: editObj.password,
+              sessionID: this.sessionId,
+              checkKey: this.getcheckKey()
+            }
+            if (window.webSocket && window.webSocket.readyState == 1) {
+              window.webSocket.send(JSON.stringify(params));
+            }
           }
         });
-        this.$message.success('用户信息已更新');
-        this.userList = userList;
-        this.editType = '';
       } else {
-        console.log(this.newUserName);
         if (!this.newUserName) {
           this.$message.error('用户名不能为空');
           return;
@@ -647,17 +862,18 @@ export default {
             this.$message.error('用户名已存在');
           } else {
             if(this.newPwd === this.confirmPwd) {
-              const newUser = {
+              const params = {
+                eventType: "addUser",
                 userName: this.newUserName,
-                pwd: this.newPwd,
-                right: this.rightList
+                password: this.newPwd,
+                confirmPassword: this.confirmPwd,
+                sessionID: this.sessionId,
+                checkKey: this.getcheckKey()
               }
-              let userList = this.userList;
-              userList.push(newUser);
-              this.userList = userList;
-              this.editType = '';
-              this.clearUserInfo();
-              this.$message.success('用户新增成功');
+              if (window.webSocket && window.webSocket.readyState == 1) {
+                window.webSocket.send(JSON.stringify(params));
+              }
+              
             } else {
               this.$message.error('两次输入的密码不一致');
             }
@@ -668,7 +884,7 @@ export default {
     // 清除用户信息
     clearUserInfo() {
       if(this.editType == 'edit') {
-        this.editObj.pwd = '';
+        this.editObj.password = '';
       } else {
         this.newUserName = '';
         this.newPwd = '';

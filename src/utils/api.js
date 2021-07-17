@@ -1,5 +1,5 @@
 import axios from '@/utils/require.js';
-let loginAPI = process.env.NODE_ENV !== 'production' ? "http://192.168.0.122" : "https://192.168.0.122"; // 登录服务
+let loginAPI = process.env.NODE_ENV !== 'production' ? "http://192.168.0.242" : "https://192.168.0.242"; // 登录服务
 const Api = {
   // 发送激活码
   getActiveCode(data) {
@@ -32,7 +32,23 @@ const Api = {
       method: 'POST',
       data: data
     })
-  }
+  },
+  // 保存ui数据
+  saveUiData(data) {
+    return axios({
+      url: '/api/cgi-bin/saveUiData',
+      method: 'POST',
+      data: data
+    })
+  },
+  //读取ui数据
+  getUiData(data) {
+    return axios({
+      url: '/api/cgi-bin/getUiData',
+      method: 'POST',
+      data: data
+    })
+  },
 }
 
 export default Api;

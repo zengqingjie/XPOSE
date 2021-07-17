@@ -4,34 +4,59 @@
       <div class="plan-cont">
         <div class="input-section">
           <div
-            class="slot"
+            class="board"
             v-for="(item, index) in inputList"
             :key="index"
           >
-            <img
-              src="@/assets/input_HDMI2.png"
-              alt=""
-              v-for="(citem, cIndex) in item"
-              :key="cIndex"
-              @click="clickPort('inputPort')"
+            <div
+              class="slot"
+              v-if="deviceInfo&&deviceInfo.costomInfo.inputModelInfo[index].hasInputBoard"
             >
+              <div
+                alt=""
+                v-for="citem in item"
+                :key="citem.id"
+                @click="clickPort(citem.id, 'inputPort', citem.display)"
+                :class="(clickPortId === citem.id && port == 'inputPort') ? 'show' : ''"
+                :id="citem.id"
+              >
+                <img
+                  :src="getIconImg(citem.inputType)"
+                >
+              </div>
+            </div>
           </div>
         </div>
         <div class="output-section">
           <div
-            class="slot"
+            class="board"
             v-for="(item, index) in outputList"
             :key="index"
           >
-            <img
-              src="@/assets/output_HDMI2.png"
-              alt=""
-              v-for="(citem, cIndex) in item"
-              :key="cIndex"
-              @click="clickPort('outputPort')"
+            <div
+              class="slot"
+              v-if="deviceInfo&&deviceInfo.costomInfo.outputModelInfo[index].hasOutputBoard"
             >
+              <div
+                alt=""
+                v-for="citem in item"
+                :key="citem.id"
+                @click="clickPort(citem.id, 'outputPort', citem.display)"
+                :class="(clickPortId === citem.id && port == 'outputPort') ? 'show' : ''"
+                :id="citem.id"
+              >
+                <img
+                  v-if="citem.display"
+                  src="@/assets/output_HDMI2.png"
+                >
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+      <div class="sn-view">
+        <div>sn:{{sn}}</div>
+        <div>ip:{{ip}}</div>
       </div>
     </div>
     <div class="right-view" v-if="!showInfo && nowMenuId == '002'">
@@ -57,14 +82,14 @@
           <div class="blue-text">设备信息</div>
           <div class="info-view">
             <div class="label">温度</div>
-            <div class="green-text">35℃</div>
+            <div class="green-text">{{deviceInfo.costomInfo.deviceInfo.temperature || ''}}</div>
           </div>
           <div class="info-view">
             <div class="label">物理地址</div>
-            <div class="green-text">01:23:45:67:89:AB</div>
+            <div class="green-text">{{deviceInfo.costomInfo.deviceInfo.macAddress || ''}}</div>
           </div>
           <div class="blue-text">主板信息</div>
-          <div class="lines-table">
+          <div class="lines-table" v-if="deviceInfo.costomInfo.mainBoard">
             <div class="head">
               <span class="xl">名称</span>
               <span class="xl">软件版本</span>
@@ -72,13 +97,13 @@
             </div>
             <div
               class="tr-item"
-              v-for="(item, index) in mainBoardInfo"
+              v-for="(item, index) in deviceInfo.costomInfo.mainBoard"
               :key="index"
               :class="index % 2 ? '' : 'deep'"
             >
-              <span class="xl">{{item.name}}</span>
-              <span class="xl">{{item.software}}</span>
-              <span>{{item.hardware}}</span>
+              <span class="xl">{{conversationBoardType(item.communicationType)}}</span>
+              <span class="xl">{{item.software || ''}}</span>
+              <span>{{item.hardware || ''}}</span>
             </div>
           </div>
           <div class="blue-text">输入模块信息</div>
@@ -90,13 +115,13 @@
             </div>
             <div
               class="tr-item"
-              v-for="(item, index) in inputInfo"
+              v-for="(item, index) in deviceInfo.costomInfo.inputModelInfo"
               :key="index"
               :class="index % 2 ? '' : 'deep'"
             >
-              <span class="xl">{{item.name}}</span>
-              <span class="xl">{{item.software}}</span>
-              <span>{{item.hardware}}</span>
+              <span class="xl">{{item.hasInputBoard ? conversationInputType(item.inputType) : (index + 1)}}</span>
+              <span class="xl">{{item.hasInputBoard ? item.software : '--'}}</span>
+              <span>{{item.hasInputBoard  ? item.hardware : '--'}}</span>
             </div>
           </div>
           <div class="blue-text">输出模块信息</div>
@@ -108,13 +133,13 @@
             </div>
             <div
               class="tr-item"
-              v-for="(item, index) in outputInfo"
+              v-for="(item, index) in deviceInfo.costomInfo.outputModelInfo"
               :key="index"
               :class="index % 2 ? '' : 'deep'"
             >
-              <span class="xl">{{item.name}}</span>
-              <span class="xl">{{item.software}}</span>
-              <span>{{item.hardware}}</span>
+              <span class="xl">{{item.hasOutputBoard ? item.outputType : (index + 1)}}</span>
+              <span class="xl">{{item.hasOutputBoard ? item.software : '--'}}</span>
+              <span>{{item.hasOutputBoard ? item.hardware : '--'}}</span>
             </div>
           </div>
         </div>
@@ -125,37 +150,37 @@
           <div class="params-style-input">
             <span>ip地址</span>
             <div class="input-group">
-              <input type="text">
-              <span>-</span>
-              <input type="text">
-              <span>-</span>
-              <input type="text">
-              <span>-</span>
-              <input type="text">
+              <div
+                v-for="(item, index) in conversationIpArry(deviceInfo.ip.ipAddress)"
+                :key="index"
+              >
+                <span v-if="index != 0">-</span>
+                <input type="text" :value="item">
+              </div>
             </div>
           </div>
           <div class="params-style-input">
             <span>子网掩码</span>
             <div class="input-group">
-              <input type="text">
-              <span>-</span>
-              <input type="text">
-              <span>-</span>
-              <input type="text">
-              <span>-</span>
-              <input type="text">
+              <div
+                v-for="(item, index) in conversationIpArry(deviceInfo.ip.subnetMask)"
+                :key="index"
+              >
+                <span v-if="index != 0">-</span>
+                <input type="text" :value="item">
+              </div>
             </div>
           </div>
           <div class="params-style-input">
             <span>网关</span>
             <div class="input-group">
-              <input type="text">
-              <span>-</span>
-              <input type="text">
-              <span>-</span>
-              <input type="text">
-              <span>-</span>
-              <input type="text">
+              <div
+                v-for="(item, index) in conversationIpArry(deviceInfo.ip.gateway)"
+                :key="index"
+              >
+                <span v-if="index != 0">-</span>
+                <input type="text" :value="item">
+              </div>
             </div>
           </div>
         </div>
@@ -163,7 +188,7 @@
           <div class="params-style-input">
             <span>自动调速</span>
             <el-switch
-              v-model="autoSpeed"
+              v-model="deviceInfo.funCtrl.funAutoSpeed"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               active-text="打开"
@@ -173,14 +198,14 @@
           </div>
           <div class="params-style-input">
             <span>风扇转速</span>
-            <input type="text" v-model="fanSpeed">
+            <input type="text" v-model="deviceInfo.funCtrl.funSpeed">
           </div>
         </div>
         <div v-if="typeIndex == 3 && rightView == 'device'">
           <div class="params-style-input">
             <span>热备份</span>
             <el-switch
-              v-model="hotBackUp"
+              v-model="deviceInfo.hotBackup.hotBackupStatus"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               active-text="打开"
@@ -210,54 +235,56 @@
               <span>热备份3</span>
             </div>
             <div class="t-body">
-              <div
-                class="t-row"
-                v-for="(item, index) in backupTable"
-                :key="index + '1'"
-                @click="clickRowEvent(index)"
-                :class="selectedBackupIndex == index ? 'selected' : ''"
-              >
-                <div class="small">{{index + 1}}</div>
-                <div>
-                  <el-select v-model="item.backupSource" placeholder="">
-                    <el-option
-                      v-for="bItem in backupData"
-                      :key="bItem.id"
-                      :label="bItem.label"
-                      :value="bItem.id">
-                    </el-option>
-                  </el-select>
+              <div v-for="(item, index) in deviceInfo.hotBackup.hotBackupList" :key="item.hotBackupModelId">
+                <div
+                  class="t-row"
+                  @click="clickRowEvent(index)"
+                  :class="selectedBackupIndex == index ? 'selected' : ''"
+                  v-if="conversationBackupMode(hotBackUpVal) == item.hotBackupModel"
+                >
+                  <div class="small">{{index + 1}}</div>
+                  <div>
+                    <el-select v-model="item.srcBackup" placeholder="">
+                      <el-option
+                        v-for="bItem in backupData"
+                        :key="bItem.id"
+                        :label="bItem.label"
+                        :value="bItem.id">
+                      </el-option>
+                    </el-select>
+                  </div>
+                  <div>
+                    <el-select v-model="item.backup1" placeholder="">
+                      <el-option
+                        v-for="bItem in backupData"
+                        :key="bItem.id"
+                        :label="bItem.label"
+                        :value="bItem.id">
+                      </el-option>
+                    </el-select>
+                  </div>
+                  <div>
+                    <el-select v-model="item.backup2" placeholder="">
+                      <el-option
+                        v-for="bItem in backupData"
+                        :key="bItem.id"
+                        :label="bItem.label"
+                        :value="bItem.id">
+                      </el-option>
+                    </el-select>
+                  </div>
+                  <div>
+                    <el-select v-model="item.backup3" placeholder="">
+                      <el-option
+                        v-for="bItem in backupData"
+                        :key="bItem.id"
+                        :label="bItem.label"
+                        :value="bItem.id">
+                      </el-option>
+                    </el-select>
+                  </div>
                 </div>
-                <div>
-                  <el-select v-model="item.backupOne" placeholder="">
-                    <el-option
-                      v-for="bItem in backupData"
-                      :key="bItem.id"
-                      :label="bItem.label"
-                      :value="bItem.id">
-                    </el-option>
-                  </el-select>
-                </div>
-                <div>
-                  <el-select v-model="item.backupSec" placeholder="">
-                    <el-option
-                      v-for="bItem in backupData"
-                      :key="bItem.id"
-                      :label="bItem.label"
-                      :value="bItem.id">
-                    </el-option>
-                  </el-select>
-                </div>
-                <div>
-                  <el-select v-model="item.backupThir" placeholder="">
-                    <el-option
-                      v-for="bItem in backupData"
-                      :key="bItem.id"
-                      :label="bItem.label"
-                      :value="bItem.id">
-                    </el-option>
-                  </el-select>
-                </div>
+
               </div>
             </div>
           </div>
@@ -265,13 +292,13 @@
         <div v-if="typeIndex == 4 && rightView == 'device'">
           <div class="params-style-input">
             <span>延时开机时间</span>
-            <input type="text" v-model="fanSpeed">
+            <input type="text" v-model="deviceInfo.delayOn.delayOnTime">
             <em>秒</em>
           </div>
           <div class="params-style-input">
             <span>前面板灯</span>
             <div class="input-select">
-              <el-select v-model="boardLightVal">
+              <el-select v-model="deviceInfo.delayOn.frontPanellightType">
                 <el-option
                   v-for="item in boardLight"
                   :key="item.value"
@@ -291,19 +318,22 @@
         <div v-if="typeIndex == 6 && rightView == 'device'">
           <div class="blue-text">请选择需要复位的功能</div>
           <div class="check-view">
-            <el-checkbox v-model="rmLogo">移除LOGO</el-checkbox>
+            <el-checkbox v-model="deviceInfo.reset.rmLogo">移除LOGO</el-checkbox>
           </div>
           <div class="check-view">
-            <el-checkbox v-model="rmEdid">移除EDID</el-checkbox>
+            <el-checkbox v-model="deviceInfo.reset.rmEdid">移除EDID</el-checkbox>
+          </div>
+          <div class="check-view">
+            <el-checkbox v-model="deviceInfo.reset.saveIP">保留IP</el-checkbox>
           </div>
         </div>
-        <div v-if="typeIndex == 7 && rightView == 'port' && port == 'inputPort'">
+        <div v-if="typeIndex == 7 && rightView == 'port' && port == 'inputPort' && inputPortInfo">
           <div class="params-style-input">
             <span>输入口</span>
             <div class="input-select">
-              <el-select v-model="inputPortSelectVal">
+              <el-select v-model.number="inputPortInfo.props.seletedInputPortId">
                 <el-option
-                  v-for="item in inputPortSelectList"
+                  v-for="item in inputPortInfo.props.inputPortList"
                   :key="item.id"
                   :label="item.label"
                   :value="item.id">
@@ -315,37 +345,37 @@
           <div class="blue-text">缩放</div>
           <div class="params-style-input">
             <span>起始点X</span>
-            <input type="text" v-model="startX">
+            <input type="text" v-model="inputPortInfo.props.scale.scalePosX">
           </div>
           <div class="params-style-input">
             <span>起始点Y</span>
-            <input type="text" v-model="startY">
+            <input type="text" v-model="inputPortInfo.props.scale.scalePosY">
           </div>
           <div class="params-style-input">
             <span>宽度</span>
-            <input type="text" v-model="scaleW">
+            <input type="text" v-model="inputPortInfo.props.scale.scaleSizeW">
           </div>
           <div class="params-style-input">
             <span>高度</span>
-            <input type="text" v-model="scaleH">
+            <input type="text" v-model="inputPortInfo.props.scale.scaleSizeH">
           </div>
           <hr style="border: 1px solid #000"/>
           <div class="blue-text">裁剪</div>
           <div class="params-style-input">
             <span>横坐标</span>
-            <input type="text" v-model="clipX">
+            <input type="text" v-model="inputPortInfo.props.crop.cropPosX">
           </div>
           <div class="params-style-input">
             <span>纵坐标</span>
-            <input type="text" v-model="clipY">
+            <input type="text" v-model="inputPortInfo.props.crop.cropPosY">
           </div>
           <div class="params-style-input">
             <span>宽度</span>
-            <input type="text" v-model="clipW">
+            <input type="text" v-model="inputPortInfo.props.crop.cropSizeW">
           </div>
           <div class="params-style-input">
             <span>高度</span>
-            <input type="text" v-model="clipH">
+            <input type="text" v-model="inputPortInfo.props.crop.cropSizeH">
           </div>
           <hr style="border: 1px solid #000"/>
           <div class="blue-text">画面调节</div>
@@ -353,7 +383,7 @@
             <span>亮度</span>
             <div class="block">
               <el-slider
-                v-model="brightness"
+                v-model="inputPortInfo.props.picture.brightness"
                 show-input
                 :max="100"
               >
@@ -364,7 +394,7 @@
             <span>锐度</span>
             <div class="block">
               <el-slider
-                v-model="sharpness"
+                v-model="inputPortInfo.props.picture.sharpness"
                 show-input
                 :max="100"
                 disabled
@@ -376,7 +406,7 @@
             <span>对比度</span>
             <div class="block">
               <el-slider
-                v-model="constrast"
+                v-model="inputPortInfo.props.picture.constrast"
                 show-input
                 :max="100"
               >
@@ -388,9 +418,9 @@
           <div class="params-style-input">
             <span>模式</span>
             <div class="input-select">
-              <el-select v-model="colorTemperatureModelVal">
+              <el-select v-model="inputPortInfo.props.colorTemperatureId">
                 <el-option
-                  v-for="item in colorTemperatureModel"
+                  v-for="item in inputPortInfo.props.colorTemperature.colorTemperatureList"
                   :key="item.id"
                   :label="item.label"
                   :value="item.id">
@@ -402,10 +432,10 @@
             <span>红</span>
             <div class="block">
               <el-slider
-                v-model="colorTemperatureModel[colorTemperatureModelVal].rgb.r"
+                v-model="inputPortInfo.props.colorTemperature.colorTemperatureList[inputPortInfo.props.colorTemperatureId].red"
                 show-input
                 :max="100"
-                :disabled="colorTemperatureModel[colorTemperatureModelVal].label != 'USER'"
+                :disabled="inputPortInfo.props.colorTemperature.colorTemperatureList[inputPortInfo.props.colorTemperatureId].readOnly"
               >
               </el-slider>
             </div>
@@ -414,10 +444,10 @@
             <span>绿</span>
             <div class="block">
               <el-slider
-                v-model="colorTemperatureModel[colorTemperatureModelVal].rgb.g"
+                v-model="inputPortInfo.props.colorTemperature.colorTemperatureList[inputPortInfo.props.colorTemperatureId].green"
                 show-input
                 :max="100"
-                :disabled="colorTemperatureModel[colorTemperatureModelVal].label != 'USER'"
+                :disabled="inputPortInfo.props.colorTemperature.colorTemperatureList[inputPortInfo.props.colorTemperatureId].readOnly"
               >
               </el-slider>
             </div>
@@ -426,28 +456,28 @@
             <span>蓝</span>
             <div class="block">
               <el-slider
-                v-model="colorTemperatureModel[colorTemperatureModelVal].rgb.b"
+                v-model="inputPortInfo.props.colorTemperature.colorTemperatureList[inputPortInfo.props.colorTemperatureId].blue"
                 show-input
                 :max="100"
-                :disabled="colorTemperatureModel[colorTemperatureModelVal].label != 'USER'"
+                :disabled="inputPortInfo.props.colorTemperature.colorTemperatureList[inputPortInfo.props.colorTemperatureId].readOnly"
               >
               </el-slider>
             </div>
           </div>
         </div>
-        <div v-if="typeIndex == 8 && rightView == 'port' && port == 'inputPort'">
+        <div v-if="typeIndex == 8 && rightView == 'port' && port == 'inputPort' && inputPortInfo">
           <div class="info-view">
             <div class="label">输入模块</div>
-            <div class="green-text">输入板卡5</div>
+            <div class="green-text">inputModel {{inputPortInfo['4k'].inputModel}}</div>
           </div>
           <hr style="border: 1px solid #000"/>
           <div class="blue-text">基本参数</div>
           <div class="params-style-input">
             <span>工作模式</span>
             <div class="input-select">
-              <el-select v-model="workModelVal">
+              <el-select v-model="inputPortInfo['4k'].operationModeId">
                 <el-option
-                  v-for="item in workModel"
+                  v-for="item in inputPortInfo['4k'].operationModeList"
                   :key="item.id"
                   :label="item.label"
                   :value="item.id">
@@ -455,12 +485,25 @@
               </el-select>
             </div>
           </div>
-          <div class="params-style-input">
-            <span>输入口类型</span>
+          <div class="params-style-input" v-if="inputPortInfo['4k'].operationModeId != 2">
+            <span>输入口类型1</span>
             <div class="input-select">
-              <el-select v-model="inputTypeVal">
+              <el-select v-model="inputPortInfo['4k'].inputTypeId1">
                 <el-option
-                  v-for="item in inputType"
+                  v-for="item in inputPortInfo['4k'].inputTypeList1"
+                  :key="item.id"
+                  :label="item.label"
+                  :value="item.id">
+                </el-option>
+              </el-select>
+            </div>
+          </div>
+          <div class="params-style-input" v-if="inputPortInfo['4k'].operationModeId == 1 ||  inputPortInfo['4k'].operationModeId == 3">
+            <span>输入口类型2</span>
+            <div class="input-select">
+              <el-select v-model="inputPortInfo['4k'].inputTypeId2">
+                <el-option
+                  v-for="item in inputPortInfo['4k'].inputTypeList2"
                   :key="item.id"
                   :label="item.label"
                   :value="item.id">
@@ -473,31 +516,35 @@
             <input type="text" v-model="jointH">
           </div>
         </div>
-        <div v-if="typeIndex == 9 && rightView == 'port' && port == 'inputPort'">
+        <div v-if="typeIndex == 9 && rightView == 'port' && port == 'inputPort' && inputPortInfo">
           <div class="info-view">
             <div class="label">输入口</div>
-            <div class="green-text">端口18；输入源1</div>
+            <div class="green-text">端口{{inputPortInfo.edid.inputPortInfo.inputPort}}；输入源{{inputPortInfo.edid.inputPortInfo.inputSourceId}}</div>
           </div>
           <hr style="border: 1px solid #000"/>
           <div class="blue-text">基本参数</div>
           <div class="params-style-input">
+            <span>显示器名称</span>
+            <input type="text" v-model="inputPortInfo.edid.monitorName">
+          </div>
+          <div class="params-style-input">
             <span>宽</span>
-            <input type="text" v-model="EDIDw">
+            <input type="text" v-model="inputPortInfo.edid.width">
           </div>
           <div class="params-style-input">
             <span>高</span>
-            <input type="text" v-model="EDIDh">
+            <input type="text" v-model="inputPortInfo.edid.height">
           </div>
           <div class="params-style-input">
             <span>频率</span>
-            <input type="text" v-model="EDIDFrequency">
+            <input type="text" v-model="inputPortInfo.edid.freq">
           </div>
         </div>
-        <div v-if="typeIndex == 10 && rightView == 'port' && port == 'outputPort'">
+        <div v-if="typeIndex == 10 && rightView == 'port' && port == 'outputPort' && outputPortInfo">
           <div class="params-style-input">
             <span>输出开关</span>
             <el-switch
-              v-model="outputSwitch"
+              v-model="outputPortInfo.resolution.outputSwitch"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               inactive-text="关闭"
@@ -509,7 +556,7 @@
           <div class="params-style-input">
             <span>分辨率范围</span>
             <el-switch
-              v-model="frequencyRange"
+              v-model="outputPortInfo.resolution.formatRange"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               inactive-text="板卡"
@@ -521,7 +568,7 @@
           <div class="params-style-input">
             <span>分辨率类型</span>
             <el-switch
-              v-model="frequencyType"
+              v-model="outputPortInfo.resolution.formatType"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               inactive-text="自定义"
@@ -530,50 +577,50 @@
             >
             </el-switch>
           </div>
-          <div class="params-style-input" v-if="frequencyType">
+          <div class="params-style-input" v-if="outputPortInfo.resolution.formatType">
             <span>HDMI2.0</span>
             <div class="input-select">
-              <el-select v-model="HDMIListVal">
+              <el-select v-model="outputPortInfo.resolution.formatId">
                 <el-option
-                  v-for="item in HDMIList"
+                  v-for="item in  outputPortInfo.resolution.formatList"
                   :key="item.id"
-                  :label="item.label"
+                  :label="item.formatStr"
                   :value="item.id">
                 </el-option>
               </el-select>
             </div>
           </div>
-          <div class="params-style-input" v-if="!frequencyType">
+          <div class="params-style-input" v-if="!outputPortInfo.resolution.formatType">
             <span>分辨率级别</span>
             <div class="input-select">
-              <el-select v-model="frequencyGradeVal">
+              <el-select v-model="outputPortInfo.resolution.formatLevelId">
                 <el-option
-                  v-for="item in frequencyGrade"
+                  v-for="item in outputPortInfo.resolution.formatLevelList"
                   :key="item.id"
-                  :label="item.label"
+                  :label="item.formatLevelStr"
                   :value="item.id">
                 </el-option>
               </el-select>
             </div>
           </div>
-          <div class="params-style-input" v-if="!frequencyType">
+          <div class="params-style-input" v-if="!outputPortInfo.resolution.formatType">
             <span>宽</span>
-            <input type="text" v-model="frequencyW">
+            <input type="text" v-model="outputPortInfo.resolution.width">
           </div>
-          <div class="params-style-input" v-if="!frequencyType">
+          <div class="params-style-input" v-if="!outputPortInfo.resolution.formatType">
             <span>高</span>
-            <input type="text" v-model="frequencyH">
+            <input type="text" v-model="outputPortInfo.resolution.height">
           </div>
-          <div class="params-style-input" v-if="!frequencyType">
+          <div class="params-style-input" v-if="!outputPortInfo.resolution.formatType">
             <span>频率</span>
-            <input type="text" v-model="frequencyUser">
+            <input type="text" v-model="outputPortInfo.resolution.freq">
           </div>
           <hr style="border: 1px solid #000"/>
           <div class="blue-text">外同步设置</div>
           <div class="params-style-input">
             <span>状态</span>
             <el-switch
-              v-model="outAsyncStatus"
+              v-model="outputPortInfo.resolution.genlockSet.status"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               inactive-text="关闭"
@@ -584,16 +631,16 @@
           </div>
           <div class="params-style-input">
             <span>输入格式</span>
-            <input type="text" v-model="outAsyncInputFormat" disabled>
+            <input type="text" v-model="outputPortInfo.resolution.genlockSet.inputFormat" disabled>
           </div>
           <div class="params-style-input">
             <span>输出格式</span>
-            <input type="text" v-model="outAsyncOutputFormat" disabled>
+            <input type="text" v-model="outputPortInfo.resolution.genlockSet.outputFormat" disabled>
           </div>
           <div class="params-style-input">
             <span>输入源</span>
             <el-switch
-              v-model="outAsyncInputSource"
+              v-model="outputPortInfo.resolution.genlockSet.inputSource"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               inactive-text="HDMI"
@@ -608,11 +655,11 @@
         <div v-if="typeIndex == 3" @click="addBackup">增加</div>
         <div v-if="typeIndex == 3" @click="deleteBackup">删除</div>
         <div v-if="typeIndex == 1 || typeIndex == 2 || typeIndex == 3 || typeIndex == 4">设置</div>
-        <div v-if="typeIndex == 3 || typeIndex == 6">重置</div>
+        <div v-if="typeIndex == 3 || typeIndex == 6" @click="resetEvent(typeIndex)">重置</div>
         <div @click="hideRightView">返回</div>
       </div>
       <div class="params-footer" v-if="rightView == 'port'">
-        <div v-if="typeIndex == 7 || typeIndex == 8 || typeIndex == 9 || typeIndex == 10">设置</div>
+        <div v-if="typeIndex == 7 || typeIndex == 8 || typeIndex == 9 || typeIndex == 10" @click="setPortInfo(typeIndex)">设置</div>
         <div v-if="typeIndex == 7 || typeIndex == 9">重置</div>
         <div @click="returnDeviceView">返回</div>
       </div>
@@ -630,37 +677,13 @@ export default {
   data() {
     return {
       rightView: 'device',
+      sn: '',
+      ip: '',
       port: '',
       typeIndex: 0,
       detection: false,
-      mainBoardInfo: [
-        { name: '通讯板', software: 'V1.10', hardware: 'V1.10' },
-        { name: '背板', software: 'V1.10', hardware: 'V1.10' },
-        { name: '矩阵板', software: 'V1.10', hardware: 'V1.10' }
-      ],
-      inputInfo: [
-        { name: 'H264', software: 'V1.14', hardware: 'V1.14' },
-        { name: 'HDBaseT', software: 'V1.14', hardware: 'V1.14' },
-        { name: 'SDI', software: 'V1.14', hardware: 'V1.14' },
-        { name: '12G-SDI', software: 'V1.14', hardware: 'V1.14' },
-        { name: '4K60', software: 'V1.14', hardware: 'V1.14' },
-        { name: 'HDMI', software: 'V1.14', hardware: 'V1.14' },
-        { name: 'D-SDI', software: 'V1.14', hardware: 'V1.14' },
-        { name: 'DVI', software: 'V1.14', hardware: 'V1.14' }
-      ],
-      outputInfo: [
-        { name: 'DVI', software: 'V1.15', hardware: 'V1.15' },
-        { name: 'DVI', software: 'V1.15', hardware: 'V1.15' },
-        { name: 'HDMI', software: 'V1.15', hardware: 'V1.15' },
-        { name: 'SDI', software: 'V1.15', hardware: 'V1.15' },
-        { name: 'HDMI 2.0', software: 'V1.15', hardware: 'V1.15' },
-        { name: 'RS1', software: 'V1.15', hardware: 'V1.15' },
-        { name: 'HDBaseT', software: 'V1.15', hardware: 'V1.15' },
-        { name: 'H264', software: 'V1.15', hardware: 'V1.15' },
-      ],
+      deviceInfo: null, // 设备概况
       autoGetIp: false,
-      autoSpeed: false,
-      fanSpeed: 50,
       boardLightVal: 1,
       boardLight: [
         { value: 1, label: '全部关闭' },
@@ -679,13 +702,11 @@ export default {
         { value: 14, label: '进度条6' },
         { value: 15, label: '全部最亮' },
       ],
-      rmLogo: false,
-      rmEdid: false,
       hotBackUp: false,
-      hotBackUpVal: 1,
+      hotBackUpVal: 0,
       hotBackUpList: [
-        { id: 1, label: '信号源备份' },
-        { id: 2, label: '场景备份' },
+        { id: 0, label: '信号源备份' },
+        { id: 1, label: '场景备份' },
       ],
       backupData: [
         { id: 0, label: 'N/A' },
@@ -724,65 +745,51 @@ export default {
       ],
       backupTable: [],
       selectedBackupIndex: 0,
-      inputList: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-        [17, 18, 19, 20],
-        [21, 22, 23, 24]
-      ],
-      outputList: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-        [17, 18, 19, 20],
-        [21, 22, 23, 24]
-      ],
-      inputPortSelectVal: 0,
-      inputPortSelectList: [
-        { id: 0, label: '输入源1-HDMI2.0' }
-      ],
-      startX: 0,
-      startY: 0,
-      scaleW: 1920,
-      scaleH: 1080,
-      clipX: 0,
-      clipY: 0,
-      clipW: 1920,
-      clipH: 1080,
-      brightness: 50,// 亮度
-      sharpness: 50,//锐度
-      constrast: 50,//对比度
-      // 色温
-      colorTemperatureModelVal: 0,
-      colorTemperatureModel: [
-        {id: 0, label: '9300', rgb: {r: 38, g:40, b:43}},
-        {id: 1, label: '7500', rgb: {r: 40, g:41, b:41}},
-        {id: 2, label: '6500', rgb: {r: 44, g:43, b:38}},
-        {id: 3, label: '5800', rgb: {r: 47, g:46, b:41}},
-        {id: 4, label: 'SRGB', rgb: {r: 50, g:50, b:50}},
-        {id: 5, label: 'USER', rgb: {r: 50, g:50, b:50}},
-      ],
-      workModelVal: 1,
-      workModel: [
-        {id: 1, label: '4K x 2K'},
-        {id: 2, label: '4K x 1K'},
-        {id: 3, label: '2K x 1K'},
-        {id: 4, label: 'PIP'},
-      ],
-      inputTypeVal: 1,
-      inputType: [
-        {id:1, label: 'DVI'},
-        {id:2, label: 'HDMI'},
-        {id:3, label: 'DP'},
-      ],
-      jointH: 1,
-      EDIDw: 1920,
-      EDIDh: 1080,
-      EDIDFrequency: 60,
+      // 输入口备份
+      // inputList: [
+      //   [{id: 0, inputType: 24}, {id: 1, inputType: 23}, {id: 2, inputType: 22}, {id: 3, inputType: 21}],
+      //   [{id: 4, inputType: 24}, {id: 5, inputType: 23}, {id: 6, inputType: 22}, {id: 7, inputType: 21}],
+      //   [{id: 8, inputType: 24}, {id: 9, inputType: 23}, {id: 10, inputType: 22}, {id: 11, inputType: 21}],
+      //   [{id: 12, inputType: 24}, {id: 13, inputType: 23}, {id: 14, inputType: 22}, {id: 15, inputType: 21}],
+      //   [{id: 16, inputType: 24}, {id: 17, inputType: 23}, {id: 18, inputType: 22}, {id: 19, inputType: 21}],
+      //   [{id: 20, inputType: 24}, {id: 21, inputType: 23}, {id: 22, inputType: 22}, {id: 23, inputType: 21}]
+      // ],
+      // 输出口备份
+      // outputList: [
+      //   [{id: 20, inputType: 23}, {id: 22, inputType: 23}],
+      //   [{id: 16, inputType: 23}, {id: 18, inputType: 23}],
+      //   [{id: 12, inputType: 23}, {id: 14, inputType: 23}],
+      //   [{id: 8, inputType: 23}, {id: 10, inputType: 23}],
+      //   [{id: 4, inputType: 23}, {id: 6, inputType: 23}],
+      //   [{id: 0, inputType: 23}, {id: 2, inputType: 23}]
+      // ],
 
+      inputList: [
+        [{id: 0, inputType: 23}, {id: 1, inputType: 23}, {id: 2, inputType: 23}, {id: 3, inputType: 23}],
+        [{id: 4, inputType: 23}, {id: 5, inputType: 23}, {id: 6, inputType: 23}, {id: 7, inputType: 23}],
+        [{id: 8, inputType: 23}, {id: 9, inputType: 23}, {id: 10, inputType: 23}, {id: 11, inputType: 23}],
+        [{id: 12, inputType: 23}, {id: 13, inputType: 23}, {id: 14, inputType: 23}, {id: 15, inputType: 23}],
+        [{id: 16, inputType: 23}, {id: 17, inputType: 23}, {id: 18, inputType: 23}, {id: 19, inputType: 23}],
+        [{id: 20, inputType: 23}, {id: 21, inputType: 23}, {id: 22, inputType: 23}, {id: 23, inputType: 23}]
+      ],
+
+      outputList: [
+        [{id: 20, inputType: 23, display: 'show'}, {id: 21, inputType: 23, display: 'show'}, {id: 22, inputType: 23, display: 'show'}, {id: 23, inputType: 23, display: 'show'}],
+        [{id: 16, inputType: 23, display: 'show'}, {id: 17, inputType: 23, display: 'show'}, {id: 18, inputType: 23, display: 'show'}, {id: 19, inputType: 23, display: 'show'}],
+        [{id: 12, inputType: 23, display: 'show'}, {id: 13, inputType: 23, display: 'show'}, {id: 14, inputType: 23, display: 'show'}, {id: 15, inputType: 23, display: 'show'}],
+        [{id: 8, inputType: 23, display: 'show'}, {id: 9, inputType: 23, display: 'show'}, {id: 10, inputType: 23, display: 'show'}, {id: 11, inputType: 23, display: 'show'}],
+        [{id: 4, inputType: 23, display: 'show'}, {id: 5, inputType: 23, display: 'show'}, {id: 6, inputType: 23, display: 'show'}, {id: 7, inputType: 23, display: 'show'}],
+        [{id: 0, inputType: 23, display: 'show'}, {id: 1, inputType: 23, display: 'show'}, {id: 2, inputType: 23, display: 'show'}, {id: 3, inputType: 23, display: 'show'}],
+      ],
+      // 输入口信息
+      inputPortId: '',
+      inputPortInfo: null,
+      // 输出口信息
+      outputPortId: '',
+      outputPortInfo: null,
+
+      jointH: 1,
+      
       outputSwitch: false,
       frequencyRange: false,
       frequencyType: true,
@@ -850,7 +857,7 @@ export default {
         { id:50, label: "Custom" },
         { id:51, label: "N / A" }
       ],
-        outAsyncStatus: false,
+      outAsyncStatus: false,
       outAsyncInputFormat: '',
       outAsyncOutputFormat: '',
       outAsyncInputSource: false,
@@ -863,20 +870,96 @@ export default {
       ],
       frequencyW: 1920,
       frequencyH: 1080,
-      frequencyUser: 60
+      frequencyUser: 60,
+
+      clickPortId: '',
+      timerObj: null,
+      sessionId: '',
     }
   },
   components: {
     Settings,
     Detection
   },
+ 
   mounted() {
+    // 处理输入，输出口顺序
+    this.inputList.map(item => {
+      item.reverse();
+    });
+    this.outputList.map(item => {
+      item.reverse();
+    });
+
+    const that = this;
+    this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
+    this.ip = JSON.parse(window.sessionStorage.getItem("ip"));
+    // 获取设备数据
+    this.getDeviceSN();
+    // this.getDeviceInfo();
+    // this.initData();
+    // 取消检测监听
     this.$root.bus.$off('cancelDetection');
     this.$root.bus.$on('cancelDetection', () => {
       this.detection = false;
     });
+    // ws接收消息
+    window.webSocket.onmessage = function(res) {
+      const result = JSON.parse(res.data);
+      // 获取设备sn
+      if((result.code == 200) && (result.data.eventType == 'getDeviceSN')) {
+        that.sn = result.data.sn;
+        that.getDeviceInfo();
+        // that.ip = result.data.id;
+      }
+      // 获取设备概况
+      if((result.code == 200) && (result.data.eventType == 'getDeviceInfo')) {
+        console.log(result);
+        that.deviceInfo = result.data;
+      }
+      //启动系统检测
+      if((result.code == 200) && (result.data.eventType == 'systemTest')) {
+        that.detection = true;
+      }
+      // 检测完成 主动上报
+      if((result.code == 200) && (result.data.eventType == 'reportTestFinished')) {
+        that.detection = false;
+      }
+      // 获取输入口信息
+      if((result.code == 200) && (result.data.eventType == 'getInputPortInfo')) {
+        console.log(result);
+        that.inputPortInfo = result.data;
+      }
+      // 获取输出口信息
+      if((result.code == 200) && (result.data.eventType == 'getOutputPortInfo')) {
+        console.log(result);
+        that.outputPortInfo = result.data;
+      }
+      // 设置输入口信息
+      if((result.code == 200) && (result.data.eventType == 'setInputPortInfo')) {
+        that.getInputPortInfo();
+      }
+      // 设置输出口信息
+      if((result.code == 200) && (result.data.eventType == 'setOutputPortInfo')) {
+        thta.getOutputInfo();
+      }
+      // 恢复出厂设置
+      if((result.code == 200) && (result.data.eventType == 'setFactoryReset')) {
+        const initBankList = that.$store.state.initBankList;
+        that.getDeviceSN();
+        that.$store.commit('setContainerList',[]);
+        that.$store.commit('setContainerId', 1);
+        that.$store.commit('setDisplayerList', []);
+        that.$store.dispatch('setBankList', initBankList);
+        that.$store.commit('setBankIndex', 0);
+      }
+    }
   },
   methods: {
+    // async initData() {
+    //   await this.getDeviceSN();
+    //   await this.getDeviceInfo();
+    // },
     // 隐藏右侧功能区
     hideRightView() {
       this.$root.bus.$emit('hideRightView');
@@ -888,13 +971,50 @@ export default {
     },
     // 容器参数类型切换
     typeSelect(num) {
+      this.getDeviceInfo();
       this.typeIndex = num;
     },
     // 点击端口
-    clickPort(type) {
+    clickPort(id, type, display) {
+      clearInterval(this.timerObj);
+      let judge = 0;
+      this.timerObj = setInterval(() => {
+        if(!judge) {
+          this.clickPortId = id;
+          judge = 1;
+        }else {
+          this.clickPortId = '';
+          judge = 0;
+        }
+      },1000);
       this.rightView = 'port';
       this.port = type;
       type == 'inputPort' ? this.typeIndex = 7 : this.typeIndex = 10;
+      if(type == 'inputPort') {
+        this.getInputPortInfo(id);
+      } else {
+        this.getOutputInfo(id);
+      }
+      // if(display) {
+      // }
+    },
+    // 右侧重置事件
+    resetEvent(typeIndex) {
+      if(typeIndex == 6) {
+        const params = {
+          eventType: "setFactoryReset",
+          reset: {
+            rmLOGO: this.deviceInfo.reset.rmLogo,
+            rmEDID: this.deviceInfo.reset.rmEdid,
+            saveIP: this.deviceInfo.reset.saveIP
+          },
+          sessionID: this.sessionId,
+          checkKey: this.getcheckKey()
+        }
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
+        }
+      }
     },
     // 增加备份
     addBackup() {
@@ -923,9 +1043,214 @@ export default {
         this.selectedBackupIndex = nowIndex - 1;
       }
     },
+    // 生成随机随机checkKey
+    getcheckKey(type) {
+      let arr = new Array;
+      const arr1 = new Array("0","1","2","3","4","5","6","7","8","9");
+      let nonceStr=''
+      for(var i=0; i<8; i++){
+        var n = Math.floor(Math.random()*10);
+        arr[i] = arr1[n] ;
+        nonceStr += arr1[n];
+      }
+      switch (type) {
+        case 'readInputSignalList': // 创建容器
+          this.readInputSignalListCheckKey = parseInt(nonceStr);
+          break;
+        case 'setLayer':
+          this.setLayerCheckKey = parseInt(nonceStr);
+          break;
+        case 'rmLayer':
+          this.rmLayerCheckKey = parseInt(nonceStr);
+          break;
+        case 'setLayerFreeze':
+          this.setLayerFreezeCheckKey = parseInt(nonceStr);
+          break;
+        default:
+          break;
+      }
+      return parseInt(nonceStr);
+    },
+    
+    // 获取设备sn
+    getDeviceSN() {
+      const getDeviceSNParams = {
+        eventType: "getDeviceSN",
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(getDeviceSNParams));
+      }
+    },
+    // 获取设备概况信息
+    getDeviceInfo() {
+      const getDeviceInfoParams = {
+        eventType: "getDeviceInfo",
+        sn: this.sn,
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(getDeviceInfoParams));
+      }
+    },
     // 检测
     detectionEvent() {
-      this.detection = true;
+      const params = {
+        eventType: "systemTest",
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 获取输入口信息
+    getInputPortInfo(id)  {
+      this.inputPortId = id;
+      const params = {
+        eventType: "getInputPortInfo",
+        inputPortId: id,
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 获取输出口信息
+    getOutputInfo(id) {
+      this.outputPortId = id;
+      const params = {
+        eventType: "getOutputPortInfo",
+        outputId: id,
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 设置输入 || 输出口信息
+    setPortInfo(typeIndex) {
+      console.log(typeIndex);
+      switch(typeIndex) {
+        case 7:
+          this.setInputPortInfo('props');
+          break;
+        case 8:
+          this.setInputPortInfo('4K');
+          break;
+        case 9:
+          this.setInputPortInfo('EDID');
+          break;
+        case 10:
+          this.setOutputPortInfo('resolution');
+          break;
+      }
+    },
+    // 设置输入
+    setInputPortInfo(type) {
+      const params = {
+        eventType: "setInputPortInfo",
+        inputPortId: this.inputPortId,
+        type,
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      params[type]=  this.inputPortInfo[type];
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 设置输出
+    setOutputPortInfo(type) {
+      const params = {
+        eventType: "setOutputPortInfo",
+        outputId: this.outputPortId,
+        type,
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      params[type]=  this.outputPortInfo[type];
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 主板类型
+    conversationBoardType(type) {
+      switch (type) {
+        case 0:
+          return '主控通讯板';
+          break;
+        case 1:
+          return '主板或背板';
+          break;
+        case 2:
+          return '前面板';
+          break;
+      }
+    },
+     //输入模块类型转化
+    conversationInputType(type) {
+      switch (type) {
+        case 21:
+        case 22:
+        case 23:
+        case 24:
+          return '4K60';
+          break;
+      }
+    },
+    // 输出模块类型转化
+    conversationOnputType(type) {
+      switch (type) {
+        case 21:
+          return 'DVI';
+          break;
+        case 22:
+          return 'HDMI1.4';
+          break;
+        case 23:
+          return 'HDMI2.0';
+          break;
+        case 24:
+          return 'DP';
+          break;
+      }
+    },
+    // ip信息处理
+    conversationIpArry(string) {
+      return string.split('.');
+    },
+    // 备份模式转化
+    conversationBackupMode(mode) {
+      switch (mode) {
+        case 0:
+          return 'inputBackup';
+          break;
+        case 1:
+          return 'presetBackup';
+          break;
+      }
+    },
+    // 获取输入口icon
+    getIconImg(type) {
+      switch (type) {
+        case 21:
+          return require('../../assets/Xport_dvi_G.png');
+          break;
+        case 22:
+          return require('../../assets/Xport_hdmi1.4_G.png');
+          break;
+        case 23:
+          return require('../../assets/inputPort/Xport_hdmi2.0_hdr_G.png');
+          break;
+        case 24:
+          return require('../../assets/Xport_DP_G.png');
+          break;
+      }
     }
   }
 }
@@ -939,6 +1264,7 @@ export default {
     background: rgb(27,36,54);
     color: #fff;
     .device-plan {
+      position: relative;
       flex: 1;
       display: flex;
       justify-content: center;
@@ -956,38 +1282,82 @@ export default {
         .input-section {
           width: 408px;
           display: flex;
-          .slot {
-            flex: 1;
-            padding: 36px 0;
+          .board {
             display: flex;
-            flex-direction: column;
-            justify-content: space-around;
-            align-items: center;
-            img {
-              display: block;
-              width: 15px;
-              height: 38px;
-              cursor: pointer;
+            flex: 1;
+            .slot {
+              flex: 1;
+              padding: 36px 0;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-around;
+              align-items: center;
+              div  {
+                height: 25%;
+                width: 30px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                cursor: pointer;
+                box-sizing: border-box;
+                img {
+                  display: block;
+                  width: 72px;
+                  height: 20px;
+                  transform: rotate(-90deg);
+                }
+              }
+              .show {
+                border: 2px solid red;
+                border-radius: 6px;
+              }
+              // img:nth-child(4){
+              //   width: 54px;
+              //   height: 18px;
+              // }
             }
           }
         }
         .output-section {
           width: 408px;
           display: flex;
-          .slot {
-            flex: 1;
-            padding: 36px 0;
+          .board {
             display: flex;
-            flex-direction: column;
-            justify-content: space-around;
-            align-items: center;
-            img {
-              display: block;
-              width: 15px;
-              height: 38px;
-              cursor: pointer;
+            flex: 1;
+            .slot {
+              padding: 36px 0;
+              display: flex;
+              flex: 1;
+              flex-direction: column;
+              justify-content: space-evenly;
+              align-items: center;
+              div {
+                height: 25%;
+                width: 30px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                cursor: pointer;
+                box-sizing: border-box;
+                img {
+                  display: block;
+                  width: 15px;
+                  height: 38px;
+                }
+              }
+              .show {
+                border: 2px solid red;
+                border-radius: 6px;
+              }
             }
           }
+        }
+      }
+      .sn-view {
+        position: absolute;
+        bottom: 30px;
+        div {
+          margin-bottom: 5px;
         }
       }
     }
@@ -1029,7 +1399,7 @@ export default {
           }
           .show {
             position: relative;
-            background: rbg(22,28,44);
+            background: rgb(22,28,44);
             color: #fff;
             border-bottom: none;
           }

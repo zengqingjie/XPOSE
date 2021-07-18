@@ -825,8 +825,8 @@ export default {
         layer: [
           {
             id: data.signalId,
-            cropPosX: Number(data.realPos.left),
-            cropPosY: Number(data.realPos.top),
+            cropPosX: Number(data.cropX),
+            cropPosY: Number(data.cropY),
             cropSizeW: Number(data.sizeW),
             cropSizeH: Number(data.sizeH),
             scalePosX: Math.round(Number(data.position.left) * 10),
@@ -970,8 +970,8 @@ export default {
             layer: [
               {
                 id: signal.signalId,
-                cropPosX: signal.realPos.left,
-                cropPosY: signal.realPos.top,
+                cropPosX: signal.cropX,
+                cropPosY: signal.cropY,
                 cropSizeW: signal.cropW,
                 cropSizeH: signal.cropH,
                 scalePosX: Number(this.positionX),
@@ -1195,6 +1195,9 @@ export default {
         case 76:
           return '3840x2160@60';
           break;
+        case 127:
+          return 'Not Input';
+          break;
       }
     },
     // 克隆
@@ -1360,12 +1363,12 @@ export default {
             layer: [
               {
                 id: layerId,
-                cropPosX: targetObj.realPos.left,
-                cropPosY: targetObj.realPos.top,
+                cropPosX: 0,
+                cropPosY: 0,
                 cropSizeW: targetObj.sizeW,
                 cropSizeH: targetObj.sizeH,
                 scalePosX: targetObj.realPos.left,
-                scalePosY: targetObj.realPos.left,
+                scalePosY: targetObj.realPos.top,
                 scaleSizeW: targetObj.sizeW,
                 scaleSizeH: targetObj.sizeH, 
                 inputPort:  Number($(ui.draggable[0]).attr('id')),
@@ -1405,6 +1408,8 @@ export default {
                 sizeH: targetObj.sizeH,
                 cropW: targetObj.sizeW,
                 cropH: targetObj.sizeH,
+                cropX: 0,
+                cropY: 0,
                 inputPort: $(ui.draggable[0]).attr('id'),
                 order: layerId + 1,
                 layerAlpha: 128
@@ -1486,8 +1491,8 @@ export default {
             layer: [
               {
                 id: movedLayer.signalId,
-                cropPosX: movedLayer.realPos.left,
-                cropPosY: movedLayer.realPos.top,
+                cropPosX: movedLayer.cropX,
+                cropPosY: movedLayer.cropY,
                 cropSizeW: movedLayer.cropW,
                 cropSizeH: movedLayer.cropH,
                 scalePosX: Math.round(ui.position.left * 10),
@@ -1617,8 +1622,8 @@ export default {
             layer: [
               {
                 id: movedLayer.signalId,
-                cropPosX: movedLayer.realPos.left,
-                cropPosY: movedLayer.realPos.top,
+                cropPosX: movedLayer.cropX,
+                cropPosY: movedLayer.cropY,
                 cropSizeW: movedLayer.cropW,
                 cropSizeH: movedLayer.cropH,
                 scalePosX: movedLayer.realPos.left,
@@ -1686,48 +1691,52 @@ export default {
       $(".aoi").draggable({
         scroll: false,
         stop: function(event, ui) {
+          let changeSitem = changeCitem.signalList.find(item => item.signalId == sid);
           const cid = $(this).attr('cId');
           const sid = $(this).attr('sId');
           const changeCitem = vm.containerList.find(item => item.containerId == cid);
-          let changeSitem = changeCitem.signalList.find(item => item.signalId == sid);
+          changeSitem.aoi.position = ui.position;
+          vm.$nextTick(() => {
+            vm.signalAOIDraggable();
+            vm.signalAOIResize();
+          });
 
-          const setLayerParams = {
-            eventType: "setLayer",
-            count: 1,
-            layer: [
-              {
-                id: changeSitem.signalId,
-                cropPosX: Math.round(ui.position.left * 10),
-                cropPosY: ui.position.top * 10,
-                cropSizeW: changeSitem.aoi.width * 10, 
-                cropSizeH: changeSitem.aoi.height * 10,
-                scalePosX: changeSitem.realPos.left,
-                scalePosY: changeSitem.realPos.left,
-                scaleSizeW: changeSitem.sizeW,
-                scaleSizeH: changeSitem.sizeH, 
-                inputPort:  changeSitem.inputPort,
-                containerId: Number(changeSitem.parentId),
-                layerAlpha: changeSitem.layerAlpha,
-                index: changeSitem.order
-              }
-            ],
-            sessionID: vm.sessionId,
-            checkKey: vm.getcheckKey('setLayer')
-          }
-          // websocket 准备
-          if (window.webSocket && window.webSocket.readyState == 1) {
-            window.webSocket.send(JSON.stringify(setLayerParams));
-          }
-          window.webSocket.onmessage = function(res) {
-            const resData = JSON.parse(res.data);
-            if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
-              changeSitem.aoi.position = ui.position;
-              vm.$nextTick(() => {
-                vm.signalAOIDraggable();
-                vm.signalAOIResize();
-              });
-            }
-          }
+        //   const setLayerParams = {
+        //     eventType: "setLayer",
+        //     count: 1,
+        //     layer: [
+        //       {
+        //         id: changeSitem.signalId,
+        //         cropPosX: changeSitem.cropX,
+        //         cropPosY: changeSitem.cropY,
+        //         cropSizeW: changeSitem.aoi.width * 10, 
+        //         cropSizeH: changeSitem.aoi.height * 10,
+        //         scalePosX: changeSitem.realPos.left,
+        //         scalePosY: changeSitem.realPos.left,
+        //         scaleSizeW: changeSitem.sizeW,
+        //         scaleSizeH: changeSitem.sizeH, 
+        //         inputPort:  changeSitem.inputPort,
+        //         containerId: Number(changeSitem.parentId),
+        //         layerAlpha: changeSitem.layerAlpha,
+        //         index: changeSitem.order
+        //       }
+        //     ],
+        //     sessionID: vm.sessionId,
+        //     checkKey: vm.getcheckKey('setLayer')
+        //   }
+        //   // websocket 准备
+        //   if (window.webSocket && window.webSocket.readyState == 1) {
+        //     window.webSocket.send(JSON.stringify(setLayerParams));
+        //   }
+        //   window.webSocket.onmessage = function(res) {
+        //     const resData = JSON.parse(res.data);
+        //     if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
+        //       vm.$nextTick(() => {
+        //         vm.signalAOIDraggable();
+        //         vm.signalAOIResize();
+        //       });
+        //     }
+        //   }
         }
       })
     },
@@ -1753,44 +1762,49 @@ export default {
           const sid = $(this).attr('sId');
           const changeCitem = vm.containerList.find(item => item.containerId == cid);
           let changeSitem = changeCitem.signalList.find(item => item.signalId == sid);
-          const setLayerParams = {
-            eventType: "setLayer",
-            count: 1,
-            layer: [
-              {
-                id: changeSitem.signalId,
-                cropPosX: Math.round(changeSitem.position.left * 10),
-                cropPosY: changeSitem.position.top * 10,
-                cropSizeW: ui.size.width * 10, 
-                cropSizeH: Math.floor(ui.size.height * 10),
-                scalePosX: changeSitem.realPos.left,
-                scalePosY: changeSitem.realPos.left,
-                scaleSizeW: changeSitem.sizeW,
-                scaleSizeH: changeSitem.sizeH, 
-                inputPort:  changeSitem.inputPort,
-                containerId: Number(changeSitem.parentId),
-                layerAlpha: changeSitem.layerAlpha,
-                index: changeSitem.order
-              }
-            ],
-            sessionID: vm.sessionId,
-            checkKey: vm.getcheckKey('setLayer')
-          }
-          // websocket 准备
-          if (window.webSocket && window.webSocket.readyState == 1) {
-            window.webSocket.send(JSON.stringify(setLayerParams));
-          }
-          window.webSocket.onmessage = function(res) {
-            const resData = JSON.parse(res.data);
-            if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
-              changeSitem.aoi.width = ui.size.width;
-              changeSitem.aoi.height = ui.size.height;
-              vm.$nextTick(() => {
-                vm.signalAOIDraggable();
-                vm.signalAOIResize();
-              });
-            }
-          }
+          changeSitem.aoi.width = ui.size.width;
+          changeSitem.aoi.height = ui.size.height;
+          vm.$nextTick(() => {
+            vm.signalAOIDraggable();
+            vm.signalAOIResize();
+          });
+          // const setLayerParams = {
+          //   eventType: "setLayer",
+          //   count: 1,
+          //   layer: [
+          //     {
+          //       id: changeSitem.signalId,
+          //       cropPosX: Math.round(changeSitem.position.left * 10),
+          //       cropPosY: changeSitem.position.top * 10,
+          //       cropSizeW: ui.size.width * 10, 
+          //       cropSizeH: Math.floor(ui.size.height * 10),
+          //       scalePosX: changeSitem.realPos.left,
+          //       scalePosY: changeSitem.realPos.left,
+          //       scaleSizeW: changeSitem.sizeW,
+          //       scaleSizeH: changeSitem.sizeH, 
+          //       inputPort:  changeSitem.inputPort,
+          //       containerId: Number(changeSitem.parentId),
+          //       layerAlpha: changeSitem.layerAlpha,
+          //       index: changeSitem.order
+          //     }
+          //   ],
+          //   sessionID: vm.sessionId,
+          //   checkKey: vm.getcheckKey('setLayer')
+          // }
+          // // websocket 准备
+          // if (window.webSocket && window.webSocket.readyState == 1) {
+          //   window.webSocket.send(JSON.stringify(setLayerParams));
+          // }
+          // window.webSocket.onmessage = function(res) {
+          //   const resData = JSON.parse(res.data);
+          //   if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
+              
+          //     vm.$nextTick(() => {
+          //       vm.signalAOIDraggable();
+          //       vm.signalAOIResize();
+          //     });
+          //   }
+          // }
 
         }
       })

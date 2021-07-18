@@ -18,6 +18,8 @@ export class Signal extends Widget {
     this.sizeH = config.sizeH || null;
     this.cropW = config.cropW;
     this.cropH = config.cropH;
+    this.cropX = config.cropX;
+    this.cropY = config.cropY;
     this.inputPort = config.inputPort;
     this.order = config.order;
     this.layerAlpha = config.layerAlpha;

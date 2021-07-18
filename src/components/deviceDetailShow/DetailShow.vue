@@ -21,7 +21,7 @@
                 :id="citem.id"
               >
                 <img
-                  :src="getIconImg(citem.inputType)"
+                  :src="getIconImg(citem.inputType, citem.format)"
                 >
               </div>
             </div>
@@ -765,12 +765,12 @@ export default {
       // ],
 
       inputList: [
-        [{id: 0, inputType: 23}, {id: 1, inputType: 23}, {id: 2, inputType: 23}, {id: 3, inputType: 23}],
-        [{id: 4, inputType: 23}, {id: 5, inputType: 23}, {id: 6, inputType: 23}, {id: 7, inputType: 23}],
-        [{id: 8, inputType: 23}, {id: 9, inputType: 23}, {id: 10, inputType: 23}, {id: 11, inputType: 23}],
-        [{id: 12, inputType: 23}, {id: 13, inputType: 23}, {id: 14, inputType: 23}, {id: 15, inputType: 23}],
-        [{id: 16, inputType: 23}, {id: 17, inputType: 23}, {id: 18, inputType: 23}, {id: 19, inputType: 23}],
-        [{id: 20, inputType: 23}, {id: 21, inputType: 23}, {id: 22, inputType: 23}, {id: 23, inputType: 23}]
+        // [{id: 0, inputType: 23}, {id: 1, inputType: 23}, {id: 2, inputType: 23}, {id: 3, inputType: 23}],
+        // [{id: 4, inputType: 23}, {id: 5, inputType: 23}, {id: 6, inputType: 23}, {id: 7, inputType: 23}],
+        // [{id: 8, inputType: 23}, {id: 9, inputType: 23}, {id: 10, inputType: 23}, {id: 11, inputType: 23}],
+        // [{id: 12, inputType: 23}, {id: 13, inputType: 23}, {id: 14, inputType: 23}, {id: 15, inputType: 23}],
+        // [{id: 16, inputType: 23}, {id: 17, inputType: 23}, {id: 18, inputType: 23}, {id: 19, inputType: 23}],
+        // [{id: 20, inputType: 23}, {id: 21, inputType: 23}, {id: 22, inputType: 23}, {id: 23, inputType: 23}]
       ],
 
       outputList: [
@@ -883,13 +883,13 @@ export default {
   },
  
   mounted() {
+    this.getSignalList();
     // 处理输入，输出口顺序
-    this.inputList.map(item => {
-      item.reverse();
-    });
     this.outputList.map(item => {
       item.reverse();
     });
+
+    
 
     const that = this;
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
@@ -916,6 +916,18 @@ export default {
       if((result.code == 200) && (result.data.eventType == 'getDeviceInfo')) {
         console.log(result);
         that.deviceInfo = result.data;
+      }
+      // 输入口列表
+      if((result.code == 200) && (result.data.eventType == 'readInputSignalList')) {
+        console.log('输入口列表', result);
+        let dataList = [];
+        for (let i = 0; i < 6; i++) {
+          dataList.push(result.data.inputSignal.slice(4*i , 4*(i+1)));
+        }
+        dataList.map(item => {
+          item.reverse();
+        });
+        that.inputList = dataList;
       }
       //启动系统检测
       if((result.code == 200) && (result.data.eventType == 'systemTest')) {
@@ -960,6 +972,19 @@ export default {
     //   await this.getDeviceSN();
     //   await this.getDeviceInfo();
     // },
+
+    // 读取输入口列表
+    getSignalList() {
+      const that = this;
+      const readInputSignalListParams = {
+        eventType: "readInputSignalList",
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(readInputSignalListParams));
+      }
+    },
     // 隐藏右侧功能区
     hideRightView() {
       this.$root.bus.$emit('hideRightView');
@@ -1236,7 +1261,7 @@ export default {
       }
     },
     // 获取输入口icon
-    getIconImg(type) {
+    getIconImg(type, format) {
       switch (type) {
         case 21:
           return require('../../assets/Xport_dvi_G.png');
@@ -1244,8 +1269,9 @@ export default {
         case 22:
           return require('../../assets/Xport_hdmi1.4_G.png');
           break;
+        case 11:
         case 23:
-          return require('../../assets/inputPort/Xport_hdmi2.0_hdr_G.png');
+          return format == 127 ? require('../../assets/inputPort/Xport_hdmi2.0_hdr.png') : require('../../assets/inputPort/Xport_hdmi2.0_hdr_G.png');
           break;
         case 24:
           return require('../../assets/Xport_DP_G.png');

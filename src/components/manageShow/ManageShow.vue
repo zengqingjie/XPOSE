@@ -72,7 +72,7 @@
               <div class="data-item" v-for="(item, index) in templateList" :key="index" :id="item.id">
                 <span class="index-text">{{index + 1}}</span>
                 <div class="icon-view"></div>
-                <span>{{item.row}} x {{item.col}} ({{separation == 2 ? (1920 * item.col) : (3840 * item.col)}} x {{separation == 2 ? (1080 * item.row) : (2160 * item.row)}})</span>
+                <span>{{item.row}} x {{item.col}} ({{separation == 10 ? (1920 * item.col) : (3840 * item.col)}} x {{separation == 10 ? (1080 * item.row) : (2160 * item.row)}})</span>
                 <!-- <span class="create-container" @click="createContainer(item)">创建</span> -->
               </div>
             </div>
@@ -443,7 +443,7 @@ export default {
                 sizeW: containerW, // 容器总宽
                 sizeH: containerH, // 容器总高
                 mode: modeType, // 容器类型
-                modeEnum: 1, // 容器类型id
+                modeEnum: vm.modelVal, // 容器类型id
               }
             ],
             sessionID: vm.sessionId,
@@ -472,8 +472,8 @@ export default {
                     id: dList[index].id,
                     posX: posArr[index].left,
                     posY: posArr[index].top,
-                    sizeW: dList[index].sizeW,
-                    sizeH: dList[index].sizeH,
+                    sizeW: vm.separation == 10 ? 1920 : 3840,
+                    sizeH: vm.separation == 10 ? 1080 : 2160,
                     containerId: vm.$store.state.containerId,
                     outputType: dList[index].outputType,
                     outputTypeEnum: dList[index].outputTypeEnum
@@ -705,20 +705,21 @@ export default {
       this.displayObj = data;
       this.startX = data.realPos.left;
       this.startY = data.realPos.top;
-      this.displayerWidth = data.sizeW;
-      this.displayerHeight = data.sizeH;
+      this.displayerWidth = data.separation == 10 ? data.sizeW : data.sizeW * 2;
+      this.displayerHeight = data.separation == 10 ?  data.sizeH : data.sizeH * 2;
     });
 
-    // 设置显示器数据
+    // 底部参数设置显示器数据
     this.$root.bus.$off('setDisplayInfo');
     this.$root.bus.$on('setDisplayInfo', (data) => {
       const vm = this;
+      const separationBase = data.separation == 10 ? 1 : 2; // 2k || 4k
       const display = {
         id: data.displayId,
-        posX: data.realPos.left,
-        posY: data.realPos.top,
-        sizeW: data.sizeW,
-        sizeH: data.sizeH,
+        posX: Number(data.realPos.left),
+        posY: Number(data.realPos.top),
+        sizeW: data.sizeW * separationBase,
+        sizeH: data.sizeH * separationBase,
         containerId: data.containerId,
         outputType: data.outputType,
         outputTypeEnum: data.outputTypeEnum
@@ -743,7 +744,12 @@ export default {
               Object.assign(cItem, container);
               return true;
             }
-          })
+          });
+          // 显示器信息同步到右侧
+          vm.startX = data.realPos.left;
+          vm.startY = data.realPos.top;
+          vm.displayerWidth = data.sizeW * separationBase;
+          vm.displayerHeight = data.sizeH * separationBase;
           vm.$store.dispatch('setContainerList', vm.showVessels);
         }
       }
@@ -767,21 +773,22 @@ export default {
     // 点击设置，修改显示数据
     setDisplayProp() {
       let display = this.displayObj;
+      const separationBase = display.separation == 10 ? 1 : 2; // 2k || 4k
       if(display) {
-        display.sizeW = this.displayerWidth ? this.displayerWidth : display.sizeW;
-        display.sizeH = this.displayerHeight ? this.displayerHeight : display.sizeH;
+        display.sizeW = this.displayerWidth ? this.displayerWidth / separationBase : display.sizeW;
+        display.sizeH = this.displayerHeight ? this.displayerHeight / separationBase : display.sizeH;
         display.realPos.left = this.startX ? this.startX : display.realPos.left;
         display.realPos.top = this.startY ? this.startY : display.realPos.top;
-        display.position.left = this.startX ? this.startX / 10 : display.position.left;
-        display.position.top = this.startY ? this.startY / 10 : display.position.top;
+        display.position.left = this.startX ? this.startX / 10 / separationBase : display.position.left;
+        display.position.top = this.startY ? this.startY / 10 / separationBase : display.position.top;
   
         const vm = this;
         const displayParams = {
           id: display.displayId,
-          posX: display.realPos.left,
-          posY: display.realPos.top,
-          sizeW: display.sizeW,
-          sizeH: display.sizeH,
+          posX: Number(display.realPos.left),
+          posY: Number(display.realPos.top),
+          sizeW: display.sizeW * separationBase,
+          sizeH: display.sizeH * separationBase,
           containerId: display.containerId,
           outputType: display.outputType,
           outputTypeEnum: display.outputTypeEnum
@@ -1022,6 +1029,7 @@ export default {
           let targetObj = vm.displayerList.find(
             item => item.id == targetId
           );
+          console.log('新添加的显示器',targetObj);
           // 放置在显示器容器上新增显示器
           if ($(this).hasClass('displayer-box')) {
             const uiLeft = event.clientX - 88 - container.position.left - $(this)[0].offsetLeft;
@@ -1116,8 +1124,8 @@ export default {
                 sizeW: displayer.sizeW,
                 sizeH: displayer.sizeH,
                 containerId: container.containerId,
-                outputType: displayer.outputType,
-                outputTypeEnum: displayer.outputTypeEnum
+                outputType: targetObj.outputType,
+                outputTypeEnum: targetObj.outputTypeEnum
               };
               const deleteDisp = {
                 id: displayer.displayId,
@@ -1199,7 +1207,8 @@ export default {
         scroll: false,
         zIndex: 100,
         stop: function(event, ui) {
-          let container = dataFormat.getWidget([$(this).attr('parentId')]); // 被拖拽显示器所属容器
+          let container = vm.showVessels.find(cItem => cItem.containerId == $(this).attr('containerId'));// 被拖拽显示器所属容器
+          console.log(container);
           const targetDid = $(this).attr('displayerId'); // 被拖拽显示器id
           container.content.some(item => {
             if(item.displayId == targetDid) {

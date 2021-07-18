@@ -10,7 +10,7 @@
     v-if="dMsg"
     @click="clickDisplayer(dMsg)"
   >
-    <div>显示器{{ dMsg.displayId }}</div>
+    <div>显示器{{ dMsg.displayId + 1}}</div>
     <div v-if="pisition && dMsg.realPos"><span>x:{{dMsg.realPos.left}}</span><span>y:{{dMsg.realPos.top}}</span></div>
     <div v-if="dMsg.separation == 10"><span>w:1920</span><span>h:1080</span></div>
     <div v-if="dMsg.separation == 82"><span>w:3840</span><span>h:2160</span></div>

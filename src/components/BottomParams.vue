@@ -56,10 +56,11 @@ export default {
       this.displayInfo = null;
       this.signalInfo = null;
       if (this.display) {
+        const separationBase = this.display.separation == 10 ? 1 : 2; // 2k || 4k
         this.displayInfo = this.display;
         this.devideName = '显示器' + this.display.displayId;
-        this.dWidth = this.display.sizeW;
-        this.dHeight = this.display.sizeH;
+        this.dWidth = this.display.sizeW * separationBase;
+        this.dHeight = this.display.sizeH * separationBase;
         this.hNum = this.display.realPos.left;
         this.vNum = this.display.realPos.top;
       }
@@ -73,7 +74,8 @@ export default {
       }
     },
     changInput(e, type) {
-      let val = e.target.value.trim().replace(/\D/ig, '').replace(/^[0]/, 1);
+      // let val = e.target.value.trim().replace(/\D/ig, '').replace(/^[0]/, 1);
+      let val = e.target.value.trim().replace(/\D/ig, '');
       console.log(val);
       if(type == 'hor') {
         this.hNum = val;
@@ -93,13 +95,14 @@ export default {
     setDisplay() {
       let display = this.displayInfo;
       let signal = this.signalInfo;
+      const separationBase = display.separation == 10 ? 1 : 2; // 2k || 4k
       if(display) {
-        display.sizeW = this.dWidth ? this.dWidth : display.sizeW;
-        display.sizeH = this.dHeight ? this.dHeight : display.sizeH;
+        display.sizeW = this.dWidth ? this.dWidth / separationBase : display.sizeW;
+        display.sizeH = this.dHeight ? this.dHeight / separationBase : display.sizeH;
         display.realPos.left = this.hNum ? this.hNum : display.realPos.left;
         display.realPos.top = this.vNum ? this.vNum : display.realPos.top;
-        display.position.left = this.hNum ? (this.hNum / 10) : display.position.left;
-        display.position.top = this.vNum ?  (this.vNum / 10) : display.position.top;
+        display.position.left = this.hNum ? (this.hNum / 10 / separationBase) : display.position.left;
+        display.position.top = this.vNum ?  (this.vNum / 10 / separationBase) : display.position.top;
         this.$root.bus.$emit('setDisplayInfo', display);
       }
       if (signal) {

@@ -5,13 +5,10 @@
     :style="setContainerStyle"
     @mousedown="emitSetContainer(cItem)"
     :id="cItem.id"
+    :containerId="cItem.containerId"
   >
     <div class="container-header">
-      <span
-        >{{ cItem.containerId + 1 }}--(W:{{ cItem.customFeature.col * 1920 }} H:{{
-          cItem.customFeature.row * 1080
-        }})</span
-      >
+      <span>{{ cItem.containerId + 1 }}--(W:{{ cItem.sizeW }} H:{{ cItem.sizeH }})</span>
       <div class="right-view">
         <div @click="zoom(cItem, -1)">-</div>
         <div @click="zoom(cItem, 1)">+</div>
@@ -24,7 +21,7 @@
         </div>
       </div>
     </div>
-    <div class="displayer-box" :parentId="cItem.id">
+    <div class="displayer-box" :parentId="cItem.id" :containerId="cItem.containerId">
       <Displayer
         v-for="displayer in cItem.content"
         :key="displayer.id"

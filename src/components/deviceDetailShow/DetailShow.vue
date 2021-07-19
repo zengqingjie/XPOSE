@@ -16,8 +16,8 @@
                 alt=""
                 v-for="citem in item"
                 :key="citem.id"
-                @click="clickPort(citem.id, 'inputPort', citem.display)"
-                :class="(clickPortId === citem.id && port == 'inputPort') ? 'show' : ''"
+                @click="clickPort(citem.inputPort, 'inputPort')"
+                :class="(clickPortId === citem.inputPort && port == 'inputPort') ? 'show' : ''"
                 :id="citem.id"
               >
                 <img
@@ -41,12 +41,11 @@
                 alt=""
                 v-for="citem in item"
                 :key="citem.id"
-                @click="clickPort(citem.id, 'outputPort', citem.display)"
+                @click="clickPort(citem.id, 'outputPort')"
                 :class="(clickPortId === citem.id && port == 'outputPort') ? 'show' : ''"
                 :id="citem.id"
               >
                 <img
-                  v-if="citem.display"
                   src="@/assets/output_HDMI2.png"
                 >
               </div>
@@ -745,42 +744,10 @@ export default {
       ],
       backupTable: [],
       selectedBackupIndex: 0,
-      // 输入口备份
-      // inputList: [
-      //   [{id: 0, inputType: 24}, {id: 1, inputType: 23}, {id: 2, inputType: 22}, {id: 3, inputType: 21}],
-      //   [{id: 4, inputType: 24}, {id: 5, inputType: 23}, {id: 6, inputType: 22}, {id: 7, inputType: 21}],
-      //   [{id: 8, inputType: 24}, {id: 9, inputType: 23}, {id: 10, inputType: 22}, {id: 11, inputType: 21}],
-      //   [{id: 12, inputType: 24}, {id: 13, inputType: 23}, {id: 14, inputType: 22}, {id: 15, inputType: 21}],
-      //   [{id: 16, inputType: 24}, {id: 17, inputType: 23}, {id: 18, inputType: 22}, {id: 19, inputType: 21}],
-      //   [{id: 20, inputType: 24}, {id: 21, inputType: 23}, {id: 22, inputType: 22}, {id: 23, inputType: 21}]
-      // ],
-      // 输出口备份
-      // outputList: [
-      //   [{id: 20, inputType: 23}, {id: 22, inputType: 23}],
-      //   [{id: 16, inputType: 23}, {id: 18, inputType: 23}],
-      //   [{id: 12, inputType: 23}, {id: 14, inputType: 23}],
-      //   [{id: 8, inputType: 23}, {id: 10, inputType: 23}],
-      //   [{id: 4, inputType: 23}, {id: 6, inputType: 23}],
-      //   [{id: 0, inputType: 23}, {id: 2, inputType: 23}]
-      // ],
 
-      inputList: [
-        // [{id: 0, inputType: 23}, {id: 1, inputType: 23}, {id: 2, inputType: 23}, {id: 3, inputType: 23}],
-        // [{id: 4, inputType: 23}, {id: 5, inputType: 23}, {id: 6, inputType: 23}, {id: 7, inputType: 23}],
-        // [{id: 8, inputType: 23}, {id: 9, inputType: 23}, {id: 10, inputType: 23}, {id: 11, inputType: 23}],
-        // [{id: 12, inputType: 23}, {id: 13, inputType: 23}, {id: 14, inputType: 23}, {id: 15, inputType: 23}],
-        // [{id: 16, inputType: 23}, {id: 17, inputType: 23}, {id: 18, inputType: 23}, {id: 19, inputType: 23}],
-        // [{id: 20, inputType: 23}, {id: 21, inputType: 23}, {id: 22, inputType: 23}, {id: 23, inputType: 23}]
-      ],
+      inputList: [],
 
-      outputList: [
-        [{id: 20, inputType: 23, display: 'show'}, {id: 21, inputType: 23, display: 'show'}, {id: 22, inputType: 23, display: 'show'}, {id: 23, inputType: 23, display: 'show'}],
-        [{id: 16, inputType: 23, display: 'show'}, {id: 17, inputType: 23, display: 'show'}, {id: 18, inputType: 23, display: 'show'}, {id: 19, inputType: 23, display: 'show'}],
-        [{id: 12, inputType: 23, display: 'show'}, {id: 13, inputType: 23, display: 'show'}, {id: 14, inputType: 23, display: 'show'}, {id: 15, inputType: 23, display: 'show'}],
-        [{id: 8, inputType: 23, display: 'show'}, {id: 9, inputType: 23, display: 'show'}, {id: 10, inputType: 23, display: 'show'}, {id: 11, inputType: 23, display: 'show'}],
-        [{id: 4, inputType: 23, display: 'show'}, {id: 5, inputType: 23, display: 'show'}, {id: 6, inputType: 23, display: 'show'}, {id: 7, inputType: 23, display: 'show'}],
-        [{id: 0, inputType: 23, display: 'show'}, {id: 1, inputType: 23, display: 'show'}, {id: 2, inputType: 23, display: 'show'}, {id: 3, inputType: 23, display: 'show'}],
-      ],
+      outputList: [],
       // 输入口信息
       inputPortId: '',
       inputPortInfo: null,
@@ -883,14 +850,6 @@ export default {
   },
  
   mounted() {
-    this.getSignalList();
-    // 处理输入，输出口顺序
-    this.outputList.map(item => {
-      item.reverse();
-    });
-
-    
-
     const that = this;
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
     this.ip = JSON.parse(window.sessionStorage.getItem("ip"));
@@ -914,12 +873,14 @@ export default {
       }
       // 获取设备概况
       if((result.code == 200) && (result.data.eventType == 'getDeviceInfo')) {
-        console.log(result);
+        console.log('概况',result);
         that.deviceInfo = result.data;
+        that.getSignalList(); // 获取输入口列表
+        that.readOutList();
+        that.$store.commit('setOutputModelInfo', result.data.costomInfo.outputModelInfo);
       }
       // 输入口列表
       if((result.code == 200) && (result.data.eventType == 'readInputSignalList')) {
-        console.log('输入口列表', result);
         let dataList = [];
         for (let i = 0; i < 6; i++) {
           dataList.push(result.data.inputSignal.slice(4*i , 4*(i+1)));
@@ -928,6 +889,17 @@ export default {
           item.reverse();
         });
         that.inputList = dataList;
+      }
+      // 获取输出口列表
+      if((result.code == 200) && (result.data.eventType == 'readOutputList')) {
+        let dataList = [];
+        for (let i = 0; i < 6; i++) {
+          dataList.push(result.data.output.slice(4*i , 4*(i+1)));
+        }
+        dataList.map(item => {
+          item.reverse();
+        });
+        that.outputList = dataList;
       }
       //启动系统检测
       if((result.code == 200) && (result.data.eventType == 'systemTest')) {
@@ -976,13 +948,25 @@ export default {
     // 读取输入口列表
     getSignalList() {
       const that = this;
-      const readInputSignalListParams = {
+      const params = {
         eventType: "readInputSignalList",
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
       if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(readInputSignalListParams));
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 读取输出口列表
+    readOutList() {
+      const that = this;
+      const params = {
+        eventType: "readOutputList",
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 隐藏右侧功能区
@@ -1000,7 +984,7 @@ export default {
       this.typeIndex = num;
     },
     // 点击端口
-    clickPort(id, type, display) {
+    clickPort(id, type) {
       clearInterval(this.timerObj);
       let judge = 0;
       this.timerObj = setInterval(() => {
@@ -1270,7 +1254,7 @@ export default {
           return require('../../assets/Xport_hdmi1.4_G.png');
           break;
         case 11:
-        case 23:
+        case 53:
           return format == 127 ? require('../../assets/inputPort/Xport_hdmi2.0_hdr.png') : require('../../assets/inputPort/Xport_hdmi2.0_hdr_G.png');
           break;
         case 24:

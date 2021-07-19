@@ -1,5 +1,5 @@
 import axios from '@/utils/require.js';
-let loginAPI = process.env.NODE_ENV !== 'production' ? "http://192.168.0.117" : "https://192.168.0.117"; // 登录服务
+let loginAPI = process.env.NODE_ENV !== 'production' ? "http://192.168.0.122" : "https://192.168.0.122"; // 登录服务
 const Api = {
   // 发送激活码
   getActiveCode(data) {

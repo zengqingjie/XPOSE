@@ -95,8 +95,8 @@ export default {
     setDisplay() {
       let display = this.displayInfo;
       let signal = this.signalInfo;
-      const separationBase = display.separation == 10 ? 1 : 2; // 2k || 4k
       if(display) {
+        const separationBase = display.separation == 10 ? 1 : 2; // 2k || 4k
         display.sizeW = this.dWidth ? this.dWidth / separationBase : display.sizeW;
         display.sizeH = this.dHeight ? this.dHeight / separationBase : display.sizeH;
         display.realPos.left = this.hNum ? this.hNum : display.realPos.left;
@@ -110,8 +110,8 @@ export default {
         signal.sizeH = this.dHeight ? this.dHeight : signal.sizeH;
         signal.realPos.left = this.hNum ? this.hNum : signal.realPos.left;
         signal.realPos.top = this.vNum ? this.vNum : signal.realPos.top;
-        signal.position.left = this.hNum ? (this.hNum / 10) : signal.position.left;
-        signal.position.top = this.vNum ?  (this.vNum / 10) : signal.position.top;
+        signal.position.left = this.hNum ? (this.hNum / 20) : signal.position.left / 2;
+        signal.position.top = this.vNum ?  (this.vNum / 20) : signal.position.top / 2;
         this.$root.bus.$emit('setSignalInfo', signal);
       }
     }

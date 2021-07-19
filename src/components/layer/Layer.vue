@@ -51,6 +51,7 @@
                 >
                   <span class="order">{{item.inputPort}}</span>
                   <div class="signal-icon">
+                    <img src="../../assets/default/HDMI.png" alt="" v-if="(item.inputType == 53 || item.inputType == 11)">
                     <img src="../../assets/default/HDBaseT.png" alt="" v-if="item.inputType == 32">
                     <img src="../../assets/default/SDI_12G.png" alt="" v-if="item.inputType == 25">
                     <img src="../../assets/default/DVI.png" alt="" v-if="(item.inputType == 1) || (item.inputType == 16) || (item.inputType == 21)">
@@ -58,7 +59,7 @@
                     <img src="../../assets/default/HDMI2.0.png" alt="" v-if="item.inputType == 24">
                     <img src="../../assets/default/DP1.2.png" alt="" v-if="(item.inputType == 23) || (item.inputType == 35)">
                   </div>
-                  <span>{{conversationFormate(item.format)}}</span>
+                  <span :class="item.format != 127 ? 'green-text' : ''">{{conversationFormate(item.format)}}</span>
                 </div>
                 <canvas width="192" height="108" class="movie" :inputPort="item.inputPort" v-if="sryj && h264"></canvas>
                 <!-- <div
@@ -493,7 +494,8 @@ export default {
       layerIds: [], // 创建图层可以用id
       clipList: [], // 流媒体切割列表
       imgObj: null,
-      signalObj: null
+      signalObj: null,
+      layerOrders: [],
     }
   },
   components: {
@@ -578,33 +580,36 @@ export default {
 
     this.$store.dispatch('setBankList', bankListData);
 
-    // this.$nextTick(() => {
-    //   this.signalLayerDraggable();
-    //   this.signalLayerResize();
-    //   // 初始化绘制流媒体画面
-    //   if(this.streamMedia) {
-    //     let img = new Image();
-    //     img.src = this.streamMedia;
-    //     let canvasBoxs = [];
-    //     $('.signal-layer-item canvas').each(function() {
-    //       canvasBoxs.push($(this)[0]);
-    //     });
+    this.$nextTick(() => {
+      this.signalLayerDraggable();
+      this.signalLayerResize();
+      // 初始化绘制流媒体画面
+      // if(this.streamMedia) {
+      //   let img = new Image();
+      //   img.src = this.streamMedia;
+      //   let canvasBoxs = [];
+      //   $('.signal-layer-item canvas').each(function() {
+      //     canvasBoxs.push($(this)[0]);
+      //   });
        
-    //     img.onload = () => renderImg();
+      //   img.onload = () => renderImg();
         
-    //     let renderImg = () => {
-    //       canvasBoxs.forEach((canvas, index) => {
-    //         const context = canvas.getContext('2d');
-    //         const inputPort = Number($(canvas).attr('inputPort'));
-    //         context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 320, 270, 0, 0, 192, 108);
-    //       });
-    //       window.requestAnimationFrame(renderImg);
-    //     } 
-    //   }
-    // });
+      //   let renderImg = () => {
+      //     canvasBoxs.forEach((canvas, index) => {
+      //       const context = canvas.getContext('2d');
+      //       const inputPort = Number($(canvas).attr('inputPort'));
+      //       context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 320, 270, 0, 0, 192, 108);
+      //     });
+      //     window.requestAnimationFrame(renderImg);
+      //   } 
+      // }
+    });
   },
   mounted() {
     const vm = this;
+    // 可设置图层id集合
+    this.layerIdList();
+
     this.draggableInit();
     this.signalInitDraggable();
     this.signalInitDroppable();
@@ -618,9 +623,9 @@ export default {
       this.positionY = layer.realPos.top;
       this.sourceW = layer.sizeW;
       this.sourceH = layer.sizeH;
+      this.clipW = layer.cropW;
+      this.clipH = layer.cropH;
     });
-    // 可设置图层id集合
-    this.layerIdList();
     // 标识当前操作的容器
     this.$root.bus.$off('setSelectedContainer');
     this.$root.bus.$on('setSelectedContainer', (data) => {
@@ -639,13 +644,13 @@ export default {
             layer.position.top = layer.fullBeforeTop;
             layer.position.left = layer.fullBeforeLeft;
             layer.realPos = {
-              left: layer.position.left * 10,
-              top: layer.position.top * 10
+              left: layer.position.left * 20,
+              top: layer.position.top * 20
             }
             layer.full = false;
           } else {
-            this.$set(layer, 'fullBeforeWbase', layer.sizeW / 10);
-            this.$set(layer, 'fullBeforeHbase', layer.sizeH / 10);
+            this.$set(layer, 'fullBeforeWbase', layer.sizeW / 20);
+            this.$set(layer, 'fullBeforeHbase', layer.sizeH / 20);
             this.$set(layer, 'fullBeforeTop', layer.position.top);
             this.$set(layer, 'fullBeforeLeft', layer.position.left);
             layer.sizeW = col * layer.sizeW;
@@ -670,6 +675,7 @@ export default {
     // 信号图层删除
     this.$root.bus.$off('deleteLayer');
     this.$root.bus.$on('deleteLayer', (data) => {
+      console.log(data);
       const vm = this;
       const rmLayerParams = {
         eventType: "rmLayer",
@@ -689,9 +695,11 @@ export default {
           
           // 所删图层所属容器
           const moveBelongContainer = vm.containerList.find(cItem => cItem.containerId == data.parentId); 
+          console.log(moveBelongContainer);
           // 被删除的图层
-          const moveLayer = moveBelongContainer.signalList.find(layer => layer.signalId == data.signalId); 
+          // const moveLayer = moveBelongContainer.signalList.find(layer => layer.signalId == data.signalId); 
           const moveLayerIndex = moveBelongContainer.signalList.findIndex(layer => layer.signalId == data.signalId); 
+          console.log(moveLayerIndex);
           moveBelongContainer.signalList.splice(moveLayerIndex, 1);
 
           moveBelongContainer.content.map(display => {
@@ -829,8 +837,8 @@ export default {
             cropPosY: Number(data.cropY),
             cropSizeW: Number(data.sizeW),
             cropSizeH: Number(data.sizeH),
-            scalePosX: Math.round(Number(data.position.left) * 10),
-            scalePosY: Number(data.position.top) * 10,
+            scalePosX: Math.round(Number(data.position.left) * 20),
+            scalePosY: Number(data.position.top) * 20,
             scaleSizeW: Number(data.sizeW),
             scaleSizeH: Number(data.sizeH), 
             inputPort:  Number(data.inputPort),
@@ -860,8 +868,8 @@ export default {
             left: data.realPos.left,
             top: data.realPos.top
           }
-          changeLayer.position.left = Math.round(data.realPos.left / 10);
-          changeLayer.position.top = Math.round(data.realPos.top / 10);
+          changeLayer.position.left = Math.round(data.realPos.left / 20);
+          changeLayer.position.top = Math.round(data.realPos.top / 20);
           changeLayer.aoi.position = changeLayer.position;
           vm.positionX = data.realPos.left;
           vm.positionY = data.realPos.top;
@@ -1117,9 +1125,12 @@ export default {
           })
         }
       });
-      for (let i = 1; i <= existDisplays.length * 8; i++) {
-        this.layerIds.push(i);
-      }
+      // 已存在显示器
+      existDisplays.map(dItem => {
+        for(let i = Number(dItem.displayId)*4; i < (Number(dItem.displayId) + 1)*4; i++) {
+          this.layerIds.push(i);
+        }
+      });
     },
     // 分割流媒体
     clipMedia(row, col) {
@@ -1341,7 +1352,34 @@ export default {
               }
             })
           } else {
-            layerId = 0;
+            layerId = vm.layerIds[0];
+          }
+          // 图层order设置
+          let cSignalList = [];
+          vm.containerList.map(item => {
+            item.signalList.map(sItem => {
+              cSignalList.push(sItem.order);
+            });
+          });
+          const maxOrder = Math.max(...cSignalList);
+          const orderArr = [];
+          for(let i = 1; i <= maxOrder; i++) {
+            orderArr.push(i);
+          }
+
+          let createOrder = null;
+          if (maxOrder >= 1) {
+            orderArr.some(index => {
+              if(index == maxOrder) {
+                createOrder = maxOrder + 1;
+                return true;
+              } else if(!orderArr.includes(index)) {
+                createOrder = index;
+                return true;
+              }
+            })
+          } else {
+            createOrder = 1;
           }
 
           let targetObj = null;
@@ -1365,15 +1403,15 @@ export default {
                 id: layerId,
                 cropPosX: 0,
                 cropPosY: 0,
-                cropSizeW: targetObj.sizeW,
-                cropSizeH: targetObj.sizeH,
+                cropSizeW: 3840,
+                cropSizeH: 2160,
                 scalePosX: targetObj.realPos.left,
                 scalePosY: targetObj.realPos.top,
                 scaleSizeW: targetObj.sizeW,
                 scaleSizeH: targetObj.sizeH, 
                 inputPort:  Number($(ui.draggable[0]).attr('id')),
                 containerId: Number(targetContainerId),
-                index: layerId + 1,
+                index: createOrder,
                 layerAlpha: 128
               }
             ],
@@ -1396,7 +1434,7 @@ export default {
                 parentId: targetContainerId,
               };
               const signal = dataFormat.addWidget('signal', {
-                parentId: targetContainerId,
+                parentId: Number(targetContainerId),
                 signalId: layerId,
                 position: targetObj.position,
                 signalIndex: Number($(ui.draggable[0]).attr('index')),
@@ -1406,12 +1444,12 @@ export default {
                 realPos: targetObj.realPos,
                 sizeW: targetObj.sizeW,
                 sizeH: targetObj.sizeH,
-                cropW: targetObj.sizeW,
-                cropH: targetObj.sizeH,
+                cropW: 3840,
+                cropH: 2160,
                 cropX: 0,
                 cropY: 0,
-                inputPort: $(ui.draggable[0]).attr('id'),
-                order: layerId + 1,
+                inputPort: Number($(ui.draggable[0]).attr('id')),
+                order: createOrder,
                 layerAlpha: 128
               });
 
@@ -1495,12 +1533,12 @@ export default {
                 cropPosY: movedLayer.cropY,
                 cropSizeW: movedLayer.cropW,
                 cropSizeH: movedLayer.cropH,
-                scalePosX: Math.round(ui.position.left * 10),
-                scalePosY: ui.position.top * 10,
+                scalePosX: Math.round(ui.position.left * 20),
+                scalePosY: ui.position.top * 20,
                 scaleSizeW: movedLayer.sizeW,
                 scaleSizeH: movedLayer.sizeH, 
                 inputPort:  movedLayer.inputPort,
-                containerId: containerId,
+                containerId: Number(containerId),
                 layerAlpha: movedLayer.layerAlpha,
                 index: movedLayer.order
               }
@@ -1522,11 +1560,11 @@ export default {
               moveLayer.position = ui.position;
               moveLayer.aoi.position = ui.position;
               moveLayer.realPos = {
-                left: Math.round(ui.position.left * 10),
-                top: ui.position.top * 10
+                left: Math.round(ui.position.left * 20),
+                top: ui.position.top * 20
               }
-              vm.positionX = Math.round(ui.position.left * 10);
-              vm.positionY = ui.position.top * 10;
+              vm.positionX = Math.round(ui.position.left * 20);
+              vm.positionY = ui.position.top * 20;
               // 重新判断图层相交显示器
               moveBelongContainer.content.map(display => {
                 if(vm.isOverlap(moveLayer, display)) { // 判断是否相交
@@ -1572,8 +1610,8 @@ export default {
                 if (layer.id == id) {
                   layer.customFeature.wBase = ui.size.width;
                   layer.customFeature.hBase = ui.size.height;
-                  layer.sizeW = Math.floor(ui.size.width * 10);
-                  layer.sizeH = ui.size.height * 10;
+                  layer.sizeW = Math.floor(ui.size.width * 20);
+                  layer.sizeH = ui.size.height * 20;
                   item.content.forEach(dItem => {
                     if (vm.isOverlap(layer, dItem)) {
                       const isBelong = dItem.intersectList.find(iItem => iItem === layer);
@@ -1628,10 +1666,10 @@ export default {
                 cropSizeH: movedLayer.cropH,
                 scalePosX: movedLayer.realPos.left,
                 scalePosY: movedLayer.realPos.top,
-                scaleSizeW: ui.size.width * 10,
-                scaleSizeH: ui.size.height * 10, 
+                scaleSizeW: ui.size.width * 20,
+                scaleSizeH: ui.size.height * 20, 
                 inputPort:  movedLayer.inputPort,
-                containerId: containerId,
+                containerId: Number(containerId),
                 layerAlpha: movedLayer.layerAlpha,
                 index: movedLayer.order
               }
@@ -1652,10 +1690,10 @@ export default {
               // 改变图层信息
               moveLayer.customFeature.wBase = ui.size.width;
               moveLayer.customFeature.hBase = ui.size.height;
-              moveLayer.sizeW = Math.floor(ui.size.width * 10);
-              moveLayer.sizeH = ui.size.height * 10;
-              vm.sourceW = Math.floor(ui.size.width * 10);
-              vm.sourceH = ui.size.height * 10;
+              moveLayer.sizeW = Math.floor(ui.size.width * 20);
+              moveLayer.sizeH = ui.size.height * 20;
+              vm.sourceW = Math.floor(ui.size.width * 20);
+              vm.sourceH = ui.size.height * 20;
               // 重新判断图层相交显示器
               moveBelongContainer.content.map(display => {
                 if(vm.isOverlap(moveLayer, display)) { // 判断是否相交
@@ -1709,8 +1747,8 @@ export default {
         //         id: changeSitem.signalId,
         //         cropPosX: changeSitem.cropX,
         //         cropPosY: changeSitem.cropY,
-        //         cropSizeW: changeSitem.aoi.width * 10, 
-        //         cropSizeH: changeSitem.aoi.height * 10,
+        //         cropSizeW: changeSitem.aoi.width * 20, 
+        //         cropSizeH: changeSitem.aoi.height * 20,
         //         scalePosX: changeSitem.realPos.left,
         //         scalePosY: changeSitem.realPos.left,
         //         scaleSizeW: changeSitem.sizeW,
@@ -1774,10 +1812,10 @@ export default {
           //   layer: [
           //     {
           //       id: changeSitem.signalId,
-          //       cropPosX: Math.round(changeSitem.position.left * 10),
-          //       cropPosY: changeSitem.position.top * 10,
-          //       cropSizeW: ui.size.width * 10, 
-          //       cropSizeH: Math.floor(ui.size.height * 10),
+          //       cropPosX: Math.round(changeSitem.position.left * 20),
+          //       cropPosY: changeSitem.position.top * 20,
+          //       cropSizeW: ui.size.width * 20, 
+          //       cropSizeH: Math.floor(ui.size.height * 20),
           //       scalePosX: changeSitem.realPos.left,
           //       scalePosY: changeSitem.realPos.left,
           //       scaleSizeW: changeSitem.sizeW,
@@ -1952,6 +1990,9 @@ export default {
             display: flex;
             justify-content: center;
             align-items: center;
+          }
+          .green-text {
+            color: rgb(26,188,156);
           }
         }
         .movie {

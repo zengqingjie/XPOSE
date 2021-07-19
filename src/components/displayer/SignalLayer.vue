@@ -103,8 +103,8 @@ export default {
   computed: {
     setStyle() {
       return {
-        width: this.layerInfo.sizeW / 10+ 'px',
-        height: this.layerInfo.sizeH / 10 + 'px',
+        width: this.layerInfo.sizeW / 20+ 'px',
+        height: this.layerInfo.sizeH / 20 + 'px',
         left: this.layerInfo.position.left + 'px',
         top: this.layerInfo.position.top + 'px',
         background: this.layerInfo.bColor

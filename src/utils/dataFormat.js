@@ -77,7 +77,7 @@ export const dataFormat = {
    * @param {object} position 拖拽放置位置
    * @param {object} templateObj 拖拽模板
    */
-  addContainer(id, addDisplay = true, position, templateObj, usableDisplay = [], realPos = [], separation) {
+  addContainer(id, addDisplay = true, position, templateObj, usableDisplay = [], realPos = [], separation, sizeW,sizeH) {
     console.log(id);
     let content = [];
     let childrenContent = [];
@@ -88,6 +88,8 @@ export const dataFormat = {
       position,
       templateId: templateObj.id,
       customFeature: templateObj,
+      sizeW,
+      sizeH,
       name: ''
     });
 
@@ -110,8 +112,8 @@ export const dataFormat = {
           position: arr[index],
           realPos: realPos[index],
           separation: separation,
-          sizeW: usableDisplay[index].sizeW,
-          sizeH: usableDisplay[index].sizeH,
+          sizeW: 3840,
+          sizeH: 2160,
           signalNum: 2
         });
         content.push(display);

@@ -4,12 +4,11 @@
     v-if="cItem && cItem.templateId"
     :style="setContainerStyle"
     :id="cItem.id"
+    :containerId="cItem.containerId"
   >
     <div class="container-header">
       <span
-        >{{ index + 1 }}--(W:{{ cItem.customFeature.col * 1920 }} H:{{
-          cItem.customFeature.row * 1080
-        }})</span
+        >{{ index + 1 }}--(W:{{ cItem.sizeW }} H:{{ cItem.sizeH }})</span
       >
     </div>
     <div class="displayer-box" :parentId="cItem.id">
@@ -20,6 +19,7 @@
         :deviceId="deviceId"
         :size="setDisplayerItem"
         :positionZoom="cItem.positionZoom"
+        pisition="true"
       />
     </div>
     <div class="signal-model" v-if="signalModelShow">
@@ -30,6 +30,7 @@
         :deviceId="deviceId"
         :size="setDisplayerItem"
         :positionZoom="cItem.positionZoom"
+        pisition="true"
       />
       <SignalLayer
         v-for="layer in signalLayers"

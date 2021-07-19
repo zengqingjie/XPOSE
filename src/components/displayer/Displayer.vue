@@ -17,7 +17,7 @@
     <div>{{dMsg.name}}</div>
     <span
       class="delete-displayer"
-      @click.stop="deleteDisplayer(dMsg.displayId, dMsg.parentId)"
+      @click.stop="deleteDisplayer(dMsg.displayId, dMsg.containerId)"
       >x</span
     >
     <div class="border-view" v-if="deviceId == dMsg.id"></div>
@@ -56,8 +56,8 @@ export default {
     setStyle() {
       if (this.dMsg.position) {
         return {
-          width: this.dMsg.sizeW / 10 + 'px',
-          height: this.dMsg.sizeH / 10 + 'px',
+          width: this.dMsg.sizeW / 20 + 'px',
+          height: this.dMsg.sizeH / 20 + 'px',
           left: this.dMsg.position.left + 'px',
           top: this.dMsg.position.top + 'px',
           position: 'absolute'

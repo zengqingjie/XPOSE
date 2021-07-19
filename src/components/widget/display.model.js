@@ -6,8 +6,8 @@ export class Display extends Widget {
     super(config);
     this.name = config.name || '显示器';
     this.containerId = config.containerId;
-    this.sizeW = config.sizeW || null;
-    this.sizeH = config.sizeH || null;
+    this.sizeW = config.sizeW;
+    this.sizeH = config.sizeH;
     this.outputTypeEnum = config.outputTypeEnum || null;
     this.displayId = config.displayId;
     this.position = config.position || null;

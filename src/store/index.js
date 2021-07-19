@@ -15,6 +15,7 @@ export default new Vuex.Store({
     containerId: 0, // 容器索引
     showVessels: [], // 显示容器
     shareVessels: [], // 共享容器 （图层管理 && 场景管理）
+    outputModelInfo: [], // 输出板信息
     displayerList: [
       
     ], // 设备列表
@@ -166,6 +167,10 @@ export default new Vuex.Store({
     setContainerList(state, list) {
       state.showVessels = list;
     },
+    // 设置输出板信息
+    setOutputModelInfo(state, list) {
+      state.outputModelInfo = list;
+    },
     // 设置共享容器
     setShareContainerList(state, list) {
       state.shareVessels = list;
@@ -192,6 +197,9 @@ export default new Vuex.Store({
     },
     setContainerList(context, list) {
       context.commit('setContainerList', list);
+    },
+    setOutputModelInfo(context, list) {
+      context.commit('setOutputModelInfo', list);
     },
     setShareContainerList(context, list) {
       context.commit('setShareContainerList', list);

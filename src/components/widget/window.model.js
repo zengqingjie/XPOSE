@@ -8,6 +8,8 @@ export class Windows extends Widget {
     this.templateId = config.templateId;
     this.containerId = config.containerId;
     this.signalList = [];
+    this.sizeW = config.sizeW;
+    this.sizeH = config.sizeH;
     this.position = config.position || {
       top: 0,
       left: 0,

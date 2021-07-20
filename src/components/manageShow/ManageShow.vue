@@ -687,8 +687,10 @@ export default {
           for (let i = 0; i < 6; i++) {
             dataList.push(result.output.slice(4*i , 4*(i+1)));
           }
-          const outputPorts = dataList.filter((item, index) => that.outputModelInfo[index].hasOutputBoard );
-
+          let outputPorts = dataList.filter((item, index) => that.outputModelInfo[index].hasOutputBoard );
+          outputPorts.map((item) => {
+            item.splice(2, 2)
+          });
           that.$store.dispatch('setDisplayerList', outputPorts.flat());
           that.$nextTick(() => {
             customActive.Draggable('.displayer .displayer-item', {
@@ -772,7 +774,11 @@ export default {
         for (let i = 0; i < 6; i++) {
           dataList.push(result.data.output.slice(4*i , 4*(i+1)));
         }
-        const outputPorts = dataList.filter((item, index) => that.outputModelInfo[index].hasOutputBoard );
+        let outputPorts = dataList.filter((item, index) => that.outputModelInfo[index].hasOutputBoard);
+
+        outputPorts.map((item) => {
+          item.splice(2, 2)
+        });
 
         that.$store.dispatch('setDisplayerList', outputPorts.flat());
         that.$nextTick(() => {

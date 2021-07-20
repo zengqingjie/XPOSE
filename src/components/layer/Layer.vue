@@ -48,6 +48,7 @@
                   :id="item.inputPort"
                   :type="item.inputType"
                   :index="index"
+                  v-if="item.format != 127"
                 >
                   <span class="order">{{item.inputPort}}</span>
                   <div class="signal-icon">
@@ -61,7 +62,14 @@
                   </div>
                   <span :class="item.format != 127 ? 'green-text' : ''">{{conversationFormate(item.format)}}</span>
                 </div>
-                <canvas width="192" height="108" class="movie" :inputPort="item.inputPort" v-if="sryj && h264"></canvas>
+                <canvas
+                  width="192"
+                  height="108"
+                  class="movie"
+                  :format="item.format"
+                  :inputPort="item.inputPort"
+                  v-if="sryj && h264 && item.format != 127 && index < 8"
+                ></canvas>
                 <!-- <div
                   class="movie"
                   v-if="h264"
@@ -416,7 +424,7 @@
         </div>
       </div>
     </div>
-    <img :src="streamMedia" alt="" v-show="false" id="hideImg">
+    <!-- <video :src="streamMedia" alt="" v-show="true" /> -->
     
     <BottomParams
       :signal="signalObj"
@@ -496,6 +504,7 @@ export default {
       imgObj: null,
       signalObj: null,
       layerOrders: [],
+      animationList: []
     }
   },
   components: {
@@ -512,7 +521,7 @@ export default {
     img.src = 'http://192.168.0.117:5005/?action=stream';
     this.imgObj = img;
     // 分割流媒体（4行6列）
-    this.clipMedia(4, 6);
+    this.clipMedia(2, 2);
     
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
     this.getSignalList();
@@ -683,6 +692,7 @@ export default {
         layer: [
           { id: data.signalId }
         ],
+        sceneId: this.bankIndex,
         sessionID: this.sessionId,
         checkKey: this.getcheckKey('rmLayer')
       }
@@ -835,8 +845,8 @@ export default {
             id: data.signalId,
             cropPosX: Number(data.cropX),
             cropPosY: Number(data.cropY),
-            cropSizeW: Number(data.sizeW),
-            cropSizeH: Number(data.sizeH),
+            cropSizeW: Number(data.cropW),
+            cropSizeH: Number(data.cropH),
             scalePosX: Math.round(Number(data.position.left) * 20),
             scalePosY: Number(data.position.top) * 20,
             scaleSizeW: Number(data.sizeW),
@@ -844,7 +854,8 @@ export default {
             inputPort:  Number(data.inputPort),
             containerId: Number(data.parentId),
             layerAlpha: Number(data.layerAlpha),
-            index: Number(data.order)
+            index: Number(data.order),
+            sceneId: vm.bankIndex
           }
         ],
         sessionID: vm.sessionId,
@@ -914,26 +925,29 @@ export default {
   methods: {
     // 输入预监
     previewPictureEvent(value) {
+      this.animationList.map(item => cancelAnimationFrame(item));
+      this.animationList = [];
       this.$nextTick(() => {
         // 信号列表画面显示
         let signalCanvas = []; // 信号列表画布
         let layerCanvas = []; // 图层画布
 
-        let img = new Image();
-        img.src = this.streamMedia;
         // 信号列表画布
         if(value && this.sryj) {
           $('.signal-box canvas').each(function() {
             signalCanvas.push($(this)[0]);
           });
+          let img = new Image();
+          img.src = this.streamMedia;
           img.onload = () => renderImg();
           let renderImg = () => {
             signalCanvas.forEach((canvas, index) => {
               const context = canvas.getContext('2d');
               const inputPort = Number($(canvas).attr('inputPort'));
-              context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 320, 270, 0, 0, 192, 108);
+              context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 960,540, 0, 0, 192, 108);
             });
-            window.requestAnimationFrame(renderImg);
+            let signalAnimateId = requestAnimationFrame(renderImg);
+            this.animationList.push(signalAnimateId);
           }
         }
         // 容器图层画布
@@ -941,14 +955,17 @@ export default {
           $('.signal-layer-item canvas').each(function() {
             layerCanvas.push($(this)[0]);
           });
+          let img = new Image();
+          img.src = this.streamMedia;
           img.onload = () => renderImg();
            let renderImg = () => {
             layerCanvas.forEach((canvas, index) => {
               const context = canvas.getContext('2d');
               const inputPort = Number($(canvas).attr('inputPort'));
-              context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 320, 270, 0, 0, 192, 108);
+              context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 960,540, 0, 0, 192, 108);
             });
-            window.requestAnimationFrame(renderImg);
+            let layerAnimateId = requestAnimationFrame(renderImg);
+            this.animationList.push(layerAnimateId);
           }
         }
       })
@@ -989,7 +1006,8 @@ export default {
                 inputPort:  Number(signal.inputPort),
                 containerId: Number(signal.parentId),
                 layerAlpha: Number(this.opacityVal),
-                index: signal.order
+                index: signal.order,
+                sceneId: vm.bankIndex
               }
             ],
             sessionID: vm.sessionId,
@@ -1063,7 +1081,8 @@ export default {
                 inputPort:  Number(signal.inputPort),
                 containerId: Number(signal.parentId),
                 layerAlpha: Number(this.opacityVal),
-                index: signal.order
+                index: signal.order,
+                sceneId: vm.bankIndex
               }
             ],
             sessionID: vm.sessionId,
@@ -1135,6 +1154,7 @@ export default {
     // 分割流媒体
     clipMedia(row, col) {
       let clips = [];
+      let allcrops = [];
       for (let i = 0; i < row; i ++) {
         for (let j = 0; j < col; j ++) {
           clips.push(
@@ -1145,7 +1165,10 @@ export default {
           );
         }
       }
-      this.clipList = clips;
+      allcrops.push(clips);
+      allcrops.push(clips);
+      console.log(allcrops.flat());
+      this.clipList = allcrops.flat();
     },
     // 读取左侧信号列表
     getSignalList() {
@@ -1253,6 +1276,9 @@ export default {
       this.$root.bus.$emit('hideRightView');
     },
     changeBank (bank, index){
+      console.log(this.animationList);
+      this.animationList.map(item => cancelAnimationFrame(item));
+      this.animationList = [];
       this.$store.commit('setBankIndex', index);
       bank.containers.forEach(cItem => {
         cItem.content.forEach(display => {
@@ -1272,6 +1298,7 @@ export default {
           });
         }
       })
+
       this.containerList = bank.containers;
       this.aoiData = null;
       this.$nextTick(() => {
@@ -1298,10 +1325,32 @@ export default {
               const inputPort = Number($(canvas).attr('inputPort'));
               context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 320, 270, 0, 0, 192, 108);
             });
-            window.requestAnimationFrame(renderImg);
+            let restartAnimateId = requestAnimationFrame(renderImg);
+            this.animationList.push(restartAnimateId);
           }
         }
+      });
+      // 直切场景
+      let containers = [];
+      bank.containers.map(item => {
+        const sceneC = {
+          id: item.containerId,
+          takeType: 2,
+          alpha: 128
+        }
+        containers.push(sceneC);
       })
+      const params = {
+        eventType: 'setTakeSetting',
+        sceneId: index,
+        container: containers,
+        count: containers.length,
+        checkKey: this.getcheckKey(),
+        sessionID: this.sessionId
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
     },
     // 容器显示与否
     eyeStatus(target) {
@@ -1412,7 +1461,8 @@ export default {
                 inputPort:  Number($(ui.draggable[0]).attr('id')),
                 containerId: Number(targetContainerId),
                 index: createOrder,
-                layerAlpha: 128
+                layerAlpha: 128,
+                sceneId: vm.bankIndex
               }
             ],
             sessionID: vm.sessionId,
@@ -1482,18 +1532,19 @@ export default {
               vm.$nextTick(() => {
                 vm.signalLayerDraggable();
                 vm.signalLayerResize();
+                console.log('创建的新图层',signal);
                 // 初始化绘制流媒体画面
                 if(vm.h264 && vm.sryj) {
                   let img = new Image();
-                  img.src = this.streamMedia;
-                  console.log(vm.clipList);
+                  img.src = vm.streamMedia;
                   const canvas = $('#'+signal.id).find('canvas')[0];
   
                   const context = canvas.getContext('2d');
                  
                   let renderImg = () => {
-                    context.drawImage(img, vm.clipList[signal.inputPort].left, vm.clipList[signal.inputPort].top, 320, 270, 0, 0, 192, 108);
-                    window.requestAnimationFrame(renderImg)
+                    context.drawImage(img, vm.clipList[signal.inputPort].left, vm.clipList[signal.inputPort].top, 960, 540, 0, 0, 192, 108);
+                    let addAnimateId = requestAnimationFrame(renderImg);
+                    vm.animationList.push(addAnimateId);
                   }
                   renderImg();
                 }
@@ -1540,7 +1591,8 @@ export default {
                 inputPort:  movedLayer.inputPort,
                 containerId: Number(containerId),
                 layerAlpha: movedLayer.layerAlpha,
-                index: movedLayer.order
+                index: movedLayer.order,
+                sceneId: vm.bankIndex
               }
             ],
             sessionID: vm.sessionId,
@@ -1671,7 +1723,8 @@ export default {
                 inputPort:  movedLayer.inputPort,
                 containerId: Number(containerId),
                 layerAlpha: movedLayer.layerAlpha,
-                index: movedLayer.order
+                index: movedLayer.order,
+                sceneId: vm.bankIndex
               }
             ],
             sessionID: vm.sessionId,

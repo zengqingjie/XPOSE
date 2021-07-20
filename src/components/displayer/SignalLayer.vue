@@ -32,7 +32,7 @@
       <span>h:{{layerInfo.sizeH}}</span>
     </div>
     <div>Order:{{layerInfo.order}}</div>
-    <canvas width="192" height="108" :inputPort="layerInfo.inputPort"></canvas>
+    <canvas width="192" height="108" :inputPort="layerInfo.inputPort" :format="layerInfo.format"></canvas>
   </div>
 </template>
 

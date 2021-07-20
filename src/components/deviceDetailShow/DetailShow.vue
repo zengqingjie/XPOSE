@@ -36,19 +36,22 @@
             <div
               class="slot"
               v-if="deviceInfo&&deviceInfo.costomInfo.outputModelInfo[index].hasOutputBoard"
-            >
-              <div
-                alt=""
-                v-for="citem in item"
-                :key="citem.id"
-                @click="clickPort(citem.id, 'outputPort')"
-                :class="(clickPortId === citem.id && port == 'outputPort') ? 'show' : ''"
-                :id="citem.id"
+            > 
+              <template
+                v-for="(citem, index) in item"
               >
-                <img
-                  src="@/assets/output_HDMI2.png"
+                <div
+                  v-if="index > 1"
+                  :key="citem.id"
+                  @click="clickPort(citem.id, 'outputPort')"
+                  :class="(clickPortId === citem.id && port == 'outputPort') ? 'show' : ''"
+                  :id="citem.id"
                 >
-              </div>
+                  <img
+                    src="@/assets/output_HDMI2.png"
+                  >
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -1339,7 +1342,7 @@ export default {
               display: flex;
               flex: 1;
               flex-direction: column;
-              justify-content: space-evenly;
+              justify-content: center;
               align-items: center;
               div {
                 height: 25%;

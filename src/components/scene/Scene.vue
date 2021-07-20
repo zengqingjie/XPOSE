@@ -374,7 +374,7 @@ export default {
   },
   created() {
     // 分割流媒体（4行6列）
-    this.clipMedia(4, 6);
+    this.clipMedia(2, 2);
     this.streamMedia = 'http://192.168.0.117:5005/?action=stream';
     // 初始化绘制流媒体画面
     this.$nextTick(() => {
@@ -391,9 +391,11 @@ export default {
           canvasBoxs.forEach((canvas, index) => {
             const context = canvas.getContext('2d');
             const inputPort = Number($(canvas).attr('inputPort'));
-            context.drawImage(img, this.clipList[inputPort-1].left, this.clipList[inputPort-1].top, 320, 270, 0, 0, 192, 108);
+            setInterval(() => {
+              context.drawImage(img, this.clipList[inputPort-1].left, this.clipList[inputPort-1].top, 960, 540, 0, 0, 192, 108);
+            }, 1000 / 60)
           })
-          window.requestAnimationFrame(renderImg);
+          // window.requestAnimationFrame(renderImg);
         }
       }
     })
@@ -509,6 +511,7 @@ export default {
     // 分割流媒体
     clipMedia(row, col) {
       let clips = [];
+      let allcrops = [];
       for (let i = 0; i < row; i ++) {
         for (let j = 0; j < col; j ++) {
           clips.push(
@@ -519,7 +522,9 @@ export default {
           );
         }
       }
-      this.clipList = clips;
+      allcrops.push(clips);
+      allcrops.push(clips);
+      this.clipList = allcrops.flat();
     },
     typeSelect(num) {
       this.typeIndex = num;
@@ -596,10 +601,10 @@ export default {
         keepSwap: this.copyContainer ? false : this.keepReplace,
         blackOut: this.darkScence,
         presetScene: this.presetScene,
+        container: containers,
+        count: containers.length,
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId,
-        count: 1,
-        container: containers,
       }
       if (window.webSocket && window.webSocket.readyState == 1) {
         window.webSocket.send(JSON.stringify(params));

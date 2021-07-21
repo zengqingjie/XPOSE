@@ -56,8 +56,8 @@ export default {
     setStyle() {
       if (this.dMsg.position) {
         return {
-          width: this.dMsg.sizeW / 20 + 'px',
-          height: this.dMsg.sizeH / 20 + 'px',
+          width: this.dMsg.sizeW / 10 + 'px',
+          height: this.dMsg.sizeH / 10 + 'px',
           left: this.dMsg.position.left + 'px',
           top: this.dMsg.position.top + 'px',
           position: 'absolute'

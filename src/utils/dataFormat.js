@@ -112,8 +112,8 @@ export const dataFormat = {
           position: arr[index],
           realPos: realPos[index],
           separation: separation,
-          sizeW: 3840,
-          sizeH: 2160,
+          sizeW: 1920,
+          sizeH: 1080,
           signalNum: 2
         });
         content.push(display);

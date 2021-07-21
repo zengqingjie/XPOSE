@@ -208,10 +208,10 @@ export default {
       ],  // 模式列表
       modelVal: 0, // 模式
       separationList: [
-        // { id: 10, label: '2k' },
+        { id: 10, label: '2k' },
         { id: 82, label: '4k' }
       ], // 分辨率列表
-      separation: 82, // 分辨率
+      separation: 10, // 分辨率
       devideChecked: true, // 容器是否创建显示器
       templateList: [
         { 
@@ -475,8 +475,8 @@ export default {
                     id: dList[index].id,
                     posX: posArr[index].left,
                     posY: posArr[index].top,
-                    sizeW: 3840,
-                    sizeH: 2160,
+                    sizeW: 1920,
+                    sizeH: 1080,
                     containerId: vm.$store.state.containerId,
                     outputType: dList[index].outputType,
                     outputTypeEnum: dList[index].outputTypeEnum
@@ -1063,8 +1063,8 @@ export default {
               id: targetObj.id,
               posX: Math.round(uiLeft * 10) * separationBase,
               posY: uiTop * 10 * separationBase,
-              sizeW: 3840,
-              sizeH: 2160,
+              sizeW: 1920,
+              sizeH: 1080,
               containerId: container.containerId,
               outputType: targetObj.outputType,
               outputTypeEnum: targetObj.outputTypeEnum
@@ -1089,8 +1089,8 @@ export default {
                   name: targetObj.outputType,
                   separation: vm.separation,
                   signalNum: 2,
-                  sizeW: 3840,
-                  sizeH: 2160,
+                  sizeW: 1920,
+                  sizeH: 1080,
                   containerId: container.containerId,
                 });
                 newDisplay.position = {
@@ -1146,8 +1146,8 @@ export default {
                 id: targetObj.id,
                 posX: displayer.realPos.left,
                 posY: displayer.realPos.top,
-                sizeW: 3840,
-                sizeH: 2160,
+                sizeW: 1920,
+                sizeH: 1080,
                 containerId: container.containerId,
                 outputType: targetObj.outputType,
                 outputTypeEnum: targetObj.outputTypeEnum
@@ -1180,8 +1180,8 @@ export default {
                     displayId: targetObj.id,
                     name: targetObj.outputType,
                     separation: vm.separation,
-                    sizeW: 3840,
-                    sizeH: 2160,
+                    sizeW: 1920,
+                    sizeH: 1080,
                     containerId: container.containerId,
                   });
                   newDisplay.position = displayer.position;

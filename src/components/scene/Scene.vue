@@ -375,32 +375,29 @@ export default {
   created() {
     // 分割流媒体（4行6列）
     this.clipMedia(2, 2);
-    this.streamMedia = 'http://192.168.0.117:5005/?action=stream';
+    this.streamMedia = 'http://192.168.0.204:5005/?action=stream';
+  },
+  mounted() {
     // 初始化绘制流媒体画面
     this.$nextTick(() => {
-      if(this.streamMedia && this.clipList.length > 0) {
+      let canvasBoxs = [];
+      $('.signal-layer-item canvas').each(function() {
+        canvasBoxs.push($(this)[0]);
+      });
+      if(canvasBoxs.length > 0) {
         let img = new Image();
         img.src = this.streamMedia;
-        let canvasBoxs = [];
-        $('.signal-layer-item canvas').each(function() {
-          canvasBoxs.push($(this)[0]);
-        });
-        
         img.onload = () => renderImg();
         let renderImg = () => {
           canvasBoxs.forEach((canvas, index) => {
             const context = canvas.getContext('2d');
             const inputPort = Number($(canvas).attr('inputPort'));
-            setInterval(() => {
-              context.drawImage(img, this.clipList[inputPort-1].left, this.clipList[inputPort-1].top, 960, 540, 0, 0, 192, 108);
-            }, 1000 / 60)
+            context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 960, 540, 0, 0, 192, 108);
           })
-          // window.requestAnimationFrame(renderImg);
+          window.requestAnimationFrame(renderImg);
         }
       }
     })
-  },
-  mounted() {
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
     this.opacityPercent = this.opacityPercent.toFixed(2);
   },
@@ -582,6 +579,27 @@ export default {
       if (window.webSocket && window.webSocket.readyState == 1) {
         window.webSocket.send(JSON.stringify(params));
       }
+      // 初始化绘制流媒体画面
+      this.$nextTick(() => {
+        let canvasBoxs = [];
+        $('.signal-layer-item canvas').each(function() {
+          canvasBoxs.push($(this)[0]);
+        });
+        
+        if(canvasBoxs.length > 0) {
+          let img = new Image();
+          img.src = this.streamMedia;
+          img.onload = () => renderImg();
+          let renderImg = () => {
+            canvasBoxs.forEach((canvas, index) => {
+              const context = canvas.getContext('2d');
+              const inputPort = Number($(canvas).attr('inputPort'));
+              context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 960, 540, 0, 0, 192, 108);
+            })
+            window.requestAnimationFrame(renderImg);
+          }
+        }
+      })
     },
     setTakeSetting() {
       let containers = [];

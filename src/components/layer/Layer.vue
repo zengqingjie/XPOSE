@@ -515,10 +515,10 @@ export default {
   created() {
     const ip = JSON.parse(window.sessionStorage.getItem("ip"));
     // this.streamMedia = `http://${ip}:5005/?action=stream`;
-    this.streamMedia = 'http://192.168.0.117:5005/?action=stream';
+    this.streamMedia = 'http://192.168.0.204:5005/?action=stream';
     let img = new Image();
     // img.src = `http://${ip}:5005/?action=stream`;
-    img.src = 'http://192.168.0.117:5005/?action=stream';
+    img.src = 'http://192.168.0.204:5005/?action=stream';
     this.imgObj = img;
     // 分割流媒体（4行6列）
     this.clipMedia(2, 2);
@@ -653,13 +653,13 @@ export default {
             layer.position.top = layer.fullBeforeTop;
             layer.position.left = layer.fullBeforeLeft;
             layer.realPos = {
-              left: layer.position.left * 20,
-              top: layer.position.top * 20
+              left: layer.position.left * 10,
+              top: layer.position.top * 10
             }
             layer.full = false;
           } else {
-            this.$set(layer, 'fullBeforeWbase', layer.sizeW / 20);
-            this.$set(layer, 'fullBeforeHbase', layer.sizeH / 20);
+            this.$set(layer, 'fullBeforeWbase', layer.sizeW / 10);
+            this.$set(layer, 'fullBeforeHbase', layer.sizeH / 10);
             this.$set(layer, 'fullBeforeTop', layer.position.top);
             this.$set(layer, 'fullBeforeLeft', layer.position.left);
             layer.sizeW = col * layer.sizeW;
@@ -847,8 +847,8 @@ export default {
             cropPosY: Number(data.cropY),
             cropSizeW: Number(data.cropW),
             cropSizeH: Number(data.cropH),
-            scalePosX: Math.round(Number(data.position.left) * 20),
-            scalePosY: Number(data.position.top) * 20,
+            scalePosX: Math.round(Number(data.position.left) * 10),
+            scalePosY: Number(data.position.top) * 10,
             scaleSizeW: Number(data.sizeW),
             scaleSizeH: Number(data.sizeH), 
             inputPort:  Number(data.inputPort),
@@ -879,8 +879,8 @@ export default {
             left: data.realPos.left,
             top: data.realPos.top
           }
-          changeLayer.position.left = Math.round(data.realPos.left / 20);
-          changeLayer.position.top = Math.round(data.realPos.top / 20);
+          changeLayer.position.left = Math.round(data.realPos.left / 10);
+          changeLayer.position.top = Math.round(data.realPos.top / 10);
           changeLayer.aoi.position = changeLayer.position;
           vm.positionX = data.realPos.left;
           vm.positionY = data.realPos.top;
@@ -952,13 +952,14 @@ export default {
         }
         // 容器图层画布
         if(value && this.tcyj) {
+          console.log(this.clipList);
           $('.signal-layer-item canvas').each(function() {
             layerCanvas.push($(this)[0]);
           });
           let img = new Image();
           img.src = this.streamMedia;
           img.onload = () => renderImg();
-           let renderImg = () => {
+          let renderImg = () => {
             layerCanvas.forEach((canvas, index) => {
               const context = canvas.getContext('2d');
               const inputPort = Number($(canvas).attr('inputPort'));
@@ -1452,8 +1453,8 @@ export default {
                 id: layerId,
                 cropPosX: 0,
                 cropPosY: 0,
-                cropSizeW: 3840,
-                cropSizeH: 2160,
+                cropSizeW: 1920,
+                cropSizeH: 1080,
                 scalePosX: targetObj.realPos.left,
                 scalePosY: targetObj.realPos.top,
                 scaleSizeW: targetObj.sizeW,
@@ -1494,8 +1495,8 @@ export default {
                 realPos: targetObj.realPos,
                 sizeW: targetObj.sizeW,
                 sizeH: targetObj.sizeH,
-                cropW: 3840,
-                cropH: 2160,
+                cropW: 1920,
+                cropH: 1080,
                 cropX: 0,
                 cropY: 0,
                 inputPort: Number($(ui.draggable[0]).attr('id')),
@@ -1584,8 +1585,8 @@ export default {
                 cropPosY: movedLayer.cropY,
                 cropSizeW: movedLayer.cropW,
                 cropSizeH: movedLayer.cropH,
-                scalePosX: Math.round(ui.position.left * 20),
-                scalePosY: ui.position.top * 20,
+                scalePosX: Math.round(ui.position.left * 10),
+                scalePosY: ui.position.top * 10,
                 scaleSizeW: movedLayer.sizeW,
                 scaleSizeH: movedLayer.sizeH, 
                 inputPort:  movedLayer.inputPort,
@@ -1612,11 +1613,11 @@ export default {
               moveLayer.position = ui.position;
               moveLayer.aoi.position = ui.position;
               moveLayer.realPos = {
-                left: Math.round(ui.position.left * 20),
-                top: ui.position.top * 20
+                left: Math.round(ui.position.left * 10),
+                top: ui.position.top * 10
               }
-              vm.positionX = Math.round(ui.position.left * 20);
-              vm.positionY = ui.position.top * 20;
+              vm.positionX = Math.round(ui.position.left * 10);
+              vm.positionY = ui.position.top * 10;
               // 重新判断图层相交显示器
               moveBelongContainer.content.map(display => {
                 if(vm.isOverlap(moveLayer, display)) { // 判断是否相交
@@ -1662,8 +1663,8 @@ export default {
                 if (layer.id == id) {
                   layer.customFeature.wBase = ui.size.width;
                   layer.customFeature.hBase = ui.size.height;
-                  layer.sizeW = Math.floor(ui.size.width * 20);
-                  layer.sizeH = ui.size.height * 20;
+                  layer.sizeW = Math.floor(ui.size.width * 10);
+                  layer.sizeH = ui.size.height * 10;
                   item.content.forEach(dItem => {
                     if (vm.isOverlap(layer, dItem)) {
                       const isBelong = dItem.intersectList.find(iItem => iItem === layer);
@@ -1718,8 +1719,8 @@ export default {
                 cropSizeH: movedLayer.cropH,
                 scalePosX: movedLayer.realPos.left,
                 scalePosY: movedLayer.realPos.top,
-                scaleSizeW: ui.size.width * 20,
-                scaleSizeH: ui.size.height * 20, 
+                scaleSizeW: ui.size.width * 10,
+                scaleSizeH: ui.size.height * 10, 
                 inputPort:  movedLayer.inputPort,
                 containerId: Number(containerId),
                 layerAlpha: movedLayer.layerAlpha,
@@ -1743,10 +1744,10 @@ export default {
               // 改变图层信息
               moveLayer.customFeature.wBase = ui.size.width;
               moveLayer.customFeature.hBase = ui.size.height;
-              moveLayer.sizeW = Math.floor(ui.size.width * 20);
-              moveLayer.sizeH = ui.size.height * 20;
-              vm.sourceW = Math.floor(ui.size.width * 20);
-              vm.sourceH = ui.size.height * 20;
+              moveLayer.sizeW = Math.floor(ui.size.width * 10);
+              moveLayer.sizeH = ui.size.height * 10;
+              vm.sourceW = Math.floor(ui.size.width * 10);
+              vm.sourceH = ui.size.height * 10;
               // 重新判断图层相交显示器
               moveBelongContainer.content.map(display => {
                 if(vm.isOverlap(moveLayer, display)) { // 判断是否相交
@@ -2049,7 +2050,7 @@ export default {
           }
         }
         .movie {
-          background: red;
+          // background: red;
         }
         .signal-item:hover {
           color: #fff;

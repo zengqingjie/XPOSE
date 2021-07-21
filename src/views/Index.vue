@@ -61,6 +61,8 @@ export default {
     return {
       menuInfo: null,
       floatStatus: true,
+      sn: '', // 设备sn
+      sessionId: '',
     }
   },
   components: {
@@ -76,22 +78,30 @@ export default {
   created() {
     this.init();
   },
-  methods: {
-    // 保存ui数据
-    saveUiData() {
-      let data = {
-        state: this.$store.state
+  mounted() {
+    this.sessionId = JSON.parse(sessionStorage.getItem("sessionId"));
+    
+    // 获取设备sn
+    this.getDeviceSN();
+    // websocket接收信息
+    const that = this;
+    window.webSocket.onmessage = function(res) {
+      const result = JSON.parse(res.data);
+      // 获取设备sn
+      if((result.code == 200) && (result.data.eventType == 'getDeviceSN')) {
+        that.sn = result.data.sn;
+        that.getDeviceInfo();
       }
-      data.state.displayerList = [];
-      Api.saveUiData(JSON.stringify(data)).then(res => {
-        if(res.code == 200) {
-           console.log('save success')
-          } else {
-            console.log('save error')
-          }
-      });
-      console.log(data);
-    },
+      // 获取设备概况
+      if((result.code == 200) && (result.data.eventType == 'getDeviceSN')) {
+        if (result.data.costomInfo && result.data.costomInfo.outputModelInfo) {
+          that.$store.commit('setOutputModelInfo', result.data.costomInfo.outputModelInfo);
+        }
+      }
+    }
+  },
+  methods: {
+    // 初始化
     init() {
       this.$root.bus.$off('titleInfo');
       this.$root.bus.$on('titleInfo', (data) => {
@@ -104,6 +114,42 @@ export default {
         this.floatStatus = true;
       });
     },
+    // 获取设备sn
+    getDeviceSN() {
+      const params = {
+        eventType: "getDeviceSN",
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+     // 获取设备概况信息
+    getDeviceInfo() {
+      const params = {
+        eventType: "getDeviceInfo",
+        sn: this.sn,
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 生成随机checkKey
+    getcheckKey() {
+      let arr = new Array;
+      const arr1 = new Array("0","1","2","3","4","5","6","7","8","9");
+      let nonceStr=''
+      for(var i=0; i<8; i++){
+        var n = Math.floor(Math.random()*10);
+        arr[i] = arr1[n] ;
+        nonceStr += arr1[n];
+      }
+      return parseInt(nonceStr);
+    },
+
     setParams() {
       this.floatStatus = !this.floatStatus;
     }

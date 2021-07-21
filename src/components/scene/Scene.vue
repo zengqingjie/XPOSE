@@ -521,6 +521,10 @@ export default {
       }
       allcrops.push(clips);
       allcrops.push(clips);
+      allcrops.push(clips);
+      allcrops.push(clips);
+      allcrops.push(clips);
+      allcrops.push(clips);
       this.clipList = allcrops.flat();
     },
     typeSelect(num) {

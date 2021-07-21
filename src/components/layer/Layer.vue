@@ -1168,6 +1168,10 @@ export default {
       }
       allcrops.push(clips);
       allcrops.push(clips);
+      allcrops.push(clips);
+      allcrops.push(clips);
+      allcrops.push(clips);
+      allcrops.push(clips);
       console.log(allcrops.flat());
       this.clipList = allcrops.flat();
     },

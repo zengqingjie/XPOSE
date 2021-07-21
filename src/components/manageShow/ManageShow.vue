@@ -385,7 +385,11 @@ export default {
       if((result.code == 200) && (result.data.eventType == 'readContainerMsg')) {
         console.log('容器列表',result);
       }
-      
+      // 创建容器成功
+      if((result.code == 200) && (result.data.eventType == 'createContainer')) {
+        that.$store.commit('setContainerId', that.$store.state.containerId + 1); // 创建成功，容器id修改成下个容器可用id
+        console.log('容器创建成功',result);
+      }
     }
   },
   methods: {
@@ -400,6 +404,7 @@ export default {
       customActive.Draggable('.template-list .template-item', {
         connectToSortable: '.container-view',
       });
+      
       // 创建容器
       const that = this;
       customActive.Droppable('.container-view', {
@@ -407,8 +412,8 @@ export default {
       }, {
         drop: function(event, ui) {
           const templateId = $(ui.draggable[0]).attr('id');
-          let item = that.templateList.find( value => value.id == templateId ); // 拉出的模板信息
-          // 容器id处理
+          let templateObj = that.templateList.find( value => value.id == templateId ); // 拉出的模板信息
+          // 容器id插空处理
           let containerIdArr = [];
           that.containerList.map(cItem => containerIdArr.push(cItem.id)); // 已创建容器id集合
           const maxId = Math.max(...containerIdArr);
@@ -418,19 +423,26 @@ export default {
             sortIdList.push(i);
           }
           if(maxId >= 0) {
-            sortIdList.some(index => {
-              if(index == maxId) {
+            sortIdList.some(item => {
+              if(item == maxId) {
                 that.$store.commit('setContainerId', maxId + 1);
                 return true;
-              } else if(!containerIdArr.includes(index)) {
-                that.$store.commit('setContainerId', index);
+              } else if(!containerIdArr.includes(item)) {
+                that.$store.commit('setContainerId', item);
                 return true;
               }
-            })
+            });
           } else {
             that.$store.commit('setContainerId', 0);
           }
+          // 拉出容器所放位置
+          const offset = {
+            top: event.clientY - 66,
+            left: event.clientX - 88
+          }
           // 根据分辨率设置基础宽高
+          let separationW = 0;
+          let separationH = 0;
           switch(that.separation) {
             case 10:
               separationW = 1920;
@@ -441,132 +453,129 @@ export default {
               separationH = 2160;
               break;
           }
-          // 拉出容器所放位置
-          const offset = {
-            top: event.clientY - 66,
-            left: event.clientX - 88
+          const containerW = templateObj.col * separationW;
+          const containerH = templateObj.row * separationH;
+
+          let mode = '';
+          that.modelList.some(item => {
+            if (item.id === that.modelVal) {
+              mode = item.type;
+            }
+          });
+
+          const params = {
+            eventType: "createContainer", // 设置1个或多个容器
+            count: 1, // 容器数量，最大不超过输出口数量，
+            container: [ 
+              {
+                id: that.$store.state.containerId, // 容器id
+                posX: offset.left, // 容器左上角横坐标
+                posY: offset.top, // 容器左上角纵坐标
+                sizeW: containerW, // 容器总宽
+                sizeH: containerH, // 容器总高
+                mode, // 容器类型
+                modeEnum: that.modelVal, // 容器类型id
+              }
+            ],
+            sessionID: that.sessionId,
+            checkKey: that.getcheckKey()
+          }
+          //websocket 准备
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(params));
           }
 
-
-          if (item) {
-            let dList = vm.displayerList.filter(ditem => ditem.status == false); // 过滤出可用的显示器
-            // 向ws发送添加容器信息
-            let separationW = 0;
-            let separationH = 0;
-            const containerW = item.col * separationW;
-            const containerH = item.row * separationH;
-            let modeType = '';
-            vm.modelList.some(item => {
-              if (item.id === vm.modelVal) {
-                modeType = item.type;
-              }
-            });
-
+          // if (item) {
+          //   let dList = vm.displayerList.filter(ditem => ditem.status == false); // 过滤出可用的显示器
+          //   // 向ws发送添加容器信息
+            
+            
+            
            
 
-            const containerMsg = {
-              eventType: "createContainer", // 设置1个或多个容器
-              count: 1, // 容器数量，最大不超过输出口数量，
-              container: [ 
-                {
-                  id: vm.$store.state.containerId, // 容器索引
-                  posX: offset.left, // 容器左上角横坐标
-                  posY: offset.top, // 容器左上角纵坐标
-                  sizeW: containerW, // 容器总宽
-                  sizeH: containerH, // 容器总高
-                  mode: modeType, // 容器类型
-                  modeEnum: vm.modelVal, // 容器类型id
-                }
-              ],
-              sessionID: vm.sessionId,
-              checkKey: vm.getcheckKey('createContainer')
-            }
-            //websocket 准备
-            if (window.webSocket && window.webSocket.readyState == 1) {
-              window.webSocket.send(JSON.stringify(containerMsg));
-            }
-            window.webSocket.onmessage = function(res) {
-              const result = JSON.parse(res.data);
-              if(result.code == 200 && result.data.eventType == 'createContainer' && result.checkKey == vm.createContainerCheckKey) {
-                // 创建完成更新视图
-                if(vm.devideChecked) {
-                  const createNum = item.row * item.col;
-                  let posArr = [];
-                  let outputList = [];
-                  for (let i = 1; i <= item.row; i++) {
-                    for (let j = 1; j <= item.col; j++) {
-                      let position = { left: (j - 1) * separationW, top: (i - 1) * separationH };
-                      posArr.push(position);
-                    }
-                  }
-                  for (let index = 0; index < (createNum <= dList.length ? createNum : dList.length); index++) {
-                    let display = {
-                      id: dList[index].id,
-                      posX: posArr[index].left,
-                      posY: posArr[index].top,
-                      sizeW: 1920,
-                      sizeH: 1080,
-                      containerId: vm.$store.state.containerId,
-                      outputType: dList[index].outputType,
-                      outputTypeEnum: dList[index].outputTypeEnum
-                    };
-                    outputList.push(display);
-                  }
+            
+          //   window.webSocket.onmessage = function(res) {
+          //     const result = JSON.parse(res.data);
+          //     if(result.code == 200 && result.data.eventType == 'createContainer' && result.checkKey == vm.createContainerCheckKey) {
+          //       // 创建完成更新视图
+          //       if(vm.devideChecked) {
+          //         const createNum = item.row * item.col;
+          //         let posArr = [];
+          //         let outputList = [];
+          //         for (let i = 1; i <= item.row; i++) {
+          //           for (let j = 1; j <= item.col; j++) {
+          //             let position = { left: (j - 1) * separationW, top: (i - 1) * separationH };
+          //             posArr.push(position);
+          //           }
+          //         }
+          //         for (let index = 0; index < (createNum <= dList.length ? createNum : dList.length); index++) {
+          //           let display = {
+          //             id: dList[index].id,
+          //             posX: posArr[index].left,
+          //             posY: posArr[index].top,
+          //             sizeW: 1920,
+          //             sizeH: 1080,
+          //             containerId: vm.$store.state.containerId,
+          //             outputType: dList[index].outputType,
+          //             outputTypeEnum: dList[index].outputTypeEnum
+          //           };
+          //           outputList.push(display);
+          //         }
 
-                  const outputMsg = {
-                    eventType: "setOutputMsg",
-                    count: createNum <= dList.length ? createNum : dList.length,
-                    output: outputList,
-                    sessionID: vm.sessionId,
-                    checkKey: vm.getcheckKey('setOutputMsg')
-                  }
-                  window.webSocket.send(JSON.stringify(outputMsg));
-                  window.webSocket.onmessage = function(res) {
-                    const outputRes = JSON.parse(res.data);
-                    if((outputRes.code == 200 && outputRes.data.eventType == 'setOutputMsg' && outputRes.checkKey == vm.setOutputMsgCheckKey) || outputRes.code == 6) {
-                      let windows = dataFormat.addContainer(vm.$store.state.containerId, vm.devideChecked, offset, item, dList, posArr, vm.separation, containerW, containerH);
-                      vm.selectedContainer = dataFormat.curWindow;
-                      vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
-                      vm.$store.commit('setContainerId', vm.$store.state.containerId + 1);
-                      vm.displayerList.map(item => {
-                        if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
-                          item.status = true;
-                        }
-                      }); // 生成容器后改变显示器是否可用状态
-                      vm.$store.commit('setDisplayerList', vm.displayerList);
-                      vm.$nextTick(() => {
-                        vm.draggableInit();
-                        vm.sortableInit();
-                        vm.droppableInit();
-                        // vm.resizableInit();
-                        vm.toggleInit();
-                      });
-                    }
-                  }
-                }
-                else {
-                  let windows = dataFormat.addContainer(vm.$store.state.containerId, vm.devideChecked, offset, item, dList);
-                  vm.selectedContainer = dataFormat.curWindow;
-                  vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
-                  vm.$store.commit('setContainerId', vm.$store.state.containerId + 1);
+          //         const outputMsg = {
+          //           eventType: "setOutputMsg",
+          //           count: createNum <= dList.length ? createNum : dList.length,
+          //           output: outputList,
+          //           sessionID: vm.sessionId,
+          //           checkKey: vm.getcheckKey('setOutputMsg')
+          //         }
+          //         window.webSocket.send(JSON.stringify(outputMsg));
+          //         window.webSocket.onmessage = function(res) {
+          //           const outputRes = JSON.parse(res.data);
+          //           if((outputRes.code == 200 && outputRes.data.eventType == 'setOutputMsg' && outputRes.checkKey == vm.setOutputMsgCheckKey) || outputRes.code == 6) {
+          //             let windows = dataFormat.addContainer(vm.$store.state.containerId, vm.devideChecked, offset, item, dList, posArr, vm.separation, containerW, containerH);
+          //             vm.selectedContainer = dataFormat.curWindow;
+          //             vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
+          //             vm.$store.commit('setContainerId', vm.$store.state.containerId + 1);
+          //             vm.displayerList.map(item => {
+          //               if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
+          //                 item.status = true;
+          //               }
+          //             }); // 生成容器后改变显示器是否可用状态
+          //             vm.$store.commit('setDisplayerList', vm.displayerList);
+          //             vm.$nextTick(() => {
+          //               vm.draggableInit();
+          //               vm.sortableInit();
+          //               vm.droppableInit();
+          //               // vm.resizableInit();
+          //               vm.toggleInit();
+          //             });
+          //           }
+          //         }
+          //       }
+          //       else {
+          //         let windows = dataFormat.addContainer(vm.$store.state.containerId, vm.devideChecked, offset, item, dList);
+          //         vm.selectedContainer = dataFormat.curWindow;
+          //         vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
+          //         vm.$store.commit('setContainerId', vm.$store.state.containerId + 1);
         
-                  vm.displayerList.map(item => {
-                    if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
-                      item.status = true;
-                    }
-                  }); // 生成容器后改变显示器是否可用状态
-                  vm.$store.commit('setDisplayerList', vm.displayerList);
-                  vm.$nextTick(() => {
-                    vm.draggableInit();
-                    vm.sortableInit();
-                    vm.droppableInit();
-                    // vm.resizableInit();
-                    vm.toggleInit();
-                  });
-                }
-              }
-            }
-          }
+          //         vm.displayerList.map(item => {
+          //           if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
+          //             item.status = true;
+          //           }
+          //         }); // 生成容器后改变显示器是否可用状态
+          //         vm.$store.commit('setDisplayerList', vm.displayerList);
+          //         vm.$nextTick(() => {
+          //           vm.draggableInit();
+          //           vm.sortableInit();
+          //           vm.droppableInit();
+          //           // vm.resizableInit();
+          //           vm.toggleInit();
+          //         });
+          //       }
+          //     }
+          //   }
+          // }
         }
       });
       this.draggableInit(); // 容器拖拽

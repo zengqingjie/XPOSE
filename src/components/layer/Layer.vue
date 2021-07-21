@@ -1234,6 +1234,9 @@ export default {
         case 76:
           return '3840x2160@60';
           break;
+        case 126:
+          return 'MD_UNDEFINE';
+          break;
         case 127:
           return 'Not Input';
           break;

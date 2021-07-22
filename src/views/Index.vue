@@ -93,10 +93,8 @@ export default {
         that.getDeviceInfo();
       }
       // 获取设备概况
-      if((result.code == 200) && (result.data.eventType == 'getDeviceSN')) {
-        if (result.data.costomInfo && result.data.costomInfo.outputModelInfo) {
-          that.$store.commit('setOutputModelInfo', result.data.costomInfo.outputModelInfo);
-        }
+      if((result.code == 200) && (result.data.eventType == 'getDeviceInfo')) {
+        that.$store.commit('setOutputModelInfo', result.data.costomInfo.outputModelInfo);
       }
     }
   },

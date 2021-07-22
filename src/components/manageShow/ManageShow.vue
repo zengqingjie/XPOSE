@@ -64,7 +64,7 @@
                   :value="item.id">
                 </el-option>
               </el-select>
-              <div class="mar-left"><el-checkbox v-model="devideChecked">显示器</el-checkbox></div>
+              <div class="mar-left"><el-checkbox v-model="outputCheck">显示器</el-checkbox></div>
             </div>
             <div
               class="template-list"
@@ -211,7 +211,7 @@ export default {
         { id: 82, label: '4k' }
       ], // 分辨率列表
       separation: 10, // 分辨率
-      devideChecked: true, // 容器是否创建显示器
+      outputCheck: true, // 容器是否创建显示器
       templateList: [
         { 
           id: '11',
@@ -384,11 +384,26 @@ export default {
       // 获取容器
       if((result.code == 200) && (result.data.eventType == 'readContainerMsg')) {
         console.log('容器列表',result);
+        if (result.data.count > 0) {
+          that.containerList = result.data.container;
+        }
       }
       // 创建容器成功
       if((result.code == 200) && (result.data.eventType == 'createContainer')) {
         that.$store.commit('setContainerId', that.$store.state.containerId + 1); // 创建成功，容器id修改成下个容器可用id
         console.log('容器创建成功',result);
+        // 重新读取容器列表
+        // todo
+        that.readContainerMsg();
+        // 是否填充显示器
+        if(that.outputCheck) {
+          const outputContainerId = (that.$store.state.containerId - 1); // 所创建容器id
+          const outputContainer = that.containerList.find(item => item.containerId == outputContainerId); // 创建的容器
+          console.log(outputContainerId,outputContainer);
+          const containerRow = outputContainer.sizeH / (that.separation == 10 ? 1080 : 2160);
+          const containerCol = outputContainer.sizeW / (that.separation == 10 ? 1920 : 3840);
+          console.log(containerRow, containerCol);
+        }
       }
     }
   },
@@ -415,9 +430,8 @@ export default {
           let templateObj = that.templateList.find( value => value.id == templateId ); // 拉出的模板信息
           // 容器id插空处理
           let containerIdArr = [];
-          that.containerList.map(cItem => containerIdArr.push(cItem.id)); // 已创建容器id集合
+          that.containerList.map(cItem => containerIdArr.push(cItem.containerId)); // 已创建容器id集合
           const maxId = Math.max(...containerIdArr);
-          
           let sortIdList = [];
           for(let i = 0; i <= maxId; i++) {
             sortIdList.push(i);
@@ -484,98 +498,6 @@ export default {
           if (window.webSocket && window.webSocket.readyState == 1) {
             window.webSocket.send(JSON.stringify(params));
           }
-
-          // if (item) {
-          //   let dList = vm.displayerList.filter(ditem => ditem.status == false); // 过滤出可用的显示器
-          //   // 向ws发送添加容器信息
-            
-            
-            
-           
-
-            
-          //   window.webSocket.onmessage = function(res) {
-          //     const result = JSON.parse(res.data);
-          //     if(result.code == 200 && result.data.eventType == 'createContainer' && result.checkKey == vm.createContainerCheckKey) {
-          //       // 创建完成更新视图
-          //       if(vm.devideChecked) {
-          //         const createNum = item.row * item.col;
-          //         let posArr = [];
-          //         let outputList = [];
-          //         for (let i = 1; i <= item.row; i++) {
-          //           for (let j = 1; j <= item.col; j++) {
-          //             let position = { left: (j - 1) * separationW, top: (i - 1) * separationH };
-          //             posArr.push(position);
-          //           }
-          //         }
-          //         for (let index = 0; index < (createNum <= dList.length ? createNum : dList.length); index++) {
-          //           let display = {
-          //             id: dList[index].id,
-          //             posX: posArr[index].left,
-          //             posY: posArr[index].top,
-          //             sizeW: 1920,
-          //             sizeH: 1080,
-          //             containerId: vm.$store.state.containerId,
-          //             outputType: dList[index].outputType,
-          //             outputTypeEnum: dList[index].outputTypeEnum
-          //           };
-          //           outputList.push(display);
-          //         }
-
-          //         const outputMsg = {
-          //           eventType: "setOutputMsg",
-          //           count: createNum <= dList.length ? createNum : dList.length,
-          //           output: outputList,
-          //           sessionID: vm.sessionId,
-          //           checkKey: vm.getcheckKey('setOutputMsg')
-          //         }
-          //         window.webSocket.send(JSON.stringify(outputMsg));
-          //         window.webSocket.onmessage = function(res) {
-          //           const outputRes = JSON.parse(res.data);
-          //           if((outputRes.code == 200 && outputRes.data.eventType == 'setOutputMsg' && outputRes.checkKey == vm.setOutputMsgCheckKey) || outputRes.code == 6) {
-          //             let windows = dataFormat.addContainer(vm.$store.state.containerId, vm.devideChecked, offset, item, dList, posArr, vm.separation, containerW, containerH);
-          //             vm.selectedContainer = dataFormat.curWindow;
-          //             vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
-          //             vm.$store.commit('setContainerId', vm.$store.state.containerId + 1);
-          //             vm.displayerList.map(item => {
-          //               if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
-          //                 item.status = true;
-          //               }
-          //             }); // 生成容器后改变显示器是否可用状态
-          //             vm.$store.commit('setDisplayerList', vm.displayerList);
-          //             vm.$nextTick(() => {
-          //               vm.draggableInit();
-          //               vm.sortableInit();
-          //               vm.droppableInit();
-          //               // vm.resizableInit();
-          //               vm.toggleInit();
-          //             });
-          //           }
-          //         }
-          //       }
-          //       else {
-          //         let windows = dataFormat.addContainer(vm.$store.state.containerId, vm.devideChecked, offset, item, dList);
-          //         vm.selectedContainer = dataFormat.curWindow;
-          //         vm.$store.commit('setContainerList', [...vm.showVessels, windows]);
-          //         vm.$store.commit('setContainerId', vm.$store.state.containerId + 1);
-        
-          //         vm.displayerList.map(item => {
-          //           if(dataFormat.getHasUseDisplayIds().includes(item.id)) {
-          //             item.status = true;
-          //           }
-          //         }); // 生成容器后改变显示器是否可用状态
-          //         vm.$store.commit('setDisplayerList', vm.displayerList);
-          //         vm.$nextTick(() => {
-          //           vm.draggableInit();
-          //           vm.sortableInit();
-          //           vm.droppableInit();
-          //           // vm.resizableInit();
-          //           vm.toggleInit();
-          //         });
-          //       }
-          //     }
-          //   }
-          // }
         }
       });
       this.draggableInit(); // 容器拖拽
@@ -812,6 +734,17 @@ export default {
     readContainerMsg() {
       const params = {
         eventType: "readContainerMsg",
+        checkKey: this.getcheckKey(),
+        sessionID: this.sessionId
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 读取容器中的显示器
+    readOutputMsg() {
+      const params = {
+        eventType: "readOutputMsg",
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId
       }

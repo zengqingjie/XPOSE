@@ -395,15 +395,6 @@ export default {
         // 重新读取容器列表
         // todo
         that.readContainerMsg();
-        // 是否填充显示器
-        if(that.outputCheck) {
-          const outputContainerId = (that.$store.state.containerId - 1); // 所创建容器id
-          const outputContainer = that.containerList.find(item => item.containerId == outputContainerId); // 创建的容器
-          console.log(outputContainerId,outputContainer);
-          const containerRow = outputContainer.sizeH / (that.separation == 10 ? 1080 : 2160);
-          const containerCol = outputContainer.sizeW / (that.separation == 10 ? 1920 : 3840);
-          console.log(containerRow, containerCol);
-        }
       }
     }
   },
@@ -493,6 +484,20 @@ export default {
             ],
             sessionID: that.sessionId,
             checkKey: that.getcheckKey()
+          }
+          // 是否填充显示器
+          if(that.outputCheck) {
+            const containerRow = containerH / (that.separation == 10 ? 1080 : 2160);
+            const containerCol = containerW / (that.separation == 10 ? 1920 : 3840);
+            let outputPosList = [];
+            const baseW = that.separation == 10 ? 1920 : 3840;
+            const baseH = that.separation == 10 ? 1080 : 2160;
+            for(let i = 0; i < containerRow; i++) {
+              for(let j = 0; j < containerCol; j++) {
+                outputPosList.push({posX: j * baseW, posY: i * baseH});
+              }
+            }
+            console.log(outputPosList);
           }
           //websocket 准备
           if (window.webSocket && window.webSocket.readyState == 1) {
@@ -734,17 +739,6 @@ export default {
     readContainerMsg() {
       const params = {
         eventType: "readContainerMsg",
-        checkKey: this.getcheckKey(),
-        sessionID: this.sessionId
-      }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
-      }
-    },
-    // 读取容器中的显示器
-    readOutputMsg() {
-      const params = {
-        eventType: "readOutputMsg",
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId
       }

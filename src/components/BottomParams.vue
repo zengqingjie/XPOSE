@@ -56,21 +56,20 @@ export default {
       this.displayInfo = null;
       this.signalInfo = null;
       if (this.display) {
-        const separationBase = this.display.separation == 10 ? 1 : 2; // 2k || 4k
         this.displayInfo = this.display;
-        this.devideName = '显示器' + this.display.displayId;
-        this.dWidth = this.display.sizeW * separationBase;
-        this.dHeight = this.display.sizeH * separationBase;
-        this.hNum = this.display.realPos.left;
-        this.vNum = this.display.realPos.top;
+        this.devideName = '显示器' + this.display.id;
+        this.dWidth = this.display.sizeW;
+        this.dHeight = this.display.sizeH;
+        this.hNum = this.display.posX;
+        this.vNum = this.display.posY;
       }
       if (this.signal) {
         this.signalInfo = this.signal;
         this.devideName = '信号' + this.signal.inputPort;
         this.dWidth = this.signal.sizeW;
         this.dHeight = this.signal.sizeH;
-        this.hNum = this.signal.realPos.left;
-        this.vNum = this.signal.realPos.top;
+        this.hNum = this.signal.posX;
+        this.vNum = this.signal.posY;
       }
     },
     changInput(e, type) {
@@ -96,13 +95,10 @@ export default {
       let display = this.displayInfo;
       let signal = this.signalInfo;
       if(display) {
-        const separationBase = display.separation == 10 ? 1 : 2; // 2k || 4k
-        display.sizeW = this.dWidth ? this.dWidth / separationBase : display.sizeW;
-        display.sizeH = this.dHeight ? this.dHeight / separationBase : display.sizeH;
-        display.realPos.left = this.hNum ? this.hNum : display.realPos.left;
-        display.realPos.top = this.vNum ? this.vNum : display.realPos.top;
-        display.position.left = this.hNum ? (this.hNum / 10 / separationBase) : display.position.left;
-        display.position.top = this.vNum ?  (this.vNum / 10 / separationBase) : display.position.top;
+        display.sizeW = this.dWidth ? this.dWidth  : display.sizeW;
+        display.sizeH = this.dHeight ? this.dHeight : display.sizeH;
+        display.posX = this.hNum ? this.hNum : display.posX;
+        display.posY = this.vNum ? this.vNum : display.posY;
         this.$root.bus.$emit('setDisplayInfo', display);
       }
       if (signal) {
@@ -117,14 +113,17 @@ export default {
     }
   },
   watch: {
-    display() {
-      this.dataChange();
-    },
-    signal: {
+    display: {
+      deep: true,
       handler() {
         this.dataChange();
       },
-      deep: true
+    },
+    signal: {
+      deep: true,
+      handler() {
+        this.dataChange();
+      }
     }
   }
 }

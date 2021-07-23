@@ -6,6 +6,8 @@
     :id="outputItem.id"
     :containerId="outputItem.containerId"
     v-if="outputItem"
+    @mouseover="mouseEvent(true)"
+    @mouseout="mouseEvent(false)"
     @click="clickDisplayer(outputItem)"
   >
     <div>显示器{{ outputItem.id + 1}}</div>
@@ -13,11 +15,12 @@
     <div><span>w:{{outputItem.sizeW}}</span><span>h:{{outputItem.sizeH}}</span></div>
     <div>{{outputItem.outputType}}</div>
     <span
+      v-show="deleteIcon"
       class="delete-displayer"
       @click.stop="deleteDisplayer(outputItem.id, outputItem.containerId)"
       >x</span
     >
-    <div class="border-view" v-if="deviceId == outputItem.id"></div>
+    <!-- <div class="border-view" v-if="deviceId == outputItem.id"></div> -->
   </div>
 </template>
 
@@ -33,7 +36,9 @@ export default {
     },
   },
   data() {
-    return {};
+    return {
+      deleteIcon: false
+    };
   },
   mounted() {
   },
@@ -49,6 +54,9 @@ export default {
     }
   },
   methods: {
+    mouseEvent(boolean) {
+      this.deleteIcon = boolean;
+    },
     // 删除单个显示器
     deleteDisplayer(outputId, cId) {
       const data = {
@@ -74,7 +82,6 @@ export default {
   box-sizing: border-box;
   font-size: 12px;
   .delete-displayer {
-    display: none;
     position: absolute;
     top: 5px;
     right: 5px;
@@ -99,6 +106,6 @@ export default {
   }
 }
 .border-style {
-  border: none;
+  border: 3px solid rgb(0, 252, 255);
 }
 </style>

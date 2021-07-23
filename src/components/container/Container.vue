@@ -9,8 +9,8 @@
     <div class="container-header">
       <span>{{ cItem.containerId + 1 }}--(W:{{ cItem.sizeW }} H:{{ cItem.sizeH }})</span>
       <div class="right-view">
-        <div @click="zoom(cItem, -1)">-</div>
-        <div @click="zoom(cItem, 1)">+</div>
+        <!-- <div @click="zoom(cItem, -1)">-</div>
+        <div @click="zoom(cItem, 1)">+</div> -->
         <div
           class="delete-container"
           @click="deleteContainerItem(cItem)"
@@ -64,8 +64,8 @@ export default {
       return {
         width: this.cItem.sizeW / 10 + 'px',
         height: this.cItem.sizeH / 10 + 24 + 'px',
-        top: this.cItem.posX + "px",
-        left: this.cItem.posY + "px",
+        top: this.cItem.posY + "px",
+        left: this.cItem.posX + "px",
       };
     },
   },

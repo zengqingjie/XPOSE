@@ -2,10 +2,9 @@
   <div
     class="container-component"
     v-if="cItem"
-    :style="setContainerStyle"
     @mousedown="emitSetContainer(cItem)"
-    :id="cItem.id"
     :containerId="cItem.containerId"
+    :style="setContainerStyle"
   >
     <div class="container-header">
       <span>{{ cItem.containerId + 1 }}--(W:{{ cItem.sizeW }} H:{{ cItem.sizeH }})</span>
@@ -13,7 +12,6 @@
         <div @click="zoom(cItem, -1)">-</div>
         <div @click="zoom(cItem, 1)">+</div>
         <div
-          v-longpress="deleteContainer"
           class="delete-container"
           @click="deleteContainerItem(cItem)"
         >
@@ -21,36 +19,35 @@
         </div>
       </div>
     </div>
-    <div class="displayer-box" :parentId="cItem.id" :containerId="cItem.containerId">
+    <div
+      class="displayer-box" 
+      :containerId="cItem.containerId"
+    >
       <Displayer
-        v-for="displayer in cItem.content"
-        :key="displayer.id"
-        :dMsg="displayer"
+        v-for="outputItem in output"
+        :key="outputItem.id"
+        :outputItem="outputItem"
         :deviceId="deviceId"
-        :size="setDisplayerItem"
-        :positionZoom="cItem.positionZoom"
-        pisition="true"
       />
     </div>
   </div>
 </template>
 
 <script>
-import { dataFormat } from '../../utils/dataFormat';
-import Displayer from "@/components/displayer/Displayer";
 import $ from "jquery";
+import Displayer from "@/components/displayer/Displayer";
 export default {
   props: {
     cItem: {
       type: Object,
     },
-    index: {
-      type: Number | String,
-      default: -1,
-    },
     deviceId: {
       type: Number | String,
       default: ''
+    },
+    output: {
+      type: Array,
+      default: () => []
     }
   },
   components: {
@@ -58,34 +55,24 @@ export default {
   },
   data() {
     return {
+      outputList: [],
     };
   },
   computed: {
     // 容器尺寸
     setContainerStyle() {
-      const { position } = this.cItem;
-      const { col, row, wBase, hBase, zoom } = this.cItem.customFeature;
-      const width = col * wBase * zoom.xRadio + "px";
-      const height = row * hBase * zoom.yRadio + 24 + "px";
       return {
-        width: width,
-        height: height,
-        top: position.top ? position.top + "px" : 0,
-        left: position.left ? position.left + "px" : 0,
-      };
-    },
-    setDisplayerItem() {
-      const { col, row, wBase, hBase, zoom } = this.cItem.customFeature;
-      const width = wBase;
-      const height = hBase;
-      return {
-        width: width * zoom.xRadio,
-        height: height * zoom.yRadio,
-        zoom: this.cItem.customFeature.zoom
+        width: this.cItem.sizeW / 10 + 'px',
+        height: this.cItem.sizeH / 10 + 24 + 'px',
+        top: this.cItem.posX + "px",
+        left: this.cItem.posY + "px",
       };
     },
   },
+  created() {},
+  mounted() {},
   methods: {
+    
     // 容器缩放
     zoom(container, zoom) {
       this.$root.bus.$emit('setZoom', {container, zoom});
@@ -95,34 +82,27 @@ export default {
     },
     // 点击删除容器
     deleteContainerItem(obj) {
-      const vm = this;
-      vm.$confirm("是否删除该容器?", "提示", {
+      const that = this;
+      that.$confirm("是否删除该容器?", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning",
       })
         .then(() => {
-          vm.$root.bus.$emit("deleteContainer", obj);
+          that.$root.bus.$emit("deleteContainer", obj);
         })
         .catch(() => {
-          vm.$message({
+          that.$message({
             type: "info",
             message: "已取消删除",
           });
         });
     },
-    // 长按删除容器
-    deleteContainer() {
-
-    },
-    
-  },
-  created() {},
-  mounted() {
-    
   },
   watch: {
+    
   },
+  
 };
 </script>
 

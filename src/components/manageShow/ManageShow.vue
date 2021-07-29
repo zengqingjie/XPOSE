@@ -321,11 +321,6 @@ export default {
       hBorder: '',
       inintPositionList: [],
       sessionId: '',
-      readOutputListCheckKey: '', // 获取显示器列表随机key
-      createContainerCheckKey: '', // 创建容器随机key
-      setOutputMsgCheckKey: '', // 设置显示器随机key
-      rmContainerCheckKey: '', // 删除容器随机key
-      rmOutputFromContainerCheckKey: '', // 删除容器中的显示器随机key
       displayObj: null, // 点击显示器传递的显示器对象
     }
   },
@@ -347,37 +342,15 @@ export default {
   mounted() {
     this.init(); // 初始化
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId")); // 会话id
-    this.readOutputList(); // 读取输出口列表
     this.readContainerMsg(); // 读取容器配置信息
-
+    this.readOutputList(); // 读取输出口列表
+    
+      
+    this.sortableInit(); // 显示器在容器内拖拽
     // websocket 接收到的消息
     const that = this;
     window.webSocket.onmessage = function(res) {
       const result = JSON.parse(res.data);
-      // 获取显示器（输出口）列表
-      if((result.code == 200) && (result.data.eventType == 'readOutputList')) {
-        // x8设备处理
-        let dataList = [];
-        for (let i = 0; i < 6; i++) {
-          dataList.push(result.data.output.slice(4*i , 4*(i+1)));
-        }
-        let outputPorts = dataList.filter((item, index) => that.outputModelInfo[index].hasOutputBoard);
-        outputPorts.map((item) => {
-          item.splice(2, 2)
-        });
-        that.outputList = outputPorts.flat();
-        // 同步设置数据
-        if(that.displayObj) {
-          that.displayObj = that.outputList.filter(item => item.id == that.displayObj.id);
-        }
-        that.$nextTick(() => {
-          customActive.Draggable('.displayer .displayer-item', {
-            connectToSortable : ".displayer-view",
-            handle: '.icon-view',
-            refreshPositions: true
-          });
-        });
-      }
       // 获取容器
       if((result.code == 200) && (result.data.eventType == 'readContainerMsg')) {
         console.log('容器列表',result);
@@ -402,13 +375,36 @@ export default {
           that.droppableInit(); // 容器放置
         });
       }
+      // 获取显示器（输出口）列表
+      if((result.code == 200) && (result.data.eventType == 'readOutputList')) {
+        // x8设备处理
+        let dataList = [];
+        for (let i = 0; i < 6; i++) {
+          dataList.push(result.data.output.slice(4*i , 4*(i+1)));
+        }
+        let outputPorts = dataList.filter((item, index) => that.outputModelInfo[index].hasOutputBoard);
+        outputPorts.map((item) => {
+          item.splice(2, 2)
+        });
+        that.outputList = outputPorts.flat();
+        // 同步设置数据
+        if(that.displayObj) {
+          that.displayObj = that.outputList.filter(item => item.id == that.displayObj.id)[0];
+        }
+        that.$nextTick(() => {
+          customActive.Draggable('.displayer .displayer-item', {
+            connectToSortable : ".displayer-view",
+            handle: '.icon-view',
+            refreshPositions: true
+          });
+          that.droppableInit(); // 容器放置
+          that.sortableInit(); // 显示器在容器内拖拽
+        });
+      }
       // 设置显示器成功
       if((result.code == 200) && (result.data.eventType == 'setOutputMsg')) {
         console.log('显示器创建成功',result);
         that.readOutputList();
-        that.$nextTick(() => {
-          that.sortableInit(); // 显示器在容器内拖拽
-        })
       }
       // 删除容器成功
       if((result.code == 200) && (result.data.eventType == 'rmContainer')) {
@@ -592,6 +588,7 @@ export default {
         }
         if (window.webSocket && window.webSocket.readyState == 1) {
           window.webSocket.send(JSON.stringify(params));
+          that.displayObj = null;
         }
       });
 
@@ -652,7 +649,6 @@ export default {
     },
     // 获取显示器列表
     readOutputList() {
-      const _this = this;
       const randoms = this.getcheckKey();
       const params = {
         eventType: "readOutputList",
@@ -669,7 +665,7 @@ export default {
       return list;
     },
     
-    // 点击设置，修改显示数据
+    // 右侧 -- 点击设置，修改显示器数据
     setDisplayProp() {
       let display = this.displayObj;
       if(display) {
@@ -727,23 +723,6 @@ export default {
         arr[i] = arr1[n] ;
         nonceStr += arr1[n];
       }
-      switch (type) {
-        case 'createContainer': // 创建容器
-          this.createContainerCheckKey =  parseInt(nonceStr);
-          break;
-        case 'readOutputList':
-          this.readOutputListCheckKey = parseInt(nonceStr);
-          break;
-        case 'setOutputMsg':
-          this.setOutputMsgCheckKey = parseInt(nonceStr);
-          break;
-        case 'rmContainer':
-          this.rmContainerCheckKey = parseInt(nonceStr);
-          break;
-        case 'rmOutputFromContainer':
-          this.rmOutputFromContainerCheckKey = parseInt(nonceStr);
-          break;
-      }
       return parseInt(nonceStr);
     },
     // 容器参数类型切换
@@ -775,88 +754,6 @@ export default {
     displayerClick(obj) {
       if (obj.status == true) return;
       this.clickItemId = obj.id;
-    },
-    
-    resizableInit() {
-      let vm = this;
-      $('.container-component').resizable({
-        minWidth: 192,
-        minHeight: 108,
-        aspectRatio: true,
-        start: function(event, ui) {
-          let container = dataFormat.getWidget($(this).attr('id'));
-          let displayList = container.content || [];
-          console.log($(this).width(),$(this).height());
-          let resizeWidth = $(this).width();
-          let resizeHeight = $(this).height();
-          displayList.forEach(item => {
-            item.setPositionZoom({
-              w: resizeWidth,
-              h: resizeHeight
-            })
-          })
-        },
-        resize: function(event, ui) {
-          const { size } = ui;
-          let container = dataFormat.getWidget($(this).attr('id'));
-          let displayList = container.content || [];
-          let resizeWidth = $(this).width();
-          let resizeHeight = $(this).height();
-          displayList.forEach(item => {
-            item.resetPosition({
-              w: resizeWidth,
-              h: resizeHeight
-            })
-          })
-          const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
-          zoom.xRadio = size.width / (wBase * col);
-          zoom.yRadio = (size.height - 24) / (hBase * row);
-          container.content.some(item => {
-            item.customFeature.zoom.xRadio = zoom.xRadio;
-            item.customFeature.zoom.yRadio = zoom.yRadio;
-            dataFormat.setWidget(item);
-          })
-          dataFormat.setWidget(container);
-          let list = vm.containerList;
-          list.some(item => {
-            if (item.id === container.id) {
-              Object.assign(item, container);
-              return true;
-            }
-          });
-          vm.$store.commit('setContainerList',list);
-        },
-        stop: function(event, ui) {
-          const { size } = ui;
-          let container = dataFormat.getWidget($(this).attr('id'));
-          let displayList = container.content || [];
-          let resizeWidth = $(this).width();
-          let resizeHeight = $(this).height();
-          displayList.forEach(item => {
-            item.resetPosition({
-              w: resizeWidth,
-              h: resizeHeight
-            })
-          })
-          const { wBase, hBase, templateVal, zoom, col, row } = container.customFeature;
-          zoom.xRadio = size.width / (wBase * col);
-          zoom.yRadio = (size.height - 24) / (hBase * row);
-          container.content.some(item => {
-            item.customFeature.zoom.xRadio = zoom.xRadio;
-            item.customFeature.zoom.yRadio = zoom.yRadio;
-            dataFormat.setWidget(item);
-          })
-          dataFormat.setWidget(container);
-          let list = vm.containerList;
-          list.some(item => {
-            if (item.id === container.id) {
-              Object.assign(item, container);
-              return true;
-            }
-          });
-          vm.$store.commit('setContainerList',list);
-        }
-      });
     },
     // 容器移动
     draggableInit() {
@@ -893,179 +790,90 @@ export default {
         }
       })
     },
+
     // 容器放置
     droppableInit() {
-      const vm = this;
+      const that = this;
       $('.displayer-box, .displayer-view').droppable({
         accept: '.displayer-item',
         greedy: true,
         over: function() {},
-        drop: function(event, ui){
-          const id = $(this).attr('id');
+        drop: function(event, ui) {
+          console.log($(this));
           const containerId = $(this).attr('containerId');
-          const targetId = $(ui.draggable[0]).attr('id');
-          let container = vm.containerList.find(cItem => cItem.containerId == containerId);
-          const separationBase = vm.separation == 10 ? 1 : 2;
+          const outputId = $(ui.draggable[0]).attr('id'); // 被拖出的显示器id
+          let container = that.containerList.find(cItem => cItem.containerId == containerId);
           // 目标显示器
-          let targetObj = vm.outputList.find(
-            item => item.id == targetId
-          );
-          // 放置在显示器容器上新增显示器
+          let outputObj = that.outputList.find(item => item.id == outputId);
+          // 放置在容器上新增显示器
           if ($(this).hasClass('displayer-box')) {
-            const uiLeft = event.clientX - 88 - container.position.left - $(this)[0].offsetLeft;
-            const uiTop = event.clientY - 64 - container.position.top - $(this)[0].offsetTop;
+            console.log(111);
+            const outputPosX = event.clientX - 88 - container.posX - $(this)[0].offsetLeft;
+            const outputPosY = event.clientY - 66 - container.posY - $(this)[0].offsetTop;
             const display = {
-              id: targetObj.id,
-              posX: Math.round(uiLeft * 10) * separationBase,
-              posY: uiTop * 10 * separationBase,
-              sizeW: 1920,
-              sizeH: 1080,
+              id: outputObj.id,
+              posX: outputPosX * 10,
+              posY: outputPosY * 10,
+              sizeW: outputObj.sizeW,
+              sizeH: outputObj.sizeH,
               containerId: container.containerId,
-              outputType: targetObj.outputType,
-              outputTypeEnum: targetObj.outputTypeEnum
+              outputType: outputObj.outputType,
+              outputTypeEnum: outputObj.outputTypeEnum
             };
-            const outputMsg = {
+            const params = {
               eventType: "setOutputMsg",
               count: 1,
               output: [display],
-              sessionID: vm.sessionId,
-              checkKey: vm.getcheckKey('setOutputMsg')
-            }
-            window.webSocket.send(JSON.stringify(outputMsg));
-            
-            window.webSocket.onmessage = function(res) {
-              const outputRes = JSON.parse(res.data);
-              if(outputRes.code == 200 && outputRes.data.eventType == 'setOutputMsg' && outputRes.checkKey == vm.setOutputMsgCheckKey) {
-                console.log('添加显示器');
-                // 创建新的显示器
-                let newDisplay = dataFormat.addWidget('display', {
-                  parentId: container.containerId,
-                  displayId: targetObj.id,
-                  name: targetObj.outputType,
-                  separation: vm.separation,
-                  signalNum: 2,
-                  sizeW: 1920,
-                  sizeH: 1080,
-                  containerId: container.containerId,
-                });
-                newDisplay.position = {
-                  top: uiTop,
-                  left: uiLeft
-                }
-                newDisplay.realPos = {
-                  left: Math.round(newDisplay.position.left * 10),
-                  top: newDisplay.position.top * 10
-                }
-                container.content.push(newDisplay);
-                vm.containerList.map(cItem => {
-                  if(cItem.id == containerId) {
-                    Object.assign(cItem, container);
-                  }
-                })
-                vm.$store.dispatch('setContainerList', vm.containerList);
-                vm.outputList.forEach(item => {
-                  if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
-                    item.status = true;
-                  } else {
-                    item.status = false;
-                  }
-                });
-                vm.$store.dispatch('setDisplayerList', vm.outputList);
-                vm.$forceUpdate();
-                vm.$nextTick(() => {
-                  vm.draggableInit();
-                  vm.sortableInit();
-                  vm.droppableInit();
-                  // vm.resizableInit();
-                })
-              }
+              sessionID: that.sessionId,
+              checkKey: that.getcheckKey()
             }
 
+            if (window.webSocket && window.webSocket.readyState == 1) {
+              window.webSocket.send(JSON.stringify(params));
+            }
           }
+          // 放置在显示器上，替换显示器
           if ($(this).hasClass('displayer-view')) {
-            let container = vm.containerList.find(cItem => cItem.containerId == containerId);
-            // 被放置的显示器
-            const displayer = container.content.find(dItem => dItem.displayId == $(this).attr('displayerId'));
-            console.log(displayer);
-            const { wBase, hBase, zoom, col, row } = container.customFeature;
-            const maxX = container.position.left + col * wBase * zoom.xRadio;
-            const maxY = container.position.top + 24 + row * hBase * zoom.yRadio;
-            const safeAreaX = [container.position.left, maxX];
-            const safeAreaY = [container.position.top, maxY];
+            console.log(222);
+            const oldOutput = that.outputList.find(dItem => dItem.id == $(this).attr('id')); // 被放置的显示器
+            const maxX = container.posX + container.sizeW;
+            const maxY = container.posY + container.sizeH + 24; // + 24 为容器头部高度
+            const safeAreaX = [container.posX, maxX]; // 容器
+            const safeAreaY = [container.posY, maxY];
             const droppleX = event.clientX - 88;
             const droppleY = event.clientY - 66;
             if((droppleX >= safeAreaX[0] && droppleX <= safeAreaX[1]) && (droppleY >= safeAreaY[0] && droppleY <= safeAreaY[1])) {
               
               const display = {
-                id: targetObj.id,
-                posX: displayer.realPos.left,
-                posY: displayer.realPos.top,
-                sizeW: 1920,
-                sizeH: 1080,
+                id: outputObj.id,
+                posX: oldOutput.posX,
+                posY: oldOutput.posY,
+                sizeW: outputObj.sizeW,
+                sizeH: outputObj.sizeH,
                 containerId: container.containerId,
-                outputType: targetObj.outputType,
-                outputTypeEnum: targetObj.outputTypeEnum
+                outputType: outputObj.outputType,
+                outputTypeEnum: outputObj.outputTypeEnum
               };
-              const deleteDisp = {
-                id: displayer.displayId,
-                posX: displayer.realPos.left,
-                posY: displayer.realPos.top,
-                sizeW: displayer.sizeW,
-                sizeH: displayer.sizeH,
+              const deleteOutput = {
+                id: oldOutput.id,
+                posX: oldOutput.posX,
+                posY: oldOutput.posY,
+                sizeW: oldOutput.sizeW,
+                sizeH: oldOutput.sizeH,
                 containerId: 0xff,
-                outputType: displayer.outputType,
-                outputTypeEnum: displayer.outputTypeEnum
+                outputType: oldOutput.outputType,
+                outputTypeEnum: oldOutput.outputTypeEnum
               }
-              const outputMsg = {
+              const params = {
                 eventType: "setOutputMsg",
                 count: 2,
-                output: [display, deleteDisp],
-                sessionID: vm.sessionId,
-                checkKey: vm.getcheckKey('setOutputMsg')
+                output: [display, deleteOutput],
+                sessionID: that.sessionId,
+                checkKey: that.getcheckKey()
               }
-              window.webSocket.send(JSON.stringify(outputMsg));
-              
-              window.webSocket.onmessage = function(res) {
-                const outputRes = JSON.parse(res.data);
-                if(outputRes.code == 200 && outputRes.data.eventType == 'setOutputMsg' && outputRes.checkKey == vm.setOutputMsgCheckKey) {
-                  // 创建新的显示器
-                  let newDisplay = dataFormat.addWidget('display', {
-                    parentId: displayer.containerId,
-                    displayId: targetObj.id,
-                    name: targetObj.outputType,
-                    separation: vm.separation,
-                    sizeW: 1920,
-                    sizeH: 1080,
-                    containerId: container.containerId,
-                  });
-                  newDisplay.position = displayer.position;
-                  newDisplay.realPos = displayer.realPos;
-                  container.content.forEach((item, index) => {
-                    if(item.id == displayer.id) {
-                      container.content.splice(index, 1, newDisplay);
-                    }
-                  });
-                  dataFormat.replaceDisplay(displayer.id);
-                  vm.containerList.some(cItem => {
-                    if(cItem.containerId == container.containerId) {
-                      Object.assign(cItem, container);
-                    }
-                  })
-                  vm.outputList.forEach(item => {
-                    if (dataFormat.getHasUseDisplayIds().includes(item.id)) {
-                      item.status = true;
-                    } else {
-                      item.status = false;
-                    }
-                  })
-                  vm.$store.dispatch('setDisplayerList', vm.outputList);
-                  vm.$nextTick(() => {
-                    vm.draggableInit();
-                    vm.sortableInit();
-                    vm.droppableInit();
-                    // vm.resizableInit();
-                  })
-                }
+              console.log(params);
+              if (window.webSocket && window.webSocket.readyState == 1) {
+                window.webSocket.send(JSON.stringify(params));
               }
             } else {
               console.log('范围外');
@@ -1076,7 +884,7 @@ export default {
     },
     // 显示器在容器内拖拽
     sortableInit() {
-      const vm = this;
+      const that = this;
       $('.displayer-box .displayer-view').draggable({
         delay: 100,
         snap: ".displayer-box",
@@ -1085,55 +893,33 @@ export default {
         scroll: false,
         zIndex: 100,
         stop: function(event, ui) {
-          let container = vm.containerList.find(cItem => cItem.containerId == $(this).attr('containerId'));// 被拖拽显示器所属容器
-          const targetDid = $(this).attr('displayerId'); // 被拖拽显示器id
-          let Display = container.content.find(dItem => dItem.displayId == targetDid);
-          const separationBase = Display.separation == 10 ? 1 : 2;
-          Display.position = ui.position;
-          Display.realPos = {
-            left: Math.round(Display.position.left * 10 * separationBase),
-            top: Display.position.top * 10 * separationBase
-          }
+          let container = that.containerList.find(cItem => cItem.containerId == $(this).attr('containerId'));// 所在容器
+          const outputId = $(this).attr('id'); // 被拖拽显示器id
+          let outputObj =that.outputList.find(dItem => dItem.id == outputId);
+          outputObj.posX = Math.round(ui.position.left * 10);
+          outputObj.posY = ui.position.top * 10;
           
           // 下发显示器参数
           const display = {
-            id: Display.displayId,
-            posX: Display.realPos.left,
-            posY: Display.realPos.top,
-            sizeW: Display.sizeW,
-            sizeH: Display.sizeH,
+            id: outputObj.id,
+            posX: outputObj.posX,
+            posY: outputObj.posY,
+            sizeW: outputObj.sizeW,
+            sizeH: outputObj.sizeH,
             containerId: container.containerId,
-            outputType: Display.name,
-            outputTypeEnum: Display.outputTypeEnum
+            outputType: outputObj.name,
+            outputTypeEnum: outputObj.outputTypeEnum
           };
 
-          const outputMsg = {
+          const params = {
             eventType: "setOutputMsg",
             count: 1,
             output: [display],
-            sessionID: vm.sessionId,
-            checkKey: vm.getcheckKey('setOutputMsg')
+            sessionID: that.sessionId,
+            checkKey: that.getcheckKey()
           }
-          window.webSocket.send(JSON.stringify(outputMsg));
-
-          window.webSocket.onmessage = function(res) {
-            const outputRes = JSON.parse(res.data);
-            if(outputRes.code == 200 && outputRes.data.eventType == 'setOutputMsg' && outputRes.checkKey == vm.setOutputMsgCheckKey) {
-              dataFormat.setWidget(container);
-              vm.containerList.some(item => {
-                if (item.id === container.id) {
-                  Object.assign(item, container);
-                  return true;
-                }
-              })
-              vm.$store.dispatch('setContainerList', vm.containerList);
-              vm.$nextTick(() => {
-                vm.draggableInit();
-                vm.sortableInit();
-                vm.droppableInit();
-                // vm.resizableInit();
-              });
-            }
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(params));
           }
         }
       })

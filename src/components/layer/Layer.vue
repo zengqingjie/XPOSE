@@ -82,7 +82,7 @@
       </div>
       <div class="layer-cont">
         <div class="container-box">
-          <LayerContainer
+          <!-- <LayerContainer
             v-for="(item, index) in containerList" :key="index"
             :cItem="item"
             :signalLayers="item.signalList"
@@ -96,6 +96,13 @@
               :aoi="aoiData"
               :cId="item.containerId"
             />
+          </LayerContainer> -->
+          <LayerContainer
+            v-for="(item, index) in containerList" :key="index"
+            :cItem="item"
+            :output="setOutputList(item.containerId)"
+            :layerList="setLayerList(item.containerId)"
+          >
           </LayerContainer>
         </div>
       </div>
@@ -120,29 +127,29 @@
             </div>
             <div class="params-style-input">
               <span>透明度</span>
-              <input type="text" v-model="opacityVal">
+              <input type="text" v-model="outsideLayerObj.alpha">
             </div>
             <hr style="border: 1px solid #000">
             <div class="params-style">位置</div>
             <div class="params-style-input">
               <span>X</span>
-              <input type="text" v-model="positionX">
+              <input type="text" v-model="outsideLayerObj.scalePosX">
             </div>
             <div class="params-style-input">
               <span>Y</span>
-              <input type="text" v-model="positionY">
+              <input type="text" v-model="outsideLayerObj.scalePosY">
             </div>
             <div class="params-style-input">
               <span>宽度</span>
-              <input type="text" v-model="sourceW">
+              <input type="text" v-model="outsideLayerObj.scaleSizeW">
             </div>
             <div class="params-style-input">
               <span>高度</span>
-              <input type="text" v-model="sourceH">
+              <input type="text" v-model="outsideLayerObj.scaleSizeH">
             </div>
           </div>
           <div v-if="typeIndex == 1">
-          <div class="params-obj">
+            <div class="params-obj">
               <span>图层序号</span>
               <div>图层 9</div>
             </div>
@@ -168,19 +175,19 @@
             <div class="params-style">位置</div>
             <div class="params-style-input">
               <span>X</span>
-              <input type="text" v-model="clipX">
+              <input type="text" v-model="outsideLayerObj.cropPosX">
             </div>
             <div class="params-style-input">
               <span>Y</span>
-              <input type="text" v-model="clipY">
+              <input type="text" v-model="outsideLayerObj.cropPosY">
             </div>
             <div class="params-style-input">
               <span>宽度</span>
-              <input type="text" v-model="clipW">
+              <input type="text" v-model="outsideLayerObj.cropSizeW">
             </div>
             <div class="params-style-input">
               <span>高度</span>
-              <input type="text" v-model="clipH">
+              <input type="text" v-model="outsideLayerObj.cropSizeH">
             </div>
           </div>
           <div v-if="typeIndex == 2">
@@ -397,26 +404,26 @@
       <div class="bank-view">
         <div class="bank-box">
           <div class="bank-item"
-            v-for="(item, index) in bankList"
+            v-for="(item, index) in sceneList"
             :key="index"
             @click="changeBank(item, index)"
           >
-            <div class="bank-head" :style="{background:item && item.headColor}">bank{{index + 1}}</div>
-            <div class="bank-cont" :style="{borderColor:item && item.headColor}">
+            <div class="bank-head" :style="{background: bankList[index].headColor}">bank{{index + 1}}</div>
+            <div class="bank-cont" :style="{borderColor: bankList[index].headColor}">
               <div
                 class="signalContainer-item"
-                v-for="(cItem) in item.containers"
-                :key="cItem.id"
+                v-for="cItem in containerList"
+                :key="cItem.containerId"
                 :style="setContainerStyle(cItem)"
               >
                 <div
                   class="signal-layer"
-                  v-for="layer in cItem.signalList"
+                  v-for="layer in item.layer"
                   :key="layer.id"
                   :style="setSignalStyle(layer)"
                 ></div>
               </div>
-              <div class="sel-model" v-if="index == bankIndex">
+              <div class="sel-model" v-if="item.id == currentSceneId">
                 <img src="../../assets/bank_show.png" alt="">
               </div>
             </div>
@@ -427,7 +434,7 @@
     <!-- <video :src="streamMedia" alt="" v-show="true" /> -->
     
     <BottomParams
-      :signal="signalObj"
+      :layer="layerObj"
     />
   </div>
 </template>
@@ -437,33 +444,41 @@ import $ from "jquery";
 import LayerContainer from '@/components/container/LayerContainer';
 import Aoi from '@/components/displayer/Aoi';
 import { mapState } from 'vuex';
-import { dataFormat } from '../../utils/dataFormat';
 import BottomParams from '@/components/BottomParams';
-import { Signal } from '../widget/layer.model';
-import { Windows } from '../widget/window.model';
 export default {
   props: ['showInfo', 'nowMenuId'],
   data() {
     return {
       leftIndex: 2, // 容器、图层、信号参数
       typeIndex: 0, // 右侧菜单参数类型
-      containerList: [], // 容器
-      signalList: [], // 信号
+      containerList: [], // 已创建的容器
+      outputList: [], // 已创建输出口
+      currentLayerList: [], // 图层列表
+      sceneList: [], // 场景列表
+      currentSceneId: 0, // 当前场景
+      currentPageId: 0, // 当前页
+
+      signalList: [], // 信号列表
+
       signalId: '',
       selectedContainer: null,
-      // 缩放数据
-      positionX: 0,
-      positionY: 0,
-      sourceW: 1920,
-      sourceH: 1080,
-      opacityVal: 128,
+      // 缩放、裁剪数据
+      outsideLayerObj: {
+        cropPosX: 0,
+        cropPosY: 0,
+        cropSizeW: '',
+        cropSizeH: '',
+        scalePosX: '',
+        scalePosY: '',
+        scaleSizeW: '',
+        scaleSizeH: '',
+        alpha: 128,
+      },
+
       // 裁剪数据
       showModel: false,
       mirrorVal: false,
-      clipX: 0,
-      clipY: 0,
-      clipW: 1920,
-      clipH: 1080,
+
       radio: '1',
       picture: [{
         value: '1',
@@ -493,18 +508,14 @@ export default {
       kzyj: false,
       h264: false,
       aoiData: null,
-      sessionId: '', // 会话列表
-      readInputSignalListCheckKey: null,// 获取信号列表随机key
-      setLayerCheckKey: null,//设置图层随机key
-      rmLayerCheckKey: null, //删除图层随机key
-      setLayerFreezeCheckKey: null, // 冻结图层随机key
       streamMedia: '',
       layerIds: [], // 创建图层可以用id
       clipList: [], // 流媒体切割列表
       imgObj: null,
-      signalObj: null,
+      layerObj: null,
       layerOrders: [],
-      animationList: []
+      animationList: [],
+      sessionId: ''
     }
   },
   components: {
@@ -513,416 +524,627 @@ export default {
     BottomParams
   },
   created() {
-    const ip = JSON.parse(window.sessionStorage.getItem("ip"));
-    // this.streamMedia = `http://${ip}:5005/?action=stream`;
-    this.streamMedia = 'http://192.168.0.204:5005/?action=stream';
-    let img = new Image();
-    // img.src = `http://${ip}:5005/?action=stream`;
-    img.src = 'http://192.168.0.204:5005/?action=stream';
-    this.imgObj = img;
-    // 分割流媒体（4行6列）
-    this.clipMedia(2, 2);
+    // const ip = JSON.parse(window.sessionStorage.getItem("ip"));
+    // // this.streamMedia = `http://${ip}:5005/?action=stream`;
+    // this.streamMedia = 'http://192.168.0.204:5005/?action=stream';
+    // let img = new Image();
+    // // img.src = `http://${ip}:5005/?action=stream`;
+    // img.src = 'http://192.168.0.204:5005/?action=stream';
+    // this.imgObj = img;
+    // // 分割流媒体（4行6列）
+    // this.clipMedia(2, 2);
     
-    this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
-    this.getSignalList();
-    const bankListData = this.$store.state.bankList;
-    const bankStoreVal = this.$store.state.bankIndex;
-    const instanceData = this.$store.state.showVessels;
-    bankListData.some((item, index) => {
-      if(item.containers) { // 存在拷贝容器
-        item.containers.forEach((containerInfo, containerIndex) => {
-          // 是否存在显示管理已删除容器，如果存在则删除
-          const havedContainer = instanceData.find(showCitem => showCitem.containerId == containerInfo.containerId);
-          if(!havedContainer) {
-            item.containers.splice(containerIndex, 1);
-          }
-          // 是否删除容器中的显示器
-          containerInfo.content.map((disInfo, disIndex) => {
-            const referContainer = instanceData.find(item => item.containerId == containerInfo.containerId);
-            if(referContainer) {
-              const disObj = referContainer.content.find(dItem => dItem.displayId == disInfo.displayId);
-              if(!disObj) {
-                containerInfo.content.splice(disIndex, 1);
-              }
-            }
-          });
-        });
+    // this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
+    // this.getSignalList();
+    // const bankListData = this.$store.state.bankList;
+    // const bankStoreVal = this.$store.state.bankIndex;
+    // const instanceData = this.$store.state.showVessels;
+    // bankListData.some((item, index) => {
+    //   if(item.containers) { // 存在拷贝容器
+    //     item.containers.forEach((containerInfo, containerIndex) => {
+    //       // 是否存在显示管理已删除容器，如果存在则删除
+    //       const havedContainer = instanceData.find(showCitem => showCitem.containerId == containerInfo.containerId);
+    //       if(!havedContainer) {
+    //         item.containers.splice(containerIndex, 1);
+    //       }
+    //       // 是否删除容器中的显示器
+    //       containerInfo.content.map((disInfo, disIndex) => {
+    //         const referContainer = instanceData.find(item => item.containerId == containerInfo.containerId);
+    //         if(referContainer) {
+    //           const disObj = referContainer.content.find(dItem => dItem.displayId == disInfo.displayId);
+    //           if(!disObj) {
+    //             containerInfo.content.splice(disIndex, 1);
+    //           }
+    //         }
+    //       });
+    //     });
         
-        // 显示管理可能修改容器数据，重新拷贝
-        instanceData.forEach((showCitem) => {
-          const copyObj = item.containers.find(copyCitem => copyCitem.containerId == showCitem.containerId);
-          if(copyObj) { // 重新拷贝已存在容器信息
-            copyObj.signalList.forEach(sItem => {
-              Object.assign(sItem.customFeature, showCitem.customFeature);
-              sItem.aoi.width = showCitem.customFeature.wBase;
-              sItem.aoi.height = showCitem.customFeature.hBase;
-            });
-            Object.assign(copyObj, {position: showCitem.position}, {customFeature: showCitem.customFeature});
-            Object.assign(copyObj.content, showCitem.content); // 拷贝显示器数据
-            copyObj.content.map(dItem => dItem.intersectList = []);
-          }else { // 拷贝显示管理新添加容器
-            item.containers.push(this.deepCopy(showCitem))
-          }
-        });
-      } else { // 初次拷贝显示管理容器数据
-        item.containers = this.deepCopy(instanceData);
-      }
-    });
-    this.containerList = bankListData[bankStoreVal].containers;
-    this.containerList.map(item => {
-      if(item.signalList.length > 0) {
-        item.signalList.map(sItem => {
-          sItem.aoi.status = false;
-          item.content.map(dItem => {
-            if (this.isOverlap(sItem, dItem)) {
-              dItem.signalNum = dItem.signalNum - 1;
-              dItem.intersectList.push(sItem);
-            }
-          });
-        });
-      } else {
-        item.content.map(dItem => {
-          dItem.intersectList = [];
-        });
-      }
-    })
+    //     // 显示管理可能修改容器数据，重新拷贝
+    //     instanceData.forEach((showCitem) => {
+    //       const copyObj = item.containers.find(copyCitem => copyCitem.containerId == showCitem.containerId);
+    //       if(copyObj) { // 重新拷贝已存在容器信息
+    //         copyObj.signalList.forEach(sItem => {
+    //           Object.assign(sItem.customFeature, showCitem.customFeature);
+    //           sItem.aoi.width = showCitem.customFeature.wBase;
+    //           sItem.aoi.height = showCitem.customFeature.hBase;
+    //         });
+    //         Object.assign(copyObj, {position: showCitem.position}, {customFeature: showCitem.customFeature});
+    //         Object.assign(copyObj.content, showCitem.content); // 拷贝显示器数据
+    //         copyObj.content.map(dItem => dItem.intersectList = []);
+    //       }else { // 拷贝显示管理新添加容器
+    //         item.containers.push(this.deepCopy(showCitem))
+    //       }
+    //     });
+    //   } else { // 初次拷贝显示管理容器数据
+    //     item.containers = this.deepCopy(instanceData);
+    //   }
+    // });
+    // this.containerList = bankListData[bankStoreVal].containers;
+    // this.containerList.map(item => {
+    //   if(item.signalList.length > 0) {
+    //     item.signalList.map(sItem => {
+    //       sItem.aoi.status = false;
+    //       item.content.map(dItem => {
+    //         if (this.isOverlap(sItem, dItem)) {
+    //           dItem.signalNum = dItem.signalNum - 1;
+    //           dItem.intersectList.push(sItem);
+    //         }
+    //       });
+    //     });
+    //   } else {
+    //     item.content.map(dItem => {
+    //       dItem.intersectList = [];
+    //     });
+    //   }
+    // })
 
-    this.$store.dispatch('setBankList', bankListData);
+    // this.$store.dispatch('setBankList', bankListData);
 
-    this.$nextTick(() => {
-      this.signalLayerDraggable();
-      this.signalLayerResize();
-      // 初始化绘制流媒体画面
-      // if(this.streamMedia) {
-      //   let img = new Image();
-      //   img.src = this.streamMedia;
-      //   let canvasBoxs = [];
-      //   $('.signal-layer-item canvas').each(function() {
-      //     canvasBoxs.push($(this)[0]);
-      //   });
-       
-      //   img.onload = () => renderImg();
-        
-      //   let renderImg = () => {
-      //     canvasBoxs.forEach((canvas, index) => {
-      //       const context = canvas.getContext('2d');
-      //       const inputPort = Number($(canvas).attr('inputPort'));
-      //       context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 320, 270, 0, 0, 192, 108);
-      //     });
-      //     window.requestAnimationFrame(renderImg);
-      //   } 
-      // }
-    });
+    // this.$nextTick(() => {
+    //   this.layerDraggable();
+    //   this.layerResize();
+    // });
   },
   mounted() {
-    const vm = this;
-    // 可设置图层id集合
-    this.layerIdList();
+    this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
+    this.init();
+    this.readContainerMsg(); // 读取容器配置信息
+    this.readOutputList(); // 读取输出口列表
+    this.readLayerMsg(); // 读取图层列表
+    this.getSignalList();
 
-    this.draggableInit();
-    this.signalInitDraggable();
-    this.signalInitDroppable();
-    this.signalLayerDraggable();
-    this.signalLayerResize();
-    // 点击图层获取图层数据
-    this.$root.bus.$off('getLayerInfo');
-    this.$root.bus.$on('getLayerInfo', (layer) => {
-      this.signalObj = layer;
-      this.positionX = layer.realPos.left;
-      this.positionY = layer.realPos.top;
-      this.sourceW = layer.sizeW;
-      this.sourceH = layer.sizeH;
-      this.clipW = layer.cropW;
-      this.clipH = layer.cropH;
-    });
-    // 标识当前操作的容器
-    this.$root.bus.$off('setSelectedContainer');
-    this.$root.bus.$on('setSelectedContainer', (data) => {
-      this.selectedContainer = data;
-    });
-    // 信号全屏
-    this.$root.bus.$off('fullScreen');
-    this.$root.bus.$on('fullScreen', (data) => {
-      const container = this.containerList.find(item => item.containerId == data.parentId);
-      const {col, row} = container.customFeature;
-      container.signalList.some((layer, index) => {
-        if (layer.signalId == data.signalId) {
-          if(layer.full) {
-            layer.sizeW = layer.fullBeforeWbase;
-            layer.sizeH = layer.fullBeforeHbase;
-            layer.position.top = layer.fullBeforeTop;
-            layer.position.left = layer.fullBeforeLeft;
-            layer.realPos = {
-              left: layer.position.left * 10,
-              top: layer.position.top * 10
-            }
-            layer.full = false;
-          } else {
-            this.$set(layer, 'fullBeforeWbase', layer.sizeW / 10);
-            this.$set(layer, 'fullBeforeHbase', layer.sizeH / 10);
-            this.$set(layer, 'fullBeforeTop', layer.position.top);
-            this.$set(layer, 'fullBeforeLeft', layer.position.left);
-            layer.sizeW = col * layer.sizeW;
-            layer.sizeH = row * layer.sizeH;
-            layer.position.top = 0;
-            layer.position.left = 0;
-            layer.realPos = layer.position;
-            layer.full = true;
-          }
-          return true;
+    this.draggableInit(); // 容器区域拖拽
+    this.signalInitDraggable(); // 信号列表拖拽
+    this.signalInitDroppable(); // 信号放置
+    
+    // websocket接收到的消息
+    const that = this;
+    window.webSocket.onmessage = function(res) {
+      const result = JSON.parse(res.data);
+      // 获取容器
+      if((result.code == 200) && (result.data.eventType == 'readContainerMsg')) {
+        if (result.data.count > 0) {
+          that.containerList = result.data.container;
+        } else {
+          that.containerList = [];
         }
-      });
-
-      this.bankList.some((item, index) => {
-        if(index == this.bankIndex) {
-          item.containers = this.containerList;
-          return true;
-        }
-      })
-      this.$store.dispatch('setBankList', this.bankList);
-    });
-    // 信号图层删除
-    this.$root.bus.$off('deleteLayer');
-    this.$root.bus.$on('deleteLayer', (data) => {
-      console.log(data);
-      const vm = this;
-      const rmLayerParams = {
-        eventType: "rmLayer",
-        count: 1,
-        layer: [
-          { id: data.signalId }
-        ],
-        sceneId: this.bankIndex,
-        sessionID: this.sessionId,
-        checkKey: this.getcheckKey('rmLayer')
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(rmLayerParams));
+      // 获取显示器（输出口）列表
+      if((result.code == 200) && (result.data.eventType == 'readOutputList')) {
+        that.outputList = result.data.output;
+        // 可设置图层id集合
+        that.layerIdList();
+        that.$nextTick(() => {
+          that.signalInitDroppable();
+        });
       }
-      window.webSocket.onmessage = function(res) {
-        const result = JSON.parse(res.data);
-        if(result.code == 200 && result.data.eventType == 'rmLayer' && result.checkKey == vm.rmLayerCheckKey) {
-          
-          // 所删图层所属容器
-          const moveBelongContainer = vm.containerList.find(cItem => cItem.containerId == data.parentId); 
-          console.log(moveBelongContainer);
-          // 被删除的图层
-          // const moveLayer = moveBelongContainer.signalList.find(layer => layer.signalId == data.signalId); 
-          const moveLayerIndex = moveBelongContainer.signalList.findIndex(layer => layer.signalId == data.signalId); 
-          console.log(moveLayerIndex);
-          moveBelongContainer.signalList.splice(moveLayerIndex, 1);
-
-          moveBelongContainer.content.map(display => {
-            display.intersectList = display.intersectList.filter(iItem => iItem.signalId != data.signalId);
-          });
-
-         
-          vm.bankList.some((item, index) => {
-            if(index == vm.bankIndex) {
-              item.containers = vm.containerList;
-              return true;
+      // 获取图层列表数据
+      if((result.code == 200) && (result.data.eventType == 'readLayerMsg')) {
+        that.sceneList = result.data.scene;
+        that.currentSceneId = result.data.currentSceneId;
+        that.currentPageId = result.data.currentPageId;
+        that.currentLayerList = result.data.scene[result.data.currentSceneId].layer;
+        that.$nextTick(() => {
+          that.currentLayerList.map(item => {
+            if(!item.freeze) {
+              that.layerDraggable(item.id); // 图层拖拽初始化
+              that.layerResize(item.id); // 图层缩放初始化
             }
           })
-          vm.$store.dispatch('setBankList', vm.bankList);
-        }
+        })
       }
-
-    });
-
-    // 图层锁定状态
-    this.$root.bus.$off('layerActive');
-    this.$root.bus.$on('layerActive', (data) => {
-
-      const vm = this;
-      const rmLayerParams = {
-        eventType: "setLayerFreeze",
-        count: 1,
-        layer: [
-          { 
-            id: data.sId,
-            freeze: data.status ? 1 : 0
-          }
-        ],
-        sessionID: this.sessionId,
-        checkKey: this.getcheckKey('setLayerFreeze')
+      // 获取输入信号列表数据
+      if((result.code == 200) && (result.data.eventType == 'readInputSignalList')) {
+        that.signalList = result.data.inputSignal;
+        that.$nextTick(() => {
+          that.signalInitDraggable(); // 信号拖拽初始化
+        });
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(rmLayerParams));
+      // 设置图层成功回调
+      if((result.code == 200) && (result.data.eventType == 'setLayer')) {
+        that.readLayerMsg();
       }
-      window.webSocket.onmessage = function(res) {
-        const result = JSON.parse(res.data);
-        if(result.code == 200 && result.data.eventType == 'setLayerFreeze' && result.checkKey == vm.setLayerFreezeCheckKey) {
-          vm.containerList.some(item => {
-            if (item.containerId == data.cId) {
-              item.signalList.some((layer, index) => {
-                if (layer.signalId == data.sId) {
-                  layer.layerLock = data.status;
-                  return true;
-                }
-              })
-              return true;
-            }
-          });
-          vm.bankList.some((item, index) => {
-            if(index == vm.bankIndex) {
-              item.containers = vm.containerList;
-              return true;
-            }
-          })
-          vm.$store.dispatch('setBankList', vm.bankList);
-          if(data.status) {
-            $('#' + data.id).draggable('destroy');
-            $('#' + data.id).resizable('destroy');
-          }else {
-            vm.$nextTick(() => {
-              vm.signalLayerDraggable();
-              vm.signalLayerResize();
-            })
-          }
-        }
+      // 删除图层成功回调
+      if((result.code == 200) && (result.data.eventType == 'rmLayer')) {
+        that.readLayerMsg();
+        that.layerObj = null;
       }
-
-    });
-
-    // 显示aoi事件
-    this.$root.bus.$off('aoiEvent');
-    this.$root.bus.$on('aoiEvent', (data) => {
-      this.containerList.some(item => {
-        if (item.containerId == data.parentId) {
-          item.signalList.forEach(signal => {
-            if (signal.signalId === data.signalId) {
-              signal.aoi.status = true;
-              this.aoiData = signal.aoi;
-            } else {
-              signal.aoi.status = false;
-            }
-          });
-          this.$nextTick(() => {
-            this.signalAOIDraggable();
-            this.signalAOIResize();
-          })
-        }
-      });
-      this.bankList.some((item, index) => {
-        if(index == this.bankIndex) {
-          item.containers = this.containerList;
-          return true;
-        }
-      })
-      this.$store.dispatch('setBankList', this.bankList);
-    });
-    // 关闭aoi
-    this.$root.bus.$off('closeAoi');
-    this.$root.bus.$on('closeAoi', (data) => {
-      this.containerList.some(item => {
-        if (item.containerId == data.parentId) {
-          item.signalList.map((layer, index) => {
-            if (layer.signalId == data.id) {
-              layer.aoi.status = false;
-              this.aoiData = layer.aoi;
-            }
-          })
-          return true;
-        }
-      });
-      this.bankList.some((item, index) => {
-        if(index == this.bankIndex) {
-          item.containers = this.containerList;
-          return true;
-        }
-      })
-      this.$store.dispatch('setBankList', this.bankList);
-    });
-    // 底部设置图层信息
-    this.$root.bus.$off('setSignalInfo');
-    this.$root.bus.$on('setSignalInfo', (data) => {
-      // websocket 准备
-      const setLayerParams = {
-        eventType: "setLayer",
-        count: 1,
-        layer: [
-          {
-            id: data.signalId,
-            cropPosX: Number(data.cropX),
-            cropPosY: Number(data.cropY),
-            cropSizeW: Number(data.cropW),
-            cropSizeH: Number(data.cropH),
-            scalePosX: Math.round(Number(data.position.left) * 10),
-            scalePosY: Number(data.position.top) * 10,
-            scaleSizeW: Number(data.sizeW),
-            scaleSizeH: Number(data.sizeH), 
-            inputPort:  Number(data.inputPort),
-            containerId: Number(data.parentId),
-            layerAlpha: Number(data.layerAlpha),
-            index: Number(data.order),
-            sceneId: vm.bankIndex
-          }
-        ],
-        sessionID: vm.sessionId,
-        checkKey: vm.getcheckKey('setLayer')
-      } 
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(setLayerParams));
+      // 图层冻结操作
+      if((result.code == 200) && (result.data.eventType == 'setLayerFreeze')) {
+        that.readLayerMsg();
       }
-      window.webSocket.onmessage = function(res) {
-        const resData = JSON.parse(res.data);
-        if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
-          // 缩放图层所属容器
-          const moveBelongContainer = vm.containerList.find(cItem => cItem.containerId == data.parentId); 
-          // 被缩放的图层
-          const changeLayer = moveBelongContainer.signalList.find(layer => layer.signalId == data.signalId); 
-          // 改变图层信息
-         
-          changeLayer.sizeW = data.sizeW;
-          changeLayer.sizeH = data.sizeH;
-          changeLayer.realPos = {
-            left: data.realPos.left,
-            top: data.realPos.top
-          }
-          changeLayer.position.left = Math.round(data.realPos.left / 10);
-          changeLayer.position.top = Math.round(data.realPos.top / 10);
-          changeLayer.aoi.position = changeLayer.position;
-          vm.positionX = data.realPos.left;
-          vm.positionY = data.realPos.top;
-          vm.sourceW = data.sizeW;
-          vm.sourceH = data.sizeH;
-          // 重新判断图层相交显示器
-          moveBelongContainer.content.map(display => {
-            if(vm.isOverlap(changeLayer, display)) { // 判断是否相交
-              const isBelong = display.intersectList.find(iItem => iItem.signalId == changeLayer.signalId);
-              if(!isBelong) { // 移动前是否已相交
-                display.signalNum = display.signalNum - 1;
-                display.intersectList.push(changeLayer);
-              }
-            } else {
-              const isBelong = display.intersectList.find(iItem => iItem.signalId == changeLayer.signalId);
-              if(isBelong) {
-                display.signalNum = display.signalNum + 1;
-                display.intersectList = display.intersectList.filter(iItem => iItem.signalId != changeLayer.signalId);
-              }
-            }
-          });
-
-          vm.bankList.some((item, index) => {
-            if(index == vm.bankIndex) {
-              item.containers = vm.containerList;
-              return true;
-            }
-          })
-          vm.$store.dispatch('setBankList', vm.bankList);
-        }
-      }
-    });
+    }
+    
   },
   computed: {
     ...mapState([
-      'shareVessels',
-      'editContainer',
       'bankList',
-      'bankIndex'
+      'bankIndex',
+      'outputModelInfo'
     ]),
   },
   methods: {
+    init() {
+      // 标识当前操作的容器
+      this.$root.bus.$off('setSelectedContainer');
+      this.$root.bus.$on('setSelectedContainer', (data) => {
+        this.selectedContainer = data;
+      });
+      // 点击图层获取图层数据
+      this.$root.bus.$off('getlayer');
+      this.$root.bus.$on('getlayer', (layer) => {
+        this.layerObj = layer;
+        this.outsideLayerObj = layer;
+      });
+      // 信号全屏
+      this.$root.bus.$off('fullScreen');
+      this.$root.bus.$on('fullScreen', (data) => {
+        const container = this.containerList.find(item => item.containerId == data.containerId);
+        const params = {
+          eventType: "setLayer",
+          count: 1,
+          layer: [
+            {
+              id: data.id,
+              cropPosX: data.cropPosX,
+              cropPosY: data.cropPosY,
+              cropSizeW: data.cropSizeW,
+              cropSizeH: data.cropSizeH,
+              scalePosX: 0,
+              scalePosY: 0,
+              scaleSizeW: container.sizeW,
+              scaleSizeH: container.sizeH, 
+              inputPort:  data.inputPort,
+              containerId: data.contaienrId,
+              layerAlpha: data.alpha,
+              index: data.index,
+              sceneId: data.sceneId,
+              pageId: this.currentPageId
+            }
+          ],
+          sessionID: this.sessionId,
+          checkKey: this.getcheckKey()
+        } 
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
+        }
+      });
+      // 信号图层删除
+      this.$root.bus.$off('deleteLayer');
+      this.$root.bus.$on('deleteLayer', (data) => {
+        const params = {
+          eventType: "rmLayer",
+          count: 1,
+          layer: [
+            { id: data.id }
+          ],
+          sceneId: data.sceneId,
+          pageId: this.currentPageId,
+          sessionID: this.sessionId,
+          checkKey: this.getcheckKey()
+        }
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
+        }
+      });
+
+      // 图层锁定状态
+      this.$root.bus.$off('layerActive');
+      this.$root.bus.$on('layerActive', (data) => {
+        if(!data.freeze) {
+          $('#layer'+data.id).draggable('destroy');
+          $('#layer'+data.id).resizable('destroy');
+        }
+        const params = {
+          eventType: "setLayerFreeze",
+          count: 1,
+          layer: [
+            { 
+              id: data.id,
+              freeze: data.freeze ? 0 : 1
+            }
+          ],
+          sceneId: data.sceneId,
+          pageId: this.currentPageId,
+          sessionID: this.sessionId,
+          checkKey: this.getcheckKey()
+        }
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
+        }
+      });
+
+      // 显示aoi事件
+      this.$root.bus.$off('aoiEvent');
+      this.$root.bus.$on('aoiEvent', (data) => {
+        this.containerList.some(item => {
+          if (item.containerId == data.parentId) {
+            item.signalList.forEach(signal => {
+              if (signal.signalId === data.signalId) {
+                signal.aoi.status = true;
+                this.aoiData = signal.aoi;
+              } else {
+                signal.aoi.status = false;
+              }
+            });
+            this.$nextTick(() => {
+              this.signalAOIDraggable();
+              this.signalAOIResize();
+            })
+          }
+        });
+        this.bankList.some((item, index) => {
+          if(index == this.bankIndex) {
+            item.containers = this.containerList;
+            return true;
+          }
+        })
+        this.$store.dispatch('setBankList', this.bankList);
+      });
+      // 关闭aoi
+      this.$root.bus.$off('closeAoi');
+      this.$root.bus.$on('closeAoi', (data) => {
+        this.containerList.some(item => {
+          if (item.containerId == data.parentId) {
+            item.signalList.map((layer, index) => {
+              if (layer.signalId == data.id) {
+                layer.aoi.status = false;
+                this.aoiData = layer.aoi;
+              }
+            })
+            return true;
+          }
+        });
+        this.bankList.some((item, index) => {
+          if(index == this.bankIndex) {
+            item.containers = this.containerList;
+            return true;
+          }
+        })
+        this.$store.dispatch('setBankList', this.bankList);
+      });
+      // 底部设置图层信息
+      this.$root.bus.$off('setLayerInfo');
+      this.$root.bus.$on('setLayerInfo', (data) => {
+        // websocket 准备
+        const params = {
+          eventType: "setLayer",
+          count: 1,
+          layer: [
+            {
+              id: data.id,
+              cropPosX: data.cropPosX,
+              cropPosY: data.cropPosY,
+              cropSizeW: data.cropSizeW,
+              cropSizeH: data.cropSizeH,
+              scalePosX: Number(data.scalePosX),
+              scalePosY: Number(data.scalePosY),
+              scaleSizeW: Number(data.scaleSizeW),
+              scaleSizeH: Number(data.scaleSizeH), 
+              inputPort:  data.inputPort,
+              containerId: data.contaienrId,
+              layerAlpha: Number(data.alpha),
+              index: data.index,
+              sceneId: data.sceneId,
+              pageId: this.currentPageId
+            }
+          ],
+          sessionID: this.sessionId,
+          checkKey: this.getcheckKey()
+        } 
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
+        }
+      });
+    },
+
+    // 读取容器配置信息
+    readContainerMsg() {
+      const params = {
+        eventType: "readContainerMsg",
+        checkKey: this.getcheckKey(),
+        sessionID: this.sessionId
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 获取显示器列表
+    readOutputList() {
+      const randoms = this.getcheckKey();
+      const params = {
+        eventType: "readOutputList",
+        sessionID: this.sessionId,
+        checkKey: randoms
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 读取图层列表
+    readLayerMsg() {
+      const randoms = this.getcheckKey();
+      const params = {
+        eventType: "readLayerMsg",
+        sessionID: this.sessionId,
+        checkKey: randoms
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 读取左侧信号列表
+    getSignalList() {
+      const params = {
+        eventType: "readInputSignalList",
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey('readInputSignalList')
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 容器中所填充显示器
+    setOutputList(containerId) {
+      const list = this.outputList.filter(item => item.status == true && item.containerId == containerId);
+      return list;
+    },
+    // 容器中对应的图层
+    setLayerList(containerId) {
+      const list = this.currentLayerList.filter(item => item.containerId == containerId);
+      return list;
+    },
+    // 可设置图层id
+    layerIdList() {
+
+      let existDisplays = []; // 已创建显示器
+      const existContainers = this.containerList; // 已创建容器
+      existContainers.map(cItem => {
+        existDisplays.push(this.setOutputList(cItem.containerId));
+      });
+      existDisplays = existDisplays.flat(Infinity);
+      // 已存在显示器
+      existDisplays.map(dItem => {
+        for(let i = Number(dItem.id)*4; i < (Number(dItem.id) + 1)*4; i++) {
+          this.layerIds.push(i);
+        }
+      });
+    },
+    // 信号放置
+    signalInitDroppable() {
+      const that = this;
+      $(".displayer-view").droppable({
+        accept: '.signal-item',
+        drop: function(event, ui) {
+          // 设置当前创建图层id
+          let usedLayerIds = []; // 使用过的图层id
+          let layerId = null;
+          that.currentLayerList.map(item => {
+            usedLayerIds.push(item.id);
+          });
+          if(usedLayerIds.length > 0) {
+            that.layerIds.some(id => {
+              if(!usedLayerIds.includes(id)) {
+                layerId = id;
+                return true;
+              }
+            })
+          } else {
+            layerId = that.layerIds[0];
+          }
+          // 图层index设置: 
+          let layerIndexList = [];
+          that.currentLayerList.map(item => {
+            layerIndexList.push(item.index);
+          });
+          const maxOrder = Math.max(...layerIndexList);
+          const indexArr = [];
+          for(let i = 1; i <= maxOrder; i++) {
+            indexArr.push(i);
+          }
+
+          let createIndex = null;
+          if (maxOrder >= 1) {
+            indexArr.some(index => {
+              if(index == maxOrder) {
+                createIndex = maxOrder + 1;
+                return true;
+              } else if(!indexArr.includes(index)) {
+                createIndex = index;
+                return true;
+              }
+            })
+          } else {
+            createIndex = 1;
+          }
+
+          const dropOutputId = $(this).attr('id'); // 放置输出口id
+          const dropContainerId = $(this).attr('containerId'); // 放置容器id
+          const dropOutput = that.outputList.find(item => item.id == dropOutputId); // 放置输出口
+          
+          const params = {
+            eventType: "setLayer",
+            count: 1,
+            layer: [
+              {
+                id: layerId,
+                cropPosX: 0,
+                cropPosY: 0,
+                cropSizeW: dropOutput.sizeW,
+                cropSizeH: dropOutput.sizeH,
+                scalePosX: dropOutput.posX,
+                scalePosY: dropOutput.posY,
+                scaleSizeW: dropOutput.sizeW,
+                scaleSizeH: dropOutput.sizeH, 
+                inputPort:  Number($(ui.draggable[0]).attr('id')),
+                containerId: Number(dropContainerId),
+                index: createIndex,
+                layerAlpha: 128,
+                sceneId: that.sceneId,
+                pageId: that.currentPageId
+              }
+            ],
+            sessionID: that.sessionId,
+            checkKey: that.getcheckKey()
+          }
+          // websocket 准备
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(params));
+          }
+        }
+      })
+    },
+    // 信号图层拖拽
+    layerDraggable(layerId) {
+      const that = this;
+      $('#layer' + layerId).draggable({
+        scroll: false,
+        zIndex: 100,
+        stop: function(event, ui) {
+          // 被移动的图层
+          const layerId = $(this).attr('layerId');
+          const mvLayer = that.currentLayerList.find(item => item.id == layerId);
+          
+          // websocket 准备
+          const params = {
+            eventType: "setLayer",
+            count: 1,
+            layer: [
+              {
+                id: mvLayer.id,
+                cropPosX: mvLayer.cropPosX,
+                cropPosY: mvLayer.cropPosY,
+                cropSizeW: mvLayer.cropSizeW,
+                cropSizeH: mvLayer.cropSizeH,
+                scalePosX: Math.round(ui.position.left * 10),
+                scalePosY: ui.position.top * 10,
+                scaleSizeW: mvLayer.scaleSizeW,
+                scaleSizeH: mvLayer.scaleSizeH, 
+                inputPort:  mvLayer.inputPort,
+                containerId: mvLayer.containerId,
+                layerAlpha: mvLayer.layerAlpha,
+                index: mvLayer.index,
+                sceneId: that.currentSceneId,
+                pageId: that.currentPageId
+              }
+            ],
+            sessionID: that.sessionId,
+            checkKey: that.getcheckKey()
+          } 
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(params));
+          }
+        }
+      });
+      
+    },
+    // 信号图层缩放
+    layerResize(layerId) {
+      const that = this;
+      const scaleLayer = that.currentLayerList.find(item => item.id == layerId);
+      this.layerObj = scaleLayer;
+      this.outsideLayerObj = scaleLayer;
+      $('#layer' + layerId).resizable({
+        minWidth: 32,
+        minHeight: 32,
+        resize: function(event, ui) {
+
+        },
+        stop: function(event, ui) {
+          const id = $(this).attr('layerId');
+          const scaleLayer = that.currentLayerList.find(item => item.id == id);
+         
+          // websocket 准备
+          const params = {
+            eventType: "setLayer",
+            count: 1,
+            layer: [
+              {
+                id: scaleLayer.id,
+                cropPosX: scaleLayer.cropPosX,
+                cropPosY: scaleLayer.cropPosY,
+                cropSizeW: scaleLayer.cropSizeW,
+                cropSizeH: scaleLayer.cropSizeH,
+                scalePosX: scaleLayer.scalePosX,
+                scalePosY: scaleLayer.scalePosY,
+                scaleSizeW: ui.size.width * 10,
+                scaleSizeH: ui.size.height * 10, 
+                inputPort:  scaleLayer.inputPort,
+                containerId: scaleLayer.containerId,
+                layerAlpha: scaleLayer.alpha,
+                index: scaleLayer.index,
+                sceneId: that.sceneId,
+                pageId: that.currentPageId
+              }
+            ],
+            sessionID: that.sessionId,
+            checkKey: that.getcheckKey()
+          }
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(params));
+          }
+        }
+      })
+    },
+
+     // 右侧设置按钮事件
+    setData() {
+      const index = this.typeIndex;
+      const layerObj = this.layerObj;
+      if(layerObj) {
+        if(index == 0 || index == 1) {
+          const params = {
+            eventType: "setLayer",
+            count: 1,
+            layer: [
+              {
+                id: layerObj.id,
+                cropPosX: Number(this.outsideLayerObj.cropPosX),
+                cropPosY: Number(this.outsideLayerObj.cropPosY),
+                cropSizeW: Number(this.outsideLayerObj.cropSizeW),
+                cropSizeH: Number(this.outsideLayerObj.cropSizeH),
+                scalePosX: Number(this.outsideLayerObj.scalePosX),
+                scalePosY: Number(this.outsideLayerObj.scalePosY),
+                scaleSizeW: Number(this.outsideLayerObj.scaleSizeW),
+                scaleSizeH: Number(this.outsideLayerObj.scaleSizeH), 
+                inputPort:  layerObj.inputPort,
+                containerId: layerObj.containerId,
+                layerAlpha: Number(this.outsideLayerObj.alpha),
+                index: layerObj.index,
+                sceneId: this.layerObj.sceneId,
+                pageId: this.currentPageId
+              }
+            ],
+            sessionID: this.sessionId,
+            checkKey: this.getcheckKey()
+          } 
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(params));
+          }
+        }
+      }
+    },
+
     // 输入预监
     previewPictureEvent(value) {
       this.animationList.map(item => cancelAnimationFrame(item));
@@ -952,7 +1174,6 @@ export default {
         }
         // 容器图层画布
         if(value && this.tcyj) {
-          console.log(this.clipList);
           $('.signal-layer-item canvas').each(function() {
             layerCanvas.push($(this)[0]);
           });
@@ -982,176 +1203,7 @@ export default {
       // 置底
       if(type == 'bottom') {}
     },
-    // 右侧设置按钮事件
-    setData() {
-      const vm = this;
-      const index = this.typeIndex;
-      const signal = this.signalObj;
-      console.log(signal);
-      if(signal) {
-        if(index == 0) {
-          const setLayerParams = {
-            eventType: "setLayer",
-            count: 1,
-            layer: [
-              {
-                id: signal.signalId,
-                cropPosX: signal.cropX,
-                cropPosY: signal.cropY,
-                cropSizeW: signal.cropW,
-                cropSizeH: signal.cropH,
-                scalePosX: Number(this.positionX),
-                scalePosY: Number(this.positionY),
-                scaleSizeW: Number(this.sourceW),
-                scaleSizeH: Number(this.sourceH), 
-                inputPort:  Number(signal.inputPort),
-                containerId: Number(signal.parentId),
-                layerAlpha: Number(this.opacityVal),
-                index: signal.order,
-                sceneId: vm.bankIndex
-              }
-            ],
-            sessionID: vm.sessionId,
-            checkKey: vm.getcheckKey('setLayer')
-          } 
-          if (window.webSocket && window.webSocket.readyState == 1) {
-            window.webSocket.send(JSON.stringify(setLayerParams));
-          }
-          window.webSocket.onmessage = function(res) {
-            const resData = JSON.parse(res.data);
-            if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
-              // 缩放图层所属容器
-              const moveBelongContainer = vm.containerList.find(cItem => cItem.containerId == signal.parentId); 
-              // 被缩放的图层
-              const changeLayer = moveBelongContainer.signalList.find(layer => layer.signalId == signal.signalId); 
-              // 改变图层信息
-            
-              changeLayer.sizeW = Number(vm.sourceW);
-              changeLayer.sizeH = Number(vm.sourceH);
-              changeLayer.realPos = {
-                left: Number(vm.positionX),
-                top: Number(vm.positionY)
-              }
-              changeLayer.layerAlpha = Number(vm.opacityVal),
-              changeLayer.position.left = Math.round(Number(vm.positionX) / 10);
-              changeLayer.position.top = Math.round(Number(vm.positionY) / 10);
-              changeLayer.aoi.position = changeLayer.position;
-              vm.signalObj = changeLayer;
-              // 重新判断图层相交显示器
-              moveBelongContainer.content.map(display => {
-                if(vm.isOverlap(changeLayer, display)) { // 判断是否相交
-                  const isBelong = display.intersectList.find(iItem => iItem.signalId == changeLayer.signalId);
-                  if(!isBelong) { // 移动前是否已相交
-                    display.signalNum = display.signalNum - 1;
-                    display.intersectList.push(changeLayer);
-                  }
-                } else {
-                  const isBelong = display.intersectList.find(iItem => iItem.signalId == changeLayer.signalId);
-                  if(isBelong) {
-                    display.signalNum = display.signalNum + 1;
-                    display.intersectList = display.intersectList.filter(iItem => iItem.signalId != changeLayer.signalId);
-                  }
-                }
-              });
-
-              vm.bankList.some((item, index) => {
-                if(index == vm.bankIndex) {
-                  item.containers = vm.containerList;
-                  return true;
-                }
-              })
-              vm.$store.dispatch('setBankList', vm.bankList);
-            }
-          }
-        }
-        if(index == 1) {
-          const setLayerParams = {
-            eventType: "setLayer",
-            count: 1,
-            layer: [
-              {
-                id: signal.signalId,
-                cropPosX: Number(this.clipX),
-                cropPosY: Number(this.clipY),
-                cropSizeW: Number(this.clipW),
-                cropSizeH: Number(this.clipH),
-                scalePosX: Number(signal.realPos.left),
-                scalePosY: Number(signal.realPos.top),
-                scaleSizeW: Number(signal.sizeW),
-                scaleSizeH: Number(signal.sizeH), 
-                inputPort:  Number(signal.inputPort),
-                containerId: Number(signal.parentId),
-                layerAlpha: Number(this.opacityVal),
-                index: signal.order,
-                sceneId: vm.bankIndex
-              }
-            ],
-            sessionID: vm.sessionId,
-            checkKey: vm.getcheckKey('setLayer')
-          } 
-          if (window.webSocket && window.webSocket.readyState == 1) {
-            window.webSocket.send(JSON.stringify(setLayerParams));
-          }
-          window.webSocket.onmessage = function(res) {
-            const resData = JSON.parse(res.data);
-            if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
-              // 缩放图层所属容器
-              const moveBelongContainer = vm.containerList.find(cItem => cItem.containerId == signal.parentId); 
-              // 被缩放的图层
-              const changeLayer = moveBelongContainer.signalList.find(layer => layer.signalId == signal.signalId); 
-              // 改变图层信息
-            
-              changeLayer.cropSizeW = Number(vm.clipW);
-              changeLayer.cropSizeH = Number(vm.clipH);
-              changeLayer.cropPosX = Number(vm.clipX);
-              changeLayer.cropPosY = Number(vm.clipY);
-              // 重新判断图层相交显示器
-              moveBelongContainer.content.map(display => {
-                if(vm.isOverlap(changeLayer, display)) { // 判断是否相交
-                  const isBelong = display.intersectList.find(iItem => iItem.signalId == changeLayer.signalId);
-                  if(!isBelong) { // 移动前是否已相交
-                    display.signalNum = display.signalNum - 1;
-                    display.intersectList.push(changeLayer);
-                  }
-                } else {
-                  const isBelong = display.intersectList.find(iItem => iItem.signalId == changeLayer.signalId);
-                  if(isBelong) {
-                    display.signalNum = display.signalNum + 1;
-                    display.intersectList = display.intersectList.filter(iItem => iItem.signalId != changeLayer.signalId);
-                  }
-                }
-              });
-
-              vm.bankList.some((item, index) => {
-                if(index == vm.bankIndex) {
-                  item.containers = vm.containerList;
-                  return true;
-                }
-              })
-              vm.$store.dispatch('setBankList', vm.bankList);
-            }
-          }
-        }
-      }
-    },
-    // 可设置图层id
-    layerIdList() {
-      let existDisplays = [];
-      const existContainers = this.$store.state.showVessels;
-      existContainers.map(cItem => {
-        if(cItem.content) {
-          cItem.content.map(dItem => {
-            existDisplays.push(dItem);
-          })
-        }
-      });
-      // 已存在显示器
-      existDisplays.map(dItem => {
-        for(let i = Number(dItem.displayId)*4; i < (Number(dItem.displayId) + 1)*4; i++) {
-          this.layerIds.push(i);
-        }
-      });
-    },
+   
     // 分割流媒体
     clipMedia(row, col) {
       let clips = [];
@@ -1168,32 +1220,11 @@ export default {
       }
       allcrops.push(clips);
       allcrops.push(clips);
-      console.log(allcrops.flat());
       this.clipList = allcrops.flat();
     },
-    // 读取左侧信号列表
-    getSignalList() {
-      const that = this;
-      const readInputSignalListParams = {
-        eventType: "readInputSignalList",
-        sessionID: this.sessionId,
-        checkKey: this.getcheckKey('readInputSignalList')
-      }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(readInputSignalListParams));
-      }
-      window.webSocket.onmessage = function(res) {
-        const result = JSON.parse(res.data);
-        if((result.code == 200) && (result.data.eventType == 'readInputSignalList') && (result.checkKey == that.readInputSignalListCheckKey)) {
-          that.signalList = result.data.inputSignal;
-          that.$nextTick(() => {
-            that.signalInitDraggable();
-          });
-        }
-      }
-    },
+    
     // 生成随机随机checkKey
-    getcheckKey(type) {
+    getcheckKey() {
       let arr = new Array;
       const arr1 = new Array("0","1","2","3","4","5","6","7","8","9");
       let nonceStr=''
@@ -1201,20 +1232,6 @@ export default {
         var n = Math.floor(Math.random()*10);
         arr[i] = arr1[n] ;
         nonceStr += arr1[n];
-      }
-      switch (type) {
-        case 'readInputSignalList': // 创建容器
-          this.readInputSignalListCheckKey = parseInt(nonceStr);
-          break;
-        case 'setLayer':
-          this.setLayerCheckKey = parseInt(nonceStr);
-          break;
-        case 'rmLayer':
-          this.rmLayerCheckKey = parseInt(nonceStr);
-          break;
-        case 'setLayerFreeze':
-          this.setLayerFreezeCheckKey = parseInt(nonceStr);
-          break;
       }
       return parseInt(nonceStr);
     },
@@ -1248,92 +1265,40 @@ export default {
     typeSelect(num) {
       this.typeIndex = num;
     },
-    // 设置bank内显示区域样式
+    // 设置bank内容器样式
     setContainerStyle(item) {
-      const { row, col, wBase, hBase } = item.customFeature;
-      const { left, top } = item.position;
-      const width = col * wBase / 10;
-      const height = row * hBase / 10;
       return {
-        'width': width + 'px',
-        'height': height + 'px',
-        'top': top / 10 + 'px',
-        'left': left / 10 + 'px'
+        'width': item.sizeW / 100 + 'px',
+        'height': item.sizeH / 100 + 'px',
+        'top': item.posX / 10 + 'px',
+        'left': item.posY / 10 + 'px'
       }
     },
     setSignalStyle(item) {
-      const { row, col, wBase, hBase } = item.customFeature;
-      const { left, top } = item.position;
-      const width = wBase / 10;
-      const height = hBase / 10;
       return {
-        'width': width + 'px',
-        'height': height + 'px',
-        'top': top / 10 + 'px',
-        'left': left / 10 + 'px'
+        'width': item.scaleSizeW / 100 + 'px',
+        'height': item.scaleSizeH / 100 + 'px',
+        'top': item.scalePosY / 100 + 'px',
+        'left': item.scalePosX / 100 + 'px'
       }
     },
     hideRightView() {
       this.$root.bus.$emit('hideRightView');
     },
-    changeBank (bank, index){
-      console.log(this.animationList);
-      this.animationList.map(item => cancelAnimationFrame(item));
-      this.animationList = [];
-      this.$store.commit('setBankIndex', index);
-      bank.containers.forEach(cItem => {
-        cItem.content.forEach(display => {
-          display.intersectList = []
-        });
-      });
-
-      bank.containers.forEach(cItem => {
-        if(cItem.signalList.length > 0) {
-          cItem.signalList.forEach(sItem => {
-            sItem.aoi.status = false;
-            cItem.content.map(display => {
-              if (this.isOverlap(sItem, display)) {
-                display.intersectList.push(sItem);
-              }
-            });
-          });
-        }
-      })
-
-      this.containerList = bank.containers;
-      this.aoiData = null;
+    changeBank (scene, index){
+      this.currentSceneId = scene.id;
+      this.currentLayerList = scene.layer;
       this.$nextTick(() => {
-        this.containerList.map(item => {
-          item.signalList.map(sItem => {
-            if(!sItem.layerLock) {
-              this.signalLayerDraggable();
-              this.signalLayerResize();
-            }
-          })
-        });
-        // 初始化绘制流媒体画面
-        if(this.streamMedia) {
-          let img = new Image();
-          img.src = this.streamMedia;
-          let canvasBoxs = [];
-          $('.signal-layer-item canvas').each(function() {
-            canvasBoxs.push($(this)[0]);
-          });
-          img.onload = () => renderImg();
-          let renderImg = () => {
-            canvasBoxs.forEach((canvas, index) => {
-              const context = canvas.getContext('2d');
-              const inputPort = Number($(canvas).attr('inputPort'));
-              context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 320, 270, 0, 0, 192, 108);
-            });
-            let restartAnimateId = requestAnimationFrame(renderImg);
-            this.animationList.push(restartAnimateId);
+        this.currentLayerList.map(item => {
+          if(!item.freeze) {
+            this.layerDraggable(item.id); // 图层拖拽初始化
+            this.layerResize(item.id); // 图层缩放初始化
           }
-        }
+        })
       });
       // 直切场景
       let containers = [];
-      bank.containers.map(item => {
+      this.containerList.map(item => {
         const sceneC = {
           id: item.containerId,
           takeType: 2,
@@ -1343,7 +1308,7 @@ export default {
       })
       const params = {
         eventType: 'setTakeSetting',
-        sceneId: index,
+        sceneId: scene.id,
         container: containers,
         count: containers.length,
         checkKey: this.getcheckKey(),
@@ -1364,7 +1329,7 @@ export default {
     },
     // 容器区域拖拽
     draggableInit() {
-      const vm = this;
+      const that = this;
       $('.layer-cont .container-box').draggable({
         containment: [-Infinity,-Infinity,Infinity,Infinity],
         scroll: false,
@@ -1375,422 +1340,26 @@ export default {
     },
     // 左侧信号拖拽
     signalInitDraggable() {
-      const vm = this;
+      const that = this;
       $('.signal-item').draggable({
         helper: 'clone',
       });
     },
-    // 信号放置
-    signalInitDroppable() {
-      const vm = this;
-      $(".signal-model .signal-view").droppable({
-        accept: '.signal-item',
-        drop: function(event, ui) {
-          // 设置当前创建图层id
-          let usedLayerIds = []; // 使用过的图层id
-          let layerId = null;
-          vm.containerList.map(item => {
-            item.signalList.map(sItem => {
-              usedLayerIds.push(sItem.signalId);
-            });
-          });
-          if(usedLayerIds.length > 0) {
-            vm.layerIds.some(id => {
-              if(!usedLayerIds.includes(id)) {
-                layerId = id;
-                return true;
-              }
-            })
-          } else {
-            layerId = vm.layerIds[0];
-          }
-          // 图层order设置
-          let cSignalList = [];
-          vm.containerList.map(item => {
-            item.signalList.map(sItem => {
-              cSignalList.push(sItem.order);
-            });
-          });
-          const maxOrder = Math.max(...cSignalList);
-          const orderArr = [];
-          for(let i = 1; i <= maxOrder; i++) {
-            orderArr.push(i);
-          }
-
-          let createOrder = null;
-          if (maxOrder >= 1) {
-            orderArr.some(index => {
-              if(index == maxOrder) {
-                createOrder = maxOrder + 1;
-                return true;
-              } else if(!orderArr.includes(index)) {
-                createOrder = index;
-                return true;
-              }
-            })
-          } else {
-            createOrder = 1;
-          }
-
-          let targetObj = null;
-          const targetOutInputId = $(this).attr('outInputId');
-          const targetContainerId = $(this).attr('containerId');
-          vm.containerList.some(cItem => {
-            if(cItem.containerId == targetContainerId) {
-              cItem.content.map(dItem => {
-                if(dItem.displayId == targetOutInputId) {
-                  targetObj = dItem;
-                }
-              })
-              return true;
-            }
-          });
-          const setLayerParams = {
-            eventType: "setLayer",
-            count: 1,
-            layer: [
-              {
-                id: layerId,
-                cropPosX: 0,
-                cropPosY: 0,
-                cropSizeW: 1920,
-                cropSizeH: 1080,
-                scalePosX: targetObj.realPos.left,
-                scalePosY: targetObj.realPos.top,
-                scaleSizeW: targetObj.sizeW,
-                scaleSizeH: targetObj.sizeH, 
-                inputPort:  Number($(ui.draggable[0]).attr('id')),
-                containerId: Number(targetContainerId),
-                index: createOrder,
-                layerAlpha: 128,
-                sceneId: vm.bankIndex
-              }
-            ],
-            sessionID: vm.sessionId,
-            checkKey: vm.getcheckKey('setLayer')
-          }
-          // websocket 准备
-          if (window.webSocket && window.webSocket.readyState == 1) {
-            window.webSocket.send(JSON.stringify(setLayerParams));
-          }
-          window.webSocket.onmessage = function(res) {
-            const resData = JSON.parse(res.data);
-            if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
-              const r = Math.floor(Math.random()*256);
-              const g = Math.floor(Math.random()*256);
-              const b = Math.floor(Math.random()*256);
-              const aoi = {
-                status: false,
-                position: targetObj.position,
-                parentId: targetContainerId,
-              };
-              const signal = dataFormat.addWidget('signal', {
-                parentId: Number(targetContainerId),
-                signalId: layerId,
-                position: targetObj.position,
-                signalIndex: Number($(ui.draggable[0]).attr('index')),
-                bColor: `rgba(${r},${g},${b},0.6)`,
-                layerLock: false,
-                aoi,
-                realPos: targetObj.realPos,
-                sizeW: targetObj.sizeW,
-                sizeH: targetObj.sizeH,
-                cropW: 1920,
-                cropH: 1080,
-                cropX: 0,
-                cropY: 0,
-                inputPort: Number($(ui.draggable[0]).attr('id')),
-                order: createOrder,
-                layerAlpha: 128
-              });
-
-              const nowContainer = vm.$store.state.showVessels.find(cItem => cItem.containerId == targetContainerId);
-              signal.customFeature.wBase = nowContainer.customFeature.wBase;
-              signal.customFeature.hBase = nowContainer.customFeature.hBase;
-              signal.aoi.width = nowContainer.customFeature.wBase;
-              signal.aoi.height = nowContainer.customFeature.hBase;
-              signal.aoi.id = signal.signalId;
-              dataFormat.setWidget(signal);
-              vm.bankList[vm.bankIndex].containers.some(item => {
-                if(item.containerId == targetObj.containerId) {
-                  item.signalList.push(signal);
-                  return true;
-                }
-              });
-              vm.bankList[vm.bankIndex].containers.some(item => {
-                if(item.containerId == targetObj.containerId) {
-                  item.content.forEach(dItem => {
-                    if (vm.isOverlap(signal, dItem)) {
-                      dItem.signalNum = dItem.signalNum - 1;
-                      dItem.intersectList.push(signal);
-                    }
-                  });
-                  return true;
-                }
-              });
-              vm.containerList = vm.bankList[vm.bankIndex].containers;
     
-              vm.$nextTick(() => {
-                vm.signalLayerDraggable();
-                vm.signalLayerResize();
-                console.log('创建的新图层',signal);
-                // 初始化绘制流媒体画面
-                if(vm.h264 && vm.sryj) {
-                  let img = new Image();
-                  img.src = vm.streamMedia;
-                  const canvas = $('#'+signal.id).find('canvas')[0];
-  
-                  const context = canvas.getContext('2d');
-                 
-                  let renderImg = () => {
-                    context.drawImage(img, vm.clipList[signal.inputPort].left, vm.clipList[signal.inputPort].top, 960, 540, 0, 0, 192, 108);
-                    let addAnimateId = requestAnimationFrame(renderImg);
-                    vm.animationList.push(addAnimateId);
-                  }
-                  renderImg();
-                }
-              })
-              vm.$store.dispatch('setBankList', vm.bankList);
-            }
-          }
-        }
-      })
-    },
-    // 信号图层拖拽
-    signalLayerDraggable() {
-      const vm = this;
-      $('.signal-layer-item').draggable({
-        scroll: false,
-        zIndex: 100,
-        stop: function(event, ui) {
-          // 被移动的图层
-          const containerId = $(this).attr('containerId');
-          const id = $(this).attr('id');
-          const signalId = $(this).attr('signalId');
-          let movedLayer = null;
-          vm.containerList.some(cItem => {
-            if(cItem.containerId == containerId) {
-              movedLayer = cItem.signalList.find(sItem => sItem.signalId == signalId);
-              return true;
-            }
-          })
-          // websocket 准备
-          const setLayerParams = {
-            eventType: "setLayer",
-            count: 1,
-            layer: [
-              {
-                id: movedLayer.signalId,
-                cropPosX: movedLayer.cropX,
-                cropPosY: movedLayer.cropY,
-                cropSizeW: movedLayer.cropW,
-                cropSizeH: movedLayer.cropH,
-                scalePosX: Math.round(ui.position.left * 10),
-                scalePosY: ui.position.top * 10,
-                scaleSizeW: movedLayer.sizeW,
-                scaleSizeH: movedLayer.sizeH, 
-                inputPort:  movedLayer.inputPort,
-                containerId: Number(containerId),
-                layerAlpha: movedLayer.layerAlpha,
-                index: movedLayer.order,
-                sceneId: vm.bankIndex
-              }
-            ],
-            sessionID: vm.sessionId,
-            checkKey: vm.getcheckKey('setLayer')
-          } 
-          if (window.webSocket && window.webSocket.readyState == 1) {
-            window.webSocket.send(JSON.stringify(setLayerParams));
-          }
-          window.webSocket.onmessage = function(res) {
-            const resData = JSON.parse(res.data);
-            if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
-              // 移动图层所属容器
-              const moveBelongContainer = vm.containerList.find(cItem => cItem.containerId == containerId); 
-              // 被移动的图层
-              const moveLayer = moveBelongContainer.signalList.find(layer => layer.signalId == signalId); 
-              // 改变图层位置信息
-              moveLayer.position = ui.position;
-              moveLayer.aoi.position = ui.position;
-              moveLayer.realPos = {
-                left: Math.round(ui.position.left * 10),
-                top: ui.position.top * 10
-              }
-              vm.positionX = Math.round(ui.position.left * 10);
-              vm.positionY = ui.position.top * 10;
-              // 重新判断图层相交显示器
-              moveBelongContainer.content.map(display => {
-                if(vm.isOverlap(moveLayer, display)) { // 判断是否相交
-                  const isBelong = display.intersectList.find(iItem => iItem.signalId == moveLayer.signalId);
-                  if(!isBelong) { // 移动前是否已相交
-                    display.signalNum = display.signalNum - 1;
-                    display.intersectList.push(moveLayer);
-                  }
-                } else {
-                  const isBelong = display.intersectList.find(iItem => iItem.signalId == moveLayer.signalId);
-                  if(isBelong) {
-                    display.signalNum = display.signalNum + 1;
-                    display.intersectList = display.intersectList.filter(iItem => iItem.signalId != moveLayer.signalId);
-                  }
-                }
-              });
-              vm.bankList.some((item, index) => {
-                if(index == vm.bankIndex) {
-                  item.containers = vm.containerList;
-                  return true;
-                }
-              })
-              vm.$store.dispatch('setBankList', vm.bankList);
-            }
-          }
-         
-        }
-      })
-    },
-    // 信号图层缩放
-    signalLayerResize() {
-      const vm = this;
-      $('.signal-layer-item').resizable({
-        minWidth: 32,
-        minHeight: 32,
-        resize: function(event, ui) {
-          const containerId = $(this).attr('containerId');
-          const id = $(this).attr('id');
-          const signalId = $(this).attr('signalId');
-          vm.containerList.some(item => {
-            if (item.containerId == containerId) {
-              item.signalList.some((layer, index) => {
-                if (layer.id == id) {
-                  layer.customFeature.wBase = ui.size.width;
-                  layer.customFeature.hBase = ui.size.height;
-                  layer.sizeW = Math.floor(ui.size.width * 10);
-                  layer.sizeH = ui.size.height * 10;
-                  item.content.forEach(dItem => {
-                    if (vm.isOverlap(layer, dItem)) {
-                      const isBelong = dItem.intersectList.find(iItem => iItem === layer);
-                      if(!isBelong) {
-                        dItem.signalNum = dItem.signalNum - 1;
-                        dItem.intersectList.push(layer);
-                      }
-                    } else {
-                      const isBelong = dItem.intersectList.find(iItem => iItem === layer);
-                      if(isBelong) {
-                        dItem.signalNum = dItem.signalNum + 1;
-                        const iItemIndex = dItem.intersectList.findIndex(iItem => iItem !== layer);
-                        dItem.intersectList.splice(iItemIndex, 1);
-                      }
-                    }
-                  })
-                  return true;
-                }
-              })
-              return true;
-            }
-          });
-          vm.bankList.some((item, index) => {
-            if(index == vm.bankIndex) {
-              item.containers = vm.containerList;
-              return true;
-            }
-          })
-          vm.$store.dispatch('setBankList', vm.bankList);
-        },
-        stop: function(event, ui) {
-          const containerId = $(this).attr('containerId');
-          const id = $(this).attr('id');
-          const signalId = $(this).attr('signalId');
-          let movedLayer = null;
-          vm.containerList.some(cItem => {
-            if(cItem.containerId == containerId) {
-              movedLayer = cItem.signalList.find(sItem => sItem.signalId == signalId);
-              return true;
-            }
-          })
-          // websocket 准备
-          const setLayerParams = {
-            eventType: "setLayer",
-            count: 1,
-            layer: [
-              {
-                id: movedLayer.signalId,
-                cropPosX: movedLayer.cropX,
-                cropPosY: movedLayer.cropY,
-                cropSizeW: movedLayer.cropW,
-                cropSizeH: movedLayer.cropH,
-                scalePosX: movedLayer.realPos.left,
-                scalePosY: movedLayer.realPos.top,
-                scaleSizeW: ui.size.width * 10,
-                scaleSizeH: ui.size.height * 10, 
-                inputPort:  movedLayer.inputPort,
-                containerId: Number(containerId),
-                layerAlpha: movedLayer.layerAlpha,
-                index: movedLayer.order,
-                sceneId: vm.bankIndex
-              }
-            ],
-            sessionID: vm.sessionId,
-            checkKey: vm.getcheckKey('setLayer')
-          } 
-          if (window.webSocket && window.webSocket.readyState == 1) {
-            window.webSocket.send(JSON.stringify(setLayerParams));
-          }
-          window.webSocket.onmessage = function(res) {
-            const resData = JSON.parse(res.data);
-            if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
-              // 缩放图层所属容器
-              const moveBelongContainer = vm.containerList.find(cItem => cItem.containerId == containerId); 
-              // 被缩放的图层
-              const moveLayer = moveBelongContainer.signalList.find(layer => layer.signalId == signalId); 
-              // 改变图层信息
-              moveLayer.customFeature.wBase = ui.size.width;
-              moveLayer.customFeature.hBase = ui.size.height;
-              moveLayer.sizeW = Math.floor(ui.size.width * 10);
-              moveLayer.sizeH = ui.size.height * 10;
-              vm.sourceW = Math.floor(ui.size.width * 10);
-              vm.sourceH = ui.size.height * 10;
-              // 重新判断图层相交显示器
-              moveBelongContainer.content.map(display => {
-                if(vm.isOverlap(moveLayer, display)) { // 判断是否相交
-                  const isBelong = display.intersectList.find(iItem => iItem.signalId == moveLayer.signalId);
-                  if(!isBelong) { // 移动前是否已相交
-                    display.signalNum = display.signalNum - 1;
-                    display.intersectList.push(moveLayer);
-                  }
-                } else {
-                  const isBelong = display.intersectList.find(iItem => iItem.signalId == moveLayer.signalId);
-                  if(isBelong) {
-                    display.signalNum = display.signalNum + 1;
-                    display.intersectList = display.intersectList.filter(iItem => iItem.signalId != moveLayer.signalId);
-                  }
-                }
-              });
-
-              vm.bankList.some((item, index) => {
-                if(index == vm.bankIndex) {
-                  item.containers = vm.containerList;
-                  return true;
-                }
-              })
-              vm.$store.dispatch('setBankList', vm.bankList);
-            }
-          }
-        }
-      })
-    },
     // aoi图层拖拽初始化
     signalAOIDraggable() {
-      const vm = this;
+      const that = this;
       $(".aoi").draggable({
         scroll: false,
         stop: function(event, ui) {
           let changeSitem = changeCitem.signalList.find(item => item.signalId == sid);
           const cid = $(this).attr('cId');
           const sid = $(this).attr('sId');
-          const changeCitem = vm.containerList.find(item => item.containerId == cid);
+          const changeCitem = that.containerList.find(item => item.containerId == cid);
           changeSitem.aoi.position = ui.position;
-          vm.$nextTick(() => {
-            vm.signalAOIDraggable();
-            vm.signalAOIResize();
+          that.$nextTick(() => {
+            that.signalAOIDraggable();
+            that.signalAOIResize();
           });
 
         //   const setLayerParams = {
@@ -1813,8 +1382,8 @@ export default {
         //         index: changeSitem.order
         //       }
         //     ],
-        //     sessionID: vm.sessionId,
-        //     checkKey: vm.getcheckKey('setLayer')
+        //     sessionID: that.sessionId,
+        //     checkKey: that.getcheckKey('setLayer')
         //   }
         //   // websocket 准备
         //   if (window.webSocket && window.webSocket.readyState == 1) {
@@ -1822,10 +1391,10 @@ export default {
         //   }
         //   window.webSocket.onmessage = function(res) {
         //     const resData = JSON.parse(res.data);
-        //     if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
-        //       vm.$nextTick(() => {
-        //         vm.signalAOIDraggable();
-        //         vm.signalAOIResize();
+        //     if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == that.setLayerCheckKey) {
+        //       that.$nextTick(() => {
+        //         that.signalAOIDraggable();
+        //         that.signalAOIResize();
         //       });
         //     }
         //   }
@@ -1833,32 +1402,32 @@ export default {
       })
     },
     signalAOIResize() {
-      const vm = this;
+      const that = this;
       $(".aoi").resizable({
         maxWidth: 500,
         maxHeight: 500,
         resize: function(event, ui) {
           const cid = $(this).attr('cId');
           const sid = $(this).attr('sId');
-          const changeCitem = vm.containerList.find(item => item.containerId == cid);
+          const changeCitem = that.containerList.find(item => item.containerId == cid);
           let changeSitem = changeCitem.signalList.find(item => item.signalId == sid);
           changeSitem.aoi.width = ui.size.width;
           changeSitem.aoi.height = ui.size.height;
-          vm.$nextTick(() => {
-            vm.signalAOIDraggable();
-            vm.signalAOIResize();
+          that.$nextTick(() => {
+            that.signalAOIDraggable();
+            that.signalAOIResize();
           });
         },
         stop: function(event, ui) {
           const cid = $(this).attr('cId');
           const sid = $(this).attr('sId');
-          const changeCitem = vm.containerList.find(item => item.containerId == cid);
+          const changeCitem = that.containerList.find(item => item.containerId == cid);
           let changeSitem = changeCitem.signalList.find(item => item.signalId == sid);
           changeSitem.aoi.width = ui.size.width;
           changeSitem.aoi.height = ui.size.height;
-          vm.$nextTick(() => {
-            vm.signalAOIDraggable();
-            vm.signalAOIResize();
+          that.$nextTick(() => {
+            that.signalAOIDraggable();
+            that.signalAOIResize();
           });
           // const setLayerParams = {
           //   eventType: "setLayer",
@@ -1880,8 +1449,8 @@ export default {
           //       index: changeSitem.order
           //     }
           //   ],
-          //   sessionID: vm.sessionId,
-          //   checkKey: vm.getcheckKey('setLayer')
+          //   sessionID: that.sessionId,
+          //   checkKey: that.getcheckKey('setLayer')
           // }
           // // websocket 准备
           // if (window.webSocket && window.webSocket.readyState == 1) {
@@ -1889,11 +1458,11 @@ export default {
           // }
           // window.webSocket.onmessage = function(res) {
           //   const resData = JSON.parse(res.data);
-          //   if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == vm.setLayerCheckKey) {
+          //   if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == that.setLayerCheckKey) {
               
-          //     vm.$nextTick(() => {
-          //       vm.signalAOIDraggable();
-          //       vm.signalAOIResize();
+          //     that.$nextTick(() => {
+          //       that.signalAOIDraggable();
+          //       that.signalAOIResize();
           //     });
           //   }
           // }
@@ -1922,6 +1491,20 @@ export default {
         return true;
     }
   },
+  watch: {
+    layerObj: {
+      deep: true,
+      handler(value) {
+        this.outsideLayerObj = value;
+      }
+    },
+    outsideLayerObj: {
+      deep: true,
+      handler(value) {
+        this.layerObj = value;
+      }
+    }
+  }
 }
 </script>
 
@@ -2048,9 +1631,6 @@ export default {
           .green-text {
             color: rgb(26,188,156);
           }
-        }
-        .movie {
-          // background: red;
         }
         .signal-item:hover {
           color: #fff;

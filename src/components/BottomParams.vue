@@ -25,15 +25,14 @@
 </template>
 
 <script>
-import { Display } from './widget/display.model';
 export default {
   props: {
     display: {
-      type: Object,
+      type: Object | Array,
       default: null
     },
-    signal: {
-      type: Object,
+    layer: {
+      type: Object | Array,
       default: null
     }
   },
@@ -44,8 +43,6 @@ export default {
       vNum: '',
       dWidth: '',
       dHeight: '',
-      displayInfo: null,
-      signalInfo: null
     }
   },
   mounted() {
@@ -53,29 +50,24 @@ export default {
   },
   methods: {
     dataChange() {
-      this.displayInfo = null;
-      this.signalInfo = null;
       if (this.display) {
-        this.displayInfo = this.display;
-        this.devideName = '显示器' + this.display.id;
+        this.devideName = '显示器' + (this.display.id + 1);
         this.dWidth = this.display.sizeW;
         this.dHeight = this.display.sizeH;
         this.hNum = this.display.posX;
         this.vNum = this.display.posY;
       }
-      if (this.signal) {
-        this.signalInfo = this.signal;
-        this.devideName = '信号' + this.signal.inputPort;
-        this.dWidth = this.signal.sizeW;
-        this.dHeight = this.signal.sizeH;
-        this.hNum = this.signal.posX;
-        this.vNum = this.signal.posY;
+      if (this.layer) {
+        this.devideName = '信号' + this.layer.inputPort;
+        this.dWidth = this.layer.scaleSizeW;
+        this.dHeight = this.layer.scaleSizeH;
+        this.hNum = this.layer.scalePosX;
+        this.vNum = this.layer.scalePosY;
       }
     },
     changInput(e, type) {
       // let val = e.target.value.trim().replace(/\D/ig, '').replace(/^[0]/, 1);
       let val = e.target.value.trim().replace(/\D/ig, '');
-      console.log(val);
       if(type == 'hor') {
         this.hNum = val;
       }
@@ -92,8 +84,8 @@ export default {
     },
     //点击确定
     setDisplay() {
-      let display = this.displayInfo;
-      let signal = this.signalInfo;
+      let display = this.display;
+      let layer = this.layer;
       if(display) {
         display.sizeW = this.dWidth ? this.dWidth  : display.sizeW;
         display.sizeH = this.dHeight ? this.dHeight : display.sizeH;
@@ -101,14 +93,12 @@ export default {
         display.posY = this.vNum ? this.vNum : display.posY;
         this.$root.bus.$emit('setDisplayInfo', display);
       }
-      if (signal) {
-        signal.sizeW = this.dWidth ? this.dWidth : signal.sizeW;
-        signal.sizeH = this.dHeight ? this.dHeight : signal.sizeH;
-        signal.realPos.left = this.hNum ? this.hNum : signal.realPos.left;
-        signal.realPos.top = this.vNum ? this.vNum : signal.realPos.top;
-        signal.position.left = this.hNum ? (this.hNum / 20) : signal.position.left / 2;
-        signal.position.top = this.vNum ?  (this.vNum / 20) : signal.position.top / 2;
-        this.$root.bus.$emit('setSignalInfo', signal);
+      if (layer) {
+        layer.scaleSizeW = this.dWidth ? this.dWidth : layer.scaleSizeW;
+        layer.scaleSizeH = this.dHeight ? this.dHeight : layer.scaleSizeH;
+        layer.scalePosX = this.hNum ? this.hNum : layer.scalePosX;
+        layer.scalePosY = this.vNum ? this.vNum : layer.scalePosY;
+        this.$root.bus.$emit('setLayerInfo', layer);
       }
     }
   },
@@ -119,7 +109,7 @@ export default {
         this.dataChange();
       },
     },
-    signal: {
+    layer: {
       deep: true,
       handler() {
         this.dataChange();

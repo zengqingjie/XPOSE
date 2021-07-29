@@ -1,28 +1,37 @@
 <template>
   <div
     class="container-component"
-    v-if="cItem && cItem.templateId"
+    v-if="cItem"
     :style="setContainerStyle"
-    :id="cItem.id"
     :containerId="cItem.containerId"
   >
     <div class="container-header">
       <span
-        >{{ index + 1 }}--(W:{{ cItem.sizeW }} H:{{ cItem.sizeH }})</span
+        >{{ cItem.containerId + 1 }}--(W:{{ cItem.sizeW }} H:{{ cItem.sizeH }})</span
       >
     </div>
-    <div class="displayer-box" :parentId="cItem.id">
+    <div
+      class="content-view" 
+      :containerId="cItem.containerId"
+    >
       <Displayer
-        v-for="displayer in cItem.content"
-        :key="displayer.id"
-        :dMsg="displayer"
-        :deviceId="deviceId"
-        :size="setDisplayerItem"
-        :positionZoom="cItem.positionZoom"
-        pisition="true"
-      />
+        v-for="outputItem in output"
+        :key="outputItem.id"
+        :outputItem="outputItem"
+        :slotName="'layerNumber'"
+      >
+        <template v-slot:layerNumber>
+          <span>192</span>
+        </template>
+      </Displayer>
+      <SignalLayer
+        v-for="layer in layerList"
+        :key="'layer' + layer.id"
+        :layer="layer"
+      >
+      </SignalLayer>
     </div>
-    <div class="signal-model" v-if="signalModelShow">
+    <!-- <div class="signal-model" v-if="signalModelShow">
       <SignalModel
         v-for="displayer in cItem.content"
         :key="displayer.id"
@@ -32,16 +41,8 @@
         :positionZoom="cItem.positionZoom"
         pisition="true"
       />
-      <SignalLayer
-        v-for="layer in signalLayers"
-        :key="layer.id"
-        :info="layer"
-        :container="cItem"
-        :clipList="clipList"
-      >
-      </SignalLayer>
       <slot></slot>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -55,29 +56,14 @@ export default {
     cItem: {
       type: Object,
     },
-    signalLayers: {
+    output: {
       type: Array,
-      default: []
+      default: () => []
     },
-    index: {
-      type: Number | String,
-      default: -1,
-    },
-    deviceId: {
-      type: Number | String,
-      default: ''
-    },
-    signalModelShow: {
-      type: Boolean
-    },
-    aoiData: {
-      type: Object,
-      default: null
-    },
-    clipList: {
+    layerList: {
       type: Array,
-      default: []
-    },
+      default: () => []
+    }
   },
   components: {
     Displayer,
@@ -92,25 +78,11 @@ export default {
   computed: {
     // 容器尺寸
     setContainerStyle() {
-      const { position } = this.cItem;
-      const { col, row, wBase, hBase, zoom } = this.cItem.customFeature;
-      const width = col * wBase * zoom.xRadio + "px";
-      const height = row * hBase * zoom.yRadio + 24 + "px";
       return {
-        width: width,
-        height: height,
-        top: position.top ? position.top + "px" : 0,
-        left: position.left ? position.left + "px" : 0,
-      };
-    },
-    setDisplayerItem() {
-      const { col, row, wBase, hBase, zoom } = this.cItem.customFeature;
-      const width = wBase;
-      const height = hBase;
-      return {
-        width: width * zoom.xRadio,
-        height: height * zoom.yRadio,
-        zoom: this.cItem.customFeature.zoom
+        width: this.cItem.sizeW / 10 + 'px',
+        height: this.cItem.sizeH / 10 + 24 + 'px',
+        top: this.cItem.posY + 'px',
+        left: this.cItem.posX + 'px'
       };
     },
   },
@@ -119,18 +91,10 @@ export default {
       this.$root.bus.$emit('setSelectedContainer', container);
     },
     
-    
   },
   created() {},
   mounted() {},
-  methods: {
-    
-  },
-  watch: {
-    signalLayers() {
-      
-    },
-  },
+  watch: {},
 };
 </script>
 
@@ -159,12 +123,12 @@ export default {
     flex: 1;
     background: rgb(63, 69, 94);
   }
-  .displayer-box {
+  .content-view {
     position: relative;
     flex: 1;
     display: flex;
     flex-wrap: wrap;
-    .displayer-box-child {
+    .content-view-child {
       position: relative;
       box-sizing: border-box;
     }

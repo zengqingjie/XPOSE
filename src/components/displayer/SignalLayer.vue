@@ -1,38 +1,37 @@
 <template>
   <div
     class="signal-layer-item"
-    v-if="layerInfo"
+    v-if="layer"
     :style="setStyle"
-    :class="layerInfo.signalType ? layerInfo.signalType : ''"
-    :containerId="layerInfo.parentId"
-    :signalId="layerInfo.signalId"
-    :id="layerInfo.id"
+    :containerId="layer.containerId"
+    :id="'layer'+layer.id"
+    :layerId="layer.id"
     @mouseenter="mouseEnter"
     @mouseleave="mouseLeave"
-    @click.stop="getLayer(layerInfo)"
+    @click.stop="getLayer(layer)"
   >
     <div class="position-head" v-if="positionHead">
-      <img src="../../assets/layer_aoi.png" alt="" v-if="!layerInfo.layerLock" @click="aoiEvent(layerInfo)">
+      <img src="../../assets/layer_aoi.png" alt="" v-if="!layer.freeze" @click="aoiEvent(layer)">
       <img
-        :src="layerInfo.layerLock ? require('../../assets/layer_lock.png') : require('../../assets/layer_unlock.png')"
-        @click="lockEvent(layerInfo.parentId, layerInfo.signalId, layerInfo.id)"
+        :src="layer.freeze ? require('../../assets/layer_lock.png') : require('../../assets/layer_unlock.png')"
+        @click="lockEvent(layer)"
         alt=""
       >
-      <img src="../../assets/layer_tile.png" alt="" v-if="!layerInfo.layerLock">
-      <img src="../../assets/layer_maximize.png" alt="" v-if="!layerInfo.layerLock" @click="fullScreen(layerInfo)">
-      <img src="../../assets/layer_delete.png" alt="" v-if="!layerInfo.layerLock" @click="deleteLayer(layerInfo)">
+      <!-- <img src="../../assets/layer_tile.png" alt="" v-if="!layer.freeze"> -->
+      <img src="../../assets/layer_maximize.png" alt="" v-if="!layer.freeze" @click="fullScreen(layer)">
+      <img src="../../assets/layer_delete.png" alt="" v-if="!layer.freeze" @click="deleteLayer(layer)">
     </div>
-    <div>信号 {{layerInfo.inputPort}}</div>
+    <div>信号 {{layer.inputPort}}</div>
     <div>
-      <span>x:{{layerInfo.realPos.left}}</span>
-      <span>y:{{layerInfo.realPos.top}}</span>
+      <span>x:{{layer.scalePosX}}</span>
+      <span>y:{{layer.scalePosY}}</span>
     </div>
     <div>
-      <span>w:{{layerInfo.sizeW}}</span>
-      <span>h:{{layerInfo.sizeH}}</span>
+      <span>w:{{layer.scaleSizeW}}</span>
+      <span>h:{{layer.scaleSizeH}}</span>
     </div>
-    <div>Order:{{layerInfo.order}}</div>
-    <canvas width="192" height="108" :inputPort="layerInfo.inputPort" :format="layerInfo.format"></canvas>
+    <!-- <div>Order:{{layer.order}}</div> -->
+    <!-- <canvas width="192" height="108" :inputPort="layer.inputPort" :format="layer.format"></canvas> -->
   </div>
 </template>
 
@@ -40,7 +39,7 @@
 import $ from "jquery";
 export default {
   props: {
-    info: {
+    layer: {
       type: Object
     },
     size: {
@@ -56,30 +55,13 @@ export default {
   data() {
     return {
       positionHead: false,
-      layerInfo: null,
       aoi: false,
-      streamMedia: ''
     }
   },
-  created() {
-    const ip = JSON.parse(window.sessionStorage.getItem("ip"));
-    this.streamMedia = `http://${ip}:5005/?action=stream`;
-  },
-  mounted() {
-    this.init();
-  },
+  mounted() { },
   methods: {
-    init() {
-      this.layerInfo = this.info;
-    },
-    lockEvent(cId, sId, id) {
-      const data = {
-        status: !this.layerInfo.layerLock,
-        cId,
-        sId,
-        id
-      }
-      this.$root.bus.$emit('layerActive', data);
+    lockEvent(layer) {
+      this.$root.bus.$emit('layerActive', layer);
     },
     mouseEnter() {
       this.positionHead = true;
@@ -97,25 +79,27 @@ export default {
       this.$root.bus.$emit('aoiEvent', layer);
     },
     getLayer(layer) {
-      this.$root.bus.$emit('getLayerInfo', layer);
+      this.$root.bus.$emit('getlayer', layer);
+    },
+    setLayerBgk() {
+      const r = Math.floor(Math.random()*256);
+      const g = Math.floor(Math.random()*256);
+      const b = Math.floor(Math.random()*256);
+      return `rgba(${r},${g},${b},0.6)`;
     }
   },
   computed: {
     setStyle() {
       return {
-        width: this.layerInfo.sizeW / 10+ 'px',
-        height: this.layerInfo.sizeH / 10 + 'px',
-        left: this.layerInfo.position.left + 'px',
-        top: this.layerInfo.position.top + 'px',
-        background: this.layerInfo.bColor
+        width: this.layer.scaleSizeW / 10+ 'px',
+        height: this.layer.scaleSizeH / 10 + 'px',
+        left: this.layer.scalePosX / 10 + 'px',
+        top: this.layer.scalePosY / 10 + 'px',
+        background: this.setLayerBgk()
       }
     }
   },
-  watch: {  
-    layer() {
-      this.init();
-    }
-  }
+  watch: { }
 }
 </script>
 

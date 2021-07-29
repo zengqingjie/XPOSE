@@ -1,7 +1,7 @@
 <template>
   <div
     class="displayer-view"
-    :class="deviceId == outputItem.id ? 'border-style' : ''"
+    :class="deviceId === outputItem.id ? 'border-style' : ''"
     :style="setStyle"
     :id="outputItem.id"
     :containerId="outputItem.containerId"
@@ -15,11 +15,14 @@
     <div><span>w:{{outputItem.sizeW}}</span><span>h:{{outputItem.sizeH}}</span></div>
     <div>{{outputItem.outputType}}</div>
     <span
-      v-show="deleteIcon"
+      v-show="!slotName && deleteIcon"
       class="delete-displayer"
       @click.stop="deleteDisplayer(outputItem.id, outputItem.containerId)"
       >x</span
     >
+    <div class="layer-num" v-if="slotName">
+      <slot name="layerNumber"></slot>
+    </div>
     <!-- <div class="border-view" v-if="deviceId == outputItem.id"></div> -->
   </div>
 </template>
@@ -34,6 +37,10 @@ export default {
       type: Number | String,
       default: ''
     },
+    slotName: {
+      type: String,
+      default: ''
+    }
   },
   data() {
     return {
@@ -41,6 +48,7 @@ export default {
     };
   },
   mounted() {
+    
   },
   watch: {},
   computed: {
@@ -94,6 +102,20 @@ export default {
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
+  }
+  .layer-num {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 48px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    font-size: 14px;
   }
   .border-view {
     position: absolute;

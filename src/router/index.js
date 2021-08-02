@@ -8,13 +8,19 @@ const routes = [
   {
     path: '/',
     name: 'Login',
-    component: () => import('../Login.vue')
+    component: () => import('../Login.vue'),
+    meta: {
+      title: 'XPOSE'
+    }
   },
   // 注册
   {
     path: '/register',
     name: 'Register',
-    component: () => import('../Register.vue')
+    component: () => import('../Register.vue'),
+    meta: {
+      title: 'XPOSE'
+    }
   },
   // 主页
   {
@@ -23,7 +29,10 @@ const routes = [
     meta: {
       requiresAuth: true
     },
-    component: () => import('@/views/Index.vue')
+    component: () => import('@/views/Index.vue'),
+    meta: {
+      title: 'XPOSE'
+    }
   },
    // 切割
    {
@@ -50,6 +59,7 @@ router.beforeEach((to, from, next) => {
   if(!isLogin && to.meta.requiresAuth) {
     next('/');
   } else {
+    if(to.meta.title) { document.title = to.meta.title; }
     next();
   }
 });

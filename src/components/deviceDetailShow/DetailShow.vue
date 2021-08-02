@@ -57,8 +57,8 @@
         </div>
       </div>
       <div class="sn-view">
-        <div>sn:{{sn}}</div>
-        <div>ip:{{ip}}</div>
+        <div>SN:{{sn}}</div>
+        <div>IP:{{ip}}</div>
       </div>
     </div>
     <div class="right-view" v-if="!showInfo && nowMenuId == '002'">

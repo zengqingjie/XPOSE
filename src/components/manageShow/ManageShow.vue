@@ -617,8 +617,8 @@ export default {
           id: data.id,
           posX: Number(data.posX),
           posY: Number(data.posY),
-          sizeW: data.sizeW,
-          sizeH: data.sizeH,
+          sizeW: Number(data.sizeW),
+          sizeH: Number(data.sizeH),
           containerId: data.containerId,
           outputType: data.outputType,
           outputTypeEnum: data.outputTypeEnum

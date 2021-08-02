@@ -957,17 +957,18 @@ export default {
           that.currentLayerList.map(item => {
             layerIndexList.push(item.index);
           });
-          const maxOrder = Math.max(...layerIndexList);
-          const indexArr = [];
-          for(let i = 1; i <= maxOrder; i++) {
+          const minIndex = Math.min(...layerIndexList);
+          let indexArr = [];
+          for(let i = 0; i <= 191; i++) {
             indexArr.push(i);
           }
+          indexArr.reverse();
 
           let createIndex = null;
-          if (maxOrder >= 1) {
+          if (minIndex <= 191 && minIndex >= 0 ) {
             indexArr.some(index => {
-              if(index == maxOrder) {
-                createIndex = maxOrder + 1;
+              if(index == minIndex) {
+                createIndex = minIndex - 1;
                 return true;
               } else if(!indexArr.includes(index)) {
                 createIndex = index;
@@ -975,7 +976,7 @@ export default {
               }
             })
           } else {
-            createIndex = 1;
+            createIndex = 191;
           }
 
           const dropOutputId = $(this).attr('id'); // 放置输出口id
@@ -1311,6 +1312,7 @@ export default {
         sceneId: scene.id,
         container: containers,
         count: containers.length,
+        pageId: this.currentPageId,
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId
       }

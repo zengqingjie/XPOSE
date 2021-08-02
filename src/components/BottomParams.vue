@@ -87,7 +87,7 @@ export default {
       let display = this.display;
       let layer = this.layer;
       if(display) {
-        display.sizeW = this.dWidth ? this.dWidth  : display.sizeW;
+        display.sizeW = this.dWidth ? this.dWidth : display.sizeW;
         display.sizeH = this.dHeight ? this.dHeight : display.sizeH;
         display.posX = this.hNum ? this.hNum : display.posX;
         display.posY = this.vNum ? this.vNum : display.posY;

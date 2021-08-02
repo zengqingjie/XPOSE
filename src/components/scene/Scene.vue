@@ -3,38 +3,35 @@
     <div class="scene-cont">
       <div class="container-view">
         <LayerContainer
-          v-for="(item, index) in bankList[bankIndex].containers" :key="index"
+          v-for="(item, index) in containerList" :key="index"
           :cItem="item"
-          :signalLayers="item.signalList"
-          :index="index"
-          :id="item.id"
-          :signalModelShow="true"
-          :clipList="clipList"
+          :output="setOutputList(item.containerId)"
+          :layerList="setLayerList(item.containerId)"
         />
       </div>
       <div class="bank-view">
         <div class="bank-box">
           <div class="bank-item"
-            v-for="(item, index) in bankList"
+            v-for="(item, index) in sceneList"
             :key="index"
             @click="changeBank(item, index)"
           >
-            <div class="bank-head" :style="{background:item && item.headColor}">bank{{index + 1}}</div>
-            <div class="bank-cont" :style="{borderColor:item && item.headColor}">
+            <div class="bank-head" :style="{background: bankList[index].headColor}">bank{{index + 1}}</div>
+            <div class="bank-cont" :style="{borderColor: bankList[index].headColor}">
               <div
                 class="signalContainer-item"
-                v-for="(cItem) in item.containers"
-                :key="cItem.id"
+                v-for="(cItem) in containerList"
+                :key="cItem.containerId"
                 :style="setContainerStyle(cItem)"
               >
                 <div
                   class="signal-layer"
-                  v-for="layer in cItem.signalList"
+                  v-for="layer in item.layer"
                   :key="layer.id"
                   :style="setSignalStyle(layer)"
                 ></div>
               </div>
-              <div class="sel-model" v-if="index == bankIndex">
+              <div class="sel-model" v-if="item.id == currentSceneId">
                 <img src="../../assets/bank_show.png" alt="">
               </div>
             </div>
@@ -239,6 +236,14 @@ export default {
   data() {
     return {
       typeIndex: 0,
+      
+      containerList: [], // 已创建的容器
+      outputList: [], // 已创建输出口
+      currentLayerList: [], // 图层列表
+      sceneList: [], // 场景列表
+      currentSceneId: 0, // 当前场景
+      currentPageId: 0, // 当前页
+
       copyContainer: false,
       sliderTime: 0, // 切换时间
       darkScence: false, // 黑场
@@ -373,35 +378,90 @@ export default {
     }
   },
   created() {
-    // 分割流媒体（4行6列）
-    this.clipMedia(2, 2);
-    this.streamMedia = 'http://192.168.0.204:5005/?action=stream';
+
   },
   mounted() {
-    // 初始化绘制流媒体画面
-    this.$nextTick(() => {
-      let canvasBoxs = [];
-      $('.signal-layer-item canvas').each(function() {
-        canvasBoxs.push($(this)[0]);
-      });
-      if(canvasBoxs.length > 0) {
-        let img = new Image();
-        img.src = this.streamMedia;
-        img.onload = () => renderImg();
-        let renderImg = () => {
-          canvasBoxs.forEach((canvas, index) => {
-            const context = canvas.getContext('2d');
-            const inputPort = Number($(canvas).attr('inputPort'));
-            context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 960, 540, 0, 0, 192, 108);
-          })
-          window.requestAnimationFrame(renderImg);
-        }
-      }
-    })
+    
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
     this.opacityPercent = this.opacityPercent.toFixed(2);
+
+    this.readContainerMsg(); // 读取容器配置信息
+    this.readOutputList(); // 读取输出口列表
+    this.readLayerMsg(); // 读取图层列表
+
+    // websocket接收到的消息
+    const that = this;
+    window.webSocket.onmessage = function(res) {
+      const result = JSON.parse(res.data);
+      // 获取容器
+      if((result.code == 200) && (result.data.eventType == 'readContainerMsg')) {
+        if (result.data.count > 0) {
+          that.containerList = result.data.container;
+        } else {
+          that.containerList = [];
+        }
+      }
+      // 获取显示器（输出口）列表
+      if((result.code == 200) && (result.data.eventType == 'readOutputList')) {
+        that.outputList = result.data.output;
+      }
+      // 获取图层列表数据
+      if((result.code == 200) && (result.data.eventType == 'readLayerMsg')) {
+        that.sceneList = result.data.scene;
+        that.currentSceneId = result.data.currentSceneId;
+        that.currentPageId = result.data.currentPageId;
+        that.currentLayerList = result.data.scene[result.data.currentSceneId].layer;
+      }
+    }
+
   },
   methods: {
+    // 读取容器配置信息
+    readContainerMsg() {
+      const params = {
+        eventType: "readContainerMsg",
+        checkKey: this.getcheckKey(),
+        sessionID: this.sessionId
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 获取显示器列表
+    readOutputList() {
+      const randoms = this.getcheckKey();
+      const params = {
+        eventType: "readOutputList",
+        sessionID: this.sessionId,
+        checkKey: randoms
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 读取图层列表
+    readLayerMsg() {
+      const randoms = this.getcheckKey();
+      const params = {
+        eventType: "readLayerMsg",
+        sessionID: this.sessionId,
+        checkKey: randoms
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
+    },
+    // 容器中所填充显示器
+    setOutputList(containerId) {
+      const list = this.outputList.filter(item => item.status == true && item.containerId == containerId);
+      return list;
+    },
+    // 容器中对应的图层
+    setLayerList(containerId) {
+      const list = this.currentLayerList.filter(item => item.containerId == containerId);
+      return list;
+    },
+
     setEvent(typeIndex) {
       if (typeIndex == 0) {
         this.setSwitchTime();
@@ -542,33 +602,25 @@ export default {
     },
     // 设置bank内显示区域样式
     setContainerStyle(item) {
-      const { row, col, wBase, hBase } = item.customFeature;
-      const { left, top } = item.position;
-      const width = col * wBase / 10;
-      const height = row * hBase / 10;
       return {
-        'width': width + 'px',
-        'height': height + 'px',
-        'top': top / 10 + 'px',
-        'left': left / 10 + 'px'
+        'width': item.sizeW / 100 + 'px',
+        'height': item.sizeH / 100 + 'px',
+        'top': item.posX / 10 + 'px',
+        'left': item.posY / 10 + 'px'
       }
     },
     // 设置bank内显示区域样式
     setSignalStyle(item) {
-      const { row, col, wBase, hBase } = item.customFeature;
-      const { left, top } = item.position;
-      const width = wBase / 10;
-      const height = hBase / 10;
       return {
-        'width': width + 'px',
-        'height': height + 'px',
-        'top': top / 10 + 'px',
-        'left': left / 10 + 'px'
+        'width': item.scaleSizeW / 100 + 'px',
+        'height': item.scaleSizeH / 100 + 'px',
+        'top': item.scalePosY / 100 + 'px',
+        'left': item.scalePosX / 100 + 'px'
       }
     },
-    changeBank (bank, index){
-      this.containerList = bank.containers;
-      this.$store.commit('setBankIndex', index);
+    changeBank (scene, index){
+      this.currentSceneId = scene.id;
+      this.currentLayerList = scene.layer;
       const params = {
         eventType: 'setTakeSetting',
         sceneId: this.$store.state.bankIndex,
@@ -579,27 +631,6 @@ export default {
       if (window.webSocket && window.webSocket.readyState == 1) {
         window.webSocket.send(JSON.stringify(params));
       }
-      // 初始化绘制流媒体画面
-      this.$nextTick(() => {
-        let canvasBoxs = [];
-        $('.signal-layer-item canvas').each(function() {
-          canvasBoxs.push($(this)[0]);
-        });
-        
-        if(canvasBoxs.length > 0) {
-          let img = new Image();
-          img.src = this.streamMedia;
-          img.onload = () => renderImg();
-          let renderImg = () => {
-            canvasBoxs.forEach((canvas, index) => {
-              const context = canvas.getContext('2d');
-              const inputPort = Number($(canvas).attr('inputPort'));
-              context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 960, 540, 0, 0, 192, 108);
-            })
-            window.requestAnimationFrame(renderImg);
-          }
-        }
-      })
     },
     setTakeSetting() {
       let containers = [];
@@ -613,7 +644,7 @@ export default {
       })
       const params = {
         eventType: 'setTakeSetting',
-        sceneId: this.$store.state.bankIndex,
+        sceneId: scene.id,
         fadeTime: this.sliderTime * 1000,
         display: this.copyContainer,
         keepSwap: this.copyContainer ? false : this.keepReplace,
@@ -621,6 +652,7 @@ export default {
         presetScene: this.presetScene,
         container: containers,
         count: containers.length,
+        pageId: this.currentPageId,
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId,
       }

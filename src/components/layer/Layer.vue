@@ -68,7 +68,7 @@
                   class="movie"
                   :format="item.format"
                   :inputPort="item.inputPort"
-                  v-if="sryj && h264 && item.format != 127 && index < 8"
+                  v-if="sryj && h264 && item.format != 127"
                 ></canvas>
                 <!-- <div
                   class="movie"
@@ -431,7 +431,7 @@
         </div>
       </div>
     </div>
-    <!-- <video :src="streamMedia" alt="" v-show="true" /> -->
+    <!-- <img src="../../assets/china.gif" alt="" v-show="true" /> -->
     
     <BottomParams
       :layer="layerObj"
@@ -514,7 +514,9 @@ export default {
       imgObj: null,
       layerObj: null,
       layerOrders: [],
-      animationList: [],
+      animationSignal: [], // 信号动画id集合
+      animationLayer: [], // 图层动画id集合
+      animationScene: [], // 场景动画集合
       sessionId: ''
     }
   },
@@ -526,7 +528,7 @@ export default {
   created() {
     // const ip = JSON.parse(window.sessionStorage.getItem("ip"));
     // // this.streamMedia = `http://${ip}:5005/?action=stream`;
-    // this.streamMedia = 'http://192.168.0.204:5005/?action=stream';
+    // this.streamMedia = 'http://192.168.0.117:5005/?action=stream';
     // let img = new Image();
     // // img.src = `http://${ip}:5005/?action=stream`;
     // img.src = 'http://192.168.0.204:5005/?action=stream';
@@ -1107,7 +1109,6 @@ export default {
         }
       })
     },
-
      // 右侧设置按钮事件
     setData() {
       const index = this.typeIndex;
@@ -1148,50 +1149,61 @@ export default {
 
     // 输入预监
     previewPictureEvent(value) {
-      this.animationList.map(item => cancelAnimationFrame(item));
-      this.animationList = [];
-      this.$nextTick(() => {
-        // 信号列表画面显示
-        let signalCanvas = []; // 信号列表画布
-        let layerCanvas = []; // 图层画布
+      if(value) {
+        this.clipMedia(4, 6);
+        this.$nextTick(() => {
+          // 信号列表画面显示
+          let signalCanvas = []; // 信号列表画布
+          let layerCanvas = []; // 图层画布
+  
+          // 信号列表画布
+          if(this.sryj) {
+            $('.signal-box canvas').each(function() {
+              signalCanvas.push($(this)[0]);
+            });
+            this.renderImg(signalCanvas);
+          }
+          // 容器图层画布
+          if(this.tcyj) {
+            $('.signal-layer-item canvas').each(function() {
+              layerCanvas.push($(this)[0]);
+            });
+            this.renderImg(layerCanvas);
+          }
+        })
+      } else {
+        this.animationSignal.map(item => {
+          cancelAnimationFrame(item);
+          console.log(item);
+        });
+        this.animationLayer.map(item => {
+          cancelAnimationFrame(item);
+          console.log(item);
+        });
+        this.animationScene.map(item => {
+          cancelAnimationFrame(item);
+          console.log(item);
+        })
+      }
+    },
+    // 画面绘制函数
+    renderImg(data) {
+      let img = new Image();
+      img.src = 'http://192.168.0.117:5005/?action=stream';
+      img.onload = () => renderUi();
+      let renderUi = () => {
+        let animationFrameId = -1;
+        data.forEach((canvas, index) => {
+          const context = canvas.getContext('2d');
+          const inputPort = Number($(canvas).attr('inputPort'));
+          animationFrameId = inputPort;
 
-        // 信号列表画布
-        if(value && this.sryj) {
-          $('.signal-box canvas').each(function() {
-            signalCanvas.push($(this)[0]);
-          });
-          let img = new Image();
-          img.src = this.streamMedia;
-          img.onload = () => renderImg();
-          let renderImg = () => {
-            signalCanvas.forEach((canvas, index) => {
-              const context = canvas.getContext('2d');
-              const inputPort = Number($(canvas).attr('inputPort'));
-              context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 960,540, 0, 0, 192, 108);
-            });
-            let signalAnimateId = requestAnimationFrame(renderImg);
-            this.animationList.push(signalAnimateId);
+          if(this.clipList[inputPort]) {
+            context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 320, 270, 0, 0, 192, 108);
           }
-        }
-        // 容器图层画布
-        if(value && this.tcyj) {
-          $('.signal-layer-item canvas').each(function() {
-            layerCanvas.push($(this)[0]);
-          });
-          let img = new Image();
-          img.src = this.streamMedia;
-          img.onload = () => renderImg();
-          let renderImg = () => {
-            layerCanvas.forEach((canvas, index) => {
-              const context = canvas.getContext('2d');
-              const inputPort = Number($(canvas).attr('inputPort'));
-              context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 960,540, 0, 0, 192, 108);
-            });
-            let layerAnimateId = requestAnimationFrame(renderImg);
-            this.animationList.push(layerAnimateId);
-          }
-        }
-      })
+        });
+        this.animationSignal[animationFrameId] = requestAnimationFrame(renderUi);
+      }
     },
     // 顶部图层移动操作
     layerOrderEvent(type) {
@@ -1219,9 +1231,7 @@ export default {
           );
         }
       }
-      allcrops.push(clips);
-      allcrops.push(clips);
-      this.clipList = allcrops.flat();
+      this.clipList = clips;
     },
     
     // 生成随机随机checkKey

@@ -104,7 +104,7 @@
               :class="index % 2 ? '' : 'deep'"
             >
               <span class="xl">{{conversationBoardType(item.communicationType)}}</span>
-              <span class="xl">{{item.software || ''}}</span>
+              <span class="xl">{{item.fpga ? item.fpga : item.mcu}}</span>
               <span>{{item.hardware || ''}}</span>
             </div>
           </div>
@@ -121,8 +121,8 @@
               :key="index"
               :class="index % 2 ? '' : 'deep'"
             >
-              <span class="xl">{{item.hasInputBoard ? conversationInputType(item.inputType) : (index + 1)}}</span>
-              <span class="xl">{{item.hasInputBoard ? item.software : '--'}}</span>
+              <span class="xl">{{item.hasInputBoard ? (index + 1 + ' ') + conversationInputType(item.inputType) : (index + 1)}}</span>
+              <span class="xl">{{item.hasInputBoard ? (item.fpga ? item.fpga : item.mcu) : '--'}}</span>
               <span>{{item.hasInputBoard  ? item.hardware : '--'}}</span>
             </div>
           </div>
@@ -140,7 +140,7 @@
               :class="index % 2 ? '' : 'deep'"
             >
               <span class="xl">{{item.hasOutputBoard ? item.outputType : (index + 1)}}</span>
-              <span class="xl">{{item.hasOutputBoard ? item.software : '--'}}</span>
+              <span class="xl">{{item.hasOutputBoard ? (item.fpga ? item.fpga : item.mcu) : '--'}}</span>
               <span>{{item.hasOutputBoard ? item.hardware : '--'}}</span>
             </div>
           </div>
@@ -546,7 +546,7 @@
           <div class="params-style-input">
             <span>输出开关</span>
             <el-switch
-              v-model="outputPortInfo.resolution.outputSwitch"
+              v-model="outputPortInfo.outputSwitch"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               inactive-text="关闭"
@@ -558,7 +558,7 @@
           <div class="params-style-input">
             <span>分辨率范围</span>
             <el-switch
-              v-model="outputPortInfo.resolution.formatRange"
+              v-model="outputPortInfo.formatRange"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               inactive-text="板卡"
@@ -570,7 +570,7 @@
           <div class="params-style-input">
             <span>分辨率类型</span>
             <el-switch
-              v-model="outputPortInfo.resolution.formatType"
+              v-model="outputPortInfo.formatType"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               inactive-text="自定义"
@@ -579,20 +579,20 @@
             >
             </el-switch>
           </div>
-          <div class="params-style-input" v-if="outputPortInfo.resolution.formatType">
-            <span>HDMI2.0</span>
+          <div class="params-style-input" v-if="outputPortInfo.formatType">
+            <span>常规</span>
             <div class="input-select">
-              <el-select v-model="outputPortInfo.resolution.formatId">
+              <el-select v-model="HDMIListVal">
                 <el-option
-                  v-for="item in  outputPortInfo.resolution.formatList"
+                  v-for="item in HDMIList"
                   :key="item.id"
-                  :label="item.formatStr"
+                  :label="item.label"
                   :value="item.id">
                 </el-option>
               </el-select>
             </div>
           </div>
-          <div class="params-style-input" v-if="!outputPortInfo.resolution.formatType">
+          <!-- <div class="params-style-input" v-if="!outputPortInfo.resolution.formatType">
             <span>分辨率级别</span>
             <div class="input-select">
               <el-select v-model="outputPortInfo.resolution.formatLevelId">
@@ -604,8 +604,8 @@
                 </el-option>
               </el-select>
             </div>
-          </div>
-          <div class="params-style-input" v-if="!outputPortInfo.resolution.formatType">
+          </div> -->
+          <div class="params-style-input" v-if="!outputPortInfo.formatType">
             <span>宽</span>
             <input type="text" v-model="outputPortInfo.resolution.width">
           </div>
@@ -618,7 +618,7 @@
             <input type="text" v-model="outputPortInfo.resolution.freq">
           </div>
           <hr style="border: 1px solid #000"/>
-          <div class="blue-text">外同步设置</div>
+          <!-- <div class="blue-text">外同步设置</div>
           <div class="params-style-input">
             <span>状态</span>
             <el-switch
@@ -650,7 +650,7 @@
               :width="100"
             >
             </el-switch>
-          </div>
+          </div> -->
         </div>
       </div>
       <div class="params-footer" v-if="rightView == 'device'">
@@ -921,6 +921,7 @@ export default {
       if((result.code == 200) && (result.data.eventType == 'getOutputPortInfo')) {
         console.log(result);
         that.outputPortInfo = result.data;
+        that.HDMIListVal = result.data.formatId;
       }
       // 设置输入口信息
       if((result.code == 200) && (result.data.eventType == 'setInputPortInfo')) {
@@ -1180,12 +1181,26 @@ export default {
     setOutputPortInfo(type) {
       const params = {
         eventType: "setOutputPortInfo",
-        outputId: this.outputPortId,
-        type,
+        outputSwitch: this.outputPortInfo.outputSwitch,
+        formatRange: this.outputPortInfo.formatRange,
+        formatType: this.outputPortInfo.formatType,
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      params[type]=  this.outputPortInfo[type];
+      if(this.outputPortInfo.formatRange && this.outputPortInfo.formatType) {
+        params['formatId']=  this.HDMIListVal;
+      }
+      if(this.outputPortInfo.formatRange && !this.outputPortInfo.formatType) {
+        params['resolution']=  this.inputPortInfo['resolution'];
+      }
+      if(!this.outputPortInfo.formatRange && this.outputPortInfo.formatType) {
+        params['outputId']=  this.inputPortId;
+        params['formatId']=  this.HDMIListVal;
+      }
+      if(!this.outputPortInfo.formatRange && !this.outputPortInfo.formatType) {
+        params['outputId']=  this.inputPortId;
+        params['resolution']=  this.inputPortInfo['resolution'];
+      }
       if (window.webSocket && window.webSocket.readyState == 1) {
         window.webSocket.send(JSON.stringify(params));
       }

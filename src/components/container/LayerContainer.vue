@@ -21,13 +21,15 @@
         :slotName="'layerNumber'"
       >
         <template v-slot:layerNumber>
-          <span>192</span>
+          <span>4</span>
         </template>
       </Displayer>
       <SignalLayer
         v-for="layer in layerList"
         :key="'layer' + layer.id"
         :layer="layer"
+        :switchLayer="switchLayer"
+        :switchVal="switchVal"
       >
       </SignalLayer>
     </div>
@@ -63,6 +65,14 @@ export default {
     layerList: {
       type: Array,
       default: () => []
+    },
+    switchLayer: {
+      type: Boolean,
+      default: false,
+    },
+    switchVal: {
+      type: Boolean,
+      default: false
     }
   },
   components: {

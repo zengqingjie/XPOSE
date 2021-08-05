@@ -579,7 +579,7 @@
             >
             </el-switch>
           </div>
-          <div class="params-style-input" v-if="outputPortInfo.formatType">
+          <div class="params-style-input">
             <span>常规</span>
             <div class="input-select">
               <el-select v-model="HDMIListVal">
@@ -607,15 +607,15 @@
           </div> -->
           <div class="params-style-input" v-if="!outputPortInfo.formatType">
             <span>宽</span>
-            <input type="text" v-model="outputPortInfo.resolution.width">
+            <input type="text" v-model="userW">
           </div>
-          <div class="params-style-input" v-if="!outputPortInfo.resolution.formatType">
+          <div class="params-style-input" v-if="!outputPortInfo.formatType">
             <span>高</span>
-            <input type="text" v-model="outputPortInfo.resolution.height">
+            <input type="text" v-model="userH">
           </div>
-          <div class="params-style-input" v-if="!outputPortInfo.resolution.formatType">
+          <div class="params-style-input" v-if="!outputPortInfo.formatType">
             <span>频率</span>
-            <input type="text" v-model="outputPortInfo.resolution.freq">
+            <input type="text" v-model="userFreq">
           </div>
           <hr style="border: 1px solid #000"/>
           <!-- <div class="blue-text">外同步设置</div>
@@ -757,6 +757,9 @@ export default {
       // 输出口信息
       outputPortId: '',
       outputPortInfo: null,
+      userW: 1920,
+      userH: 1080,
+      userFreq: 60,
 
       jointH: 1,
       
@@ -776,7 +779,7 @@ export default {
         { id:7, label: "1280x720@30"},
         { id:8, label: "1280x720@50"},
         { id:9, label: "1280x720@59.94"},
-        { id:10, label: "1280x720@60" },
+        { id:29, label: "1280x720@60" },
         { id:11, label: "1280x768@60"},
         { id:12, label: "1280x800@60"},
         { id:13, label: "1280x960@85" },
@@ -797,7 +800,7 @@ export default {
         { id:26, label: "1920x1080@30" },
         { id:27, label: "1920x1080@59.94" },
         { id:28, label: "1920x1080@50" },
-        { id:29, label: "1920x1080@60" },
+        { id:10, label: "1920x1080@60" },
         { id:30, label: "1920x1200@60" },
 
         { id:31, label: "2048x1152@60" },
@@ -811,7 +814,7 @@ export default {
         { id:37, label: "3840x2160@30" },
         { id:38, label: "3840x2160@50" },
         { id:39, label: "3840x2160@59.94" },
-        { id:40, label: "3840x2160@60" },
+        { id:76, label: "3840x2160@60" },
         
         { id:41, label: "4096x2160@23.98" },
         { id:42, label: "4096x2160@24" },
@@ -914,14 +917,17 @@ export default {
       }
       // 获取输入口信息
       if((result.code == 200) && (result.data.eventType == 'getInputPortInfo')) {
-        console.log(result);
         that.inputPortInfo = result.data;
       }
       // 获取输出口信息
       if((result.code == 200) && (result.data.eventType == 'getOutputPortInfo')) {
-        console.log(result);
         that.outputPortInfo = result.data;
         that.HDMIListVal = result.data.formatId;
+        if(!result.data.formatType) {
+          that.userW = result.data.resolution.width;
+          that.userH = result.data.resolution.height;
+          that.userFreq = result.data.resolution.freq;
+        }
       }
       // 设置输入口信息
       if((result.code == 200) && (result.data.eventType == 'setInputPortInfo')) {
@@ -929,7 +935,7 @@ export default {
       }
       // 设置输出口信息
       if((result.code == 200) && (result.data.eventType == 'setOutputPortInfo')) {
-        thta.getOutputInfo();
+        that.getOutputInfo();
       }
       // 恢复出厂设置
       if((result.code == 200) && (result.data.eventType == 'setFactoryReset')) {
@@ -975,6 +981,8 @@ export default {
     },
     // 隐藏右侧功能区
     hideRightView() {
+      this.inputPortId = '';
+      this.outputPortId = '';
       this.$root.bus.$emit('hideRightView');
     },
     // 返回设备设置区
@@ -1147,7 +1155,6 @@ export default {
     },
     // 设置输入 || 输出口信息
     setPortInfo(typeIndex) {
-      console.log(typeIndex);
       switch(typeIndex) {
         case 7:
           this.setInputPortInfo('props');
@@ -1191,15 +1198,23 @@ export default {
         params['formatId']=  this.HDMIListVal;
       }
       if(this.outputPortInfo.formatRange && !this.outputPortInfo.formatType) {
-        params['resolution']=  this.inputPortInfo['resolution'];
+        params['resolution']=  {
+          width: this.userW,
+          height: this.userH,
+          freq: this.userFreq
+        }
       }
       if(!this.outputPortInfo.formatRange && this.outputPortInfo.formatType) {
-        params['outputId']=  this.inputPortId;
+        params['outputId']=  this.outputPortId;
         params['formatId']=  this.HDMIListVal;
       }
       if(!this.outputPortInfo.formatRange && !this.outputPortInfo.formatType) {
-        params['outputId']=  this.inputPortId;
-        params['resolution']=  this.inputPortInfo['resolution'];
+        params['outputId']=  this.outputPortId;
+        params['resolution']=  {
+          width: this.userW,
+          height: this.userH,
+          freq: this.userFreq
+        }
       }
       if (window.webSocket && window.webSocket.readyState == 1) {
         window.webSocket.send(JSON.stringify(params));

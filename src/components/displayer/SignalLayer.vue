@@ -31,7 +31,11 @@
       <span>h:{{layer.scaleSizeH}}</span>
     </div>
     <!-- <div>Order:{{layer.order}}</div> -->
-    <!-- <canvas width="192" height="108" :inputPort="layer.inputPort" :format="layer.format"></canvas> -->
+    <canvas
+      v-if="switchVal && switchLayer"
+      :inputPort="layer.inputPort"
+      :format="layer.format"
+    ></canvas>
   </div>
 </template>
 
@@ -50,12 +54,25 @@ export default {
     },
     clipList: {
       type: Array
+    },
+    switchLayer: {
+      type: Boolean,
+      default: false,
+    },
+    switchVal: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
     return {
       positionHead: false,
       aoi: false,
+      bckList:  ["#8055aad8", "#805869d8", "#80ab5cd8", "#805a4bd8",
+        "#80e5bbd8", "#80a117d8", "#802208d8", "#80764dd8",
+        "#80fadad8", "#800326d8", "#80b3a8d8", "#80de7dd8",
+        "#805a0dd8", "#80172cd8", "#809850d8", "#80da69d8",
+        "#80f744d8", "#805760d8", "#80adc3d8", "#80b3c5d8"]
     }
   },
   mounted() { },
@@ -81,12 +98,12 @@ export default {
     getLayer(layer) {
       this.$root.bus.$emit('getlayer', layer);
     },
-    setLayerBgk() {
-      const r = Math.floor(Math.random()*256);
-      const g = Math.floor(Math.random()*256);
-      const b = Math.floor(Math.random()*256);
-      return `rgba(${r},${g},${b},0.6)`;
-    }
+    // setLayerBgk() {
+    //   const r = Math.floor(Math.random()*256);
+    //   const g = Math.floor(Math.random()*256);
+    //   const b = Math.floor(Math.random()*256);
+    //   return `rgba(${r},${g},${b},0.6)`;
+    // }
   },
   computed: {
     setStyle() {
@@ -95,7 +112,7 @@ export default {
         height: this.layer.scaleSizeH / 10 + 'px',
         left: this.layer.scalePosX / 10 + 'px',
         top: this.layer.scalePosY / 10 + 'px',
-        background: this.setLayerBgk()
+        background: this.bckList[(192 - this.layer.index) % 20],
       }
     }
   },

@@ -479,12 +479,10 @@ export default {
       const result = JSON.parse(res.data);
       // 获取管理员权限信息
       if((result.code == 200) && (result.data.eventType == 'getUserRight')) {
-        console.log(result);
         that.userRightInfo = result.data;
       }
       // 设置模块用户登录
       if((result.code == 200) && (result.data.eventType == 'rightSetLogin')) {
-        console.log(result);
         that.$message.success('登录成功');
         that.loginStatus = true;
         that.typeIndex = 1;
@@ -492,7 +490,6 @@ export default {
       }
       // 设置模块用户注销
       if((result.code == 200) && (result.data.eventType == 'rightSetLogout')) {
-        console.log(result);
         that.$message.success('注销成功');
         that.loginStatus = false;
         that.password = '';
@@ -517,12 +514,10 @@ export default {
       }
       // 设置多控数目
       if((result.code == 200) && (result.data.eventType == 'setMoreCtrlNum')) {
-        console.log(result);
         that.deviceList = result.data.moreCtrlList;
       }
       // 编辑用户信息
       if((result.code == 200) && (result.data.eventType == 'editUser')) {
-        console.log(result);
         let userList = that.userList;
         const editObj = that.editObj;
         userList.some((item, index) => {
@@ -537,7 +532,6 @@ export default {
       }
       // 设置模块新增用户
       if((result.code == 200) && (result.data.eventType == 'addUser')) {
-        console.log(result);
         that.userList = result.data.userList;
         that.editType = '';
         that.clearUserInfo();
@@ -545,7 +539,6 @@ export default {
       }
       // 删除设置模块用户账号
       if((result.code == 200) && (result.data.eventType == 'deleteUser')) {
-        console.log(result);
         let userList = that.userList;
         userList = userList.filter((item, index) => index != that.deleteUserIndex);
         that.userList = userList;

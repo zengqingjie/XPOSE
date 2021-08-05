@@ -685,7 +685,7 @@ export default {
       .container-view {
         position: relative;
         flex: 1;
-        height: 640px;
+        height: calc(100% - 148px - 20px);
         background: #1B2436;
         border: 2px solid #008000;
       }

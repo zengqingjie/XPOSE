@@ -353,7 +353,6 @@ export default {
       const result = JSON.parse(res.data);
       // 获取容器
       if((result.code == 200) && (result.data.eventType == 'readContainerMsg')) {
-        console.log('容器列表',result);
         if (result.data.count > 0) {
           that.containerList = result.data.container;
         } else {
@@ -367,7 +366,6 @@ export default {
       // 创建容器成功
       if((result.code == 200) && (result.data.eventType == 'createContainer')) {
         that.$store.commit('setContainerId', that.$store.state.containerId + 1); // 创建成功，容器id修改成下个容器可用id
-        console.log('容器创建成功',result);
         // 重新读取容器列表
         that.readContainerMsg();
         that.$nextTick(() => {
@@ -403,19 +401,16 @@ export default {
       }
       // 设置显示器成功
       if((result.code == 200) && (result.data.eventType == 'setOutputMsg')) {
-        console.log('显示器创建成功',result);
         that.readOutputList();
       }
       // 删除容器成功
       if((result.code == 200) && (result.data.eventType == 'rmContainer')) {
-        console.log('删除容器成功',result);
         // 重新读取输出口列表
         that.readContainerMsg();
         that.readOutputList();
       }
       // 删除显示器成功
       if((result.code == 200) && (result.data.eventType == 'rmOutputFromContainer')) {
-        console.log('删除显示器成功',result);
         // 重新读取输出口列表
         that.readOutputList();
       }
@@ -799,7 +794,6 @@ export default {
         greedy: true,
         over: function() {},
         drop: function(event, ui) {
-          console.log($(this));
           const containerId = $(this).attr('containerId');
           const outputId = $(ui.draggable[0]).attr('id'); // 被拖出的显示器id
           let container = that.containerList.find(cItem => cItem.containerId == containerId);
@@ -807,7 +801,6 @@ export default {
           let outputObj = that.outputList.find(item => item.id == outputId);
           // 放置在容器上新增显示器
           if ($(this).hasClass('displayer-box')) {
-            console.log(111);
             const outputPosX = event.clientX - 88 - container.posX - $(this)[0].offsetLeft;
             const outputPosY = event.clientY - 66 - container.posY - $(this)[0].offsetTop;
             const display = {
@@ -834,7 +827,6 @@ export default {
           }
           // 放置在显示器上，替换显示器
           if ($(this).hasClass('displayer-view')) {
-            console.log(222);
             const oldOutput = that.outputList.find(dItem => dItem.id == $(this).attr('id')); // 被放置的显示器
             const maxX = container.posX + container.sizeW;
             const maxY = container.posY + container.sizeH + 24; // + 24 为容器头部高度
@@ -871,7 +863,6 @@ export default {
                 sessionID: that.sessionId,
                 checkKey: that.getcheckKey()
               }
-              console.log(params);
               if (window.webSocket && window.webSocket.readyState == 1) {
                 window.webSocket.send(JSON.stringify(params));
               }

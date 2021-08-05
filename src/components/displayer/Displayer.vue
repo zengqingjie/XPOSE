@@ -23,6 +23,7 @@
     <div class="layer-num" v-if="slotName">
       <slot name="layerNumber"></slot>
     </div>
+    
     <!-- <div class="border-view" v-if="deviceId == outputItem.id"></div> -->
   </div>
 </template>

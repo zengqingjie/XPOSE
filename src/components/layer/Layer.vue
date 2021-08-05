@@ -48,6 +48,7 @@
                   :id="item.inputPort"
                   :type="item.inputType"
                   :index="index"
+                  :format="item.format"
                   v-if="item.format != 127"
                 >
                   <span class="order">{{item.inputPort}}</span>
@@ -70,11 +71,6 @@
                   :inputPort="item.inputPort"
                   v-if="sryj && h264 && item.format != 127"
                 ></canvas>
-                <!-- <div
-                  class="movie"
-                  v-if="h264"
-                  :style="signalClipList[index] ? signalClipList[index] : signalClipList[0]"
-                ></div> -->
               </div>
             </div>
           </div>
@@ -82,26 +78,13 @@
       </div>
       <div class="layer-cont">
         <div class="container-box">
-          <!-- <LayerContainer
-            v-for="(item, index) in containerList" :key="index"
-            :cItem="item"
-            :signalLayers="item.signalList"
-            :index="index"
-            :id="item.id"
-            :style="{borderColor: item.id == (selectedContainer && selectedContainer.id) ? 'red' : ''}"
-            :signalModelShow="true"
-            :clipList="clipList"
-          >
-            <Aoi
-              :aoi="aoiData"
-              :cId="item.containerId"
-            />
-          </LayerContainer> -->
           <LayerContainer
             v-for="(item, index) in containerList" :key="index"
             :cItem="item"
             :output="setOutputList(item.containerId)"
             :layerList="setLayerList(item.containerId)"
+            :switchLayer="tcyj"
+            :switchVal="h264"
           >
           </LayerContainer>
         </div>
@@ -611,8 +594,9 @@ export default {
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
     this.init();
     this.readContainerMsg(); // 读取容器配置信息
-    this.readOutputList(); // 读取输出口列表
     this.readLayerMsg(); // 读取图层列表
+    this.readOutputList(); // 读取输出口列表
+
     this.getSignalList();
 
     this.draggableInit(); // 容器区域拖拽
@@ -651,6 +635,14 @@ export default {
             if(!item.freeze) {
               that.layerDraggable(item.id); // 图层拖拽初始化
               that.layerResize(item.id); // 图层缩放初始化
+
+              let layerCanvas = [];
+              if(that.tcyj && that.h264) {
+                $('.signal-layer-item canvas').each(function() {
+                  layerCanvas.push($(this)[0]);
+                });
+                that.renderImg(layerCanvas, 'layer');
+              }
             }
           })
         })
@@ -961,13 +953,13 @@ export default {
           });
           const minIndex = Math.min(...layerIndexList);
           let indexArr = [];
-          for(let i = 0; i <= 191; i++) {
+          for(let i = 0; i <= 95; i++) {
             indexArr.push(i);
           }
           indexArr.reverse();
 
           let createIndex = null;
-          if (minIndex <= 191 && minIndex >= 0 ) {
+          if (minIndex <= 95 && minIndex >= 0 ) {
             indexArr.some(index => {
               if(index == minIndex) {
                 createIndex = minIndex - 1;
@@ -978,13 +970,16 @@ export default {
               }
             })
           } else {
-            createIndex = 191;
+            createIndex = 95;
           }
 
           const dropOutputId = $(this).attr('id'); // 放置输出口id
           const dropContainerId = $(this).attr('containerId'); // 放置容器id
           const dropOutput = that.outputList.find(item => item.id == dropOutputId); // 放置输出口
-          
+          const signalFormat = $(ui.draggable[0]).attr('format');
+          const cropW = that.layerCropConversation(Number(signalFormat)).cropW;
+          const cropH = that.layerCropConversation(Number(signalFormat)).cropH;
+
           const params = {
             eventType: "setLayer",
             count: 1,
@@ -993,8 +988,8 @@ export default {
                 id: layerId,
                 cropPosX: 0,
                 cropPosY: 0,
-                cropSizeW: dropOutput.sizeW,
-                cropSizeH: dropOutput.sizeH,
+                cropSizeW: cropW,
+                cropSizeH: cropH,
                 scalePosX: dropOutput.posX,
                 scalePosY: dropOutput.posY,
                 scaleSizeW: dropOutput.sizeW,
@@ -1146,6 +1141,56 @@ export default {
         }
       }
     },
+    // 图层crop值映射
+    layerCropConversation(format) {
+      switch(format) {
+        case 0:
+        case 1:
+          return { cropW: 720, cropH: 480 };
+          break;
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+          return { cropW: 1280, cropH: 720 };
+          break;
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+        case 17:
+        case 18:
+        case 19:
+        case 20:
+        case 21:
+        case 22:
+        case 38:
+        case 39:
+          return { cropW: 1920, cropH: 1080 };
+          break;
+        case 73:
+        case 74:
+        case 75:
+        case 76:
+        case 77:
+        case 78:
+        case 85:
+        case 86:
+        case 91:
+          return { cropW: 3840, cropH: 2160 };
+          break;
+        case 127:
+          return { cropW: 0, cropH: 0 };
+          break;
+      }
+    },
 
     // 输入预监
     previewPictureEvent(value) {
@@ -1161,33 +1206,30 @@ export default {
             $('.signal-box canvas').each(function() {
               signalCanvas.push($(this)[0]);
             });
-            this.renderImg(signalCanvas);
+            this.renderImg(signalCanvas, 'signal');
           }
           // 容器图层画布
           if(this.tcyj) {
             $('.signal-layer-item canvas').each(function() {
               layerCanvas.push($(this)[0]);
             });
-            this.renderImg(layerCanvas);
+            this.renderImg(layerCanvas, 'layer');
           }
         })
       } else {
         this.animationSignal.map(item => {
           cancelAnimationFrame(item);
-          console.log(item);
         });
         this.animationLayer.map(item => {
           cancelAnimationFrame(item);
-          console.log(item);
         });
         this.animationScene.map(item => {
           cancelAnimationFrame(item);
-          console.log(item);
         })
       }
     },
     // 画面绘制函数
-    renderImg(data) {
+    renderImg(data, type) {
       let img = new Image();
       img.src = 'http://192.168.0.117:5005/?action=stream';
       img.onload = () => renderUi();
@@ -1199,10 +1241,18 @@ export default {
           animationFrameId = inputPort;
 
           if(this.clipList[inputPort]) {
-            context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 320, 270, 0, 0, 192, 108);
+            context.drawImage(img, this.clipList[inputPort].left, this.clipList[inputPort].top, 320, 270, 0, 0, canvas.width, canvas.height);
           }
         });
-        this.animationSignal[animationFrameId] = requestAnimationFrame(renderUi);
+        if(type == 'signal') {
+          this.animationSignal[animationFrameId] = requestAnimationFrame(renderUi);
+        }
+        if(type == 'layer') {
+          this.animationLayer[animationFrameId] = requestAnimationFrame(renderUi);
+        }
+        if(type == 'scene') {
+          this.animationScene[animationFrameId] = requestAnimationFrame(renderUi);
+        }
       }
     },
     // 顶部图层移动操作
@@ -1220,7 +1270,6 @@ export default {
     // 分割流媒体
     clipMedia(row, col) {
       let clips = [];
-      let allcrops = [];
       for (let i = 0; i < row; i ++) {
         for (let j = 0; j < col; j ++) {
           clips.push(

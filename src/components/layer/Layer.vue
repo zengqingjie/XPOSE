@@ -648,6 +648,11 @@ export default {
         that.currentSceneId = result.data.currentSceneId;
         that.currentPageId = result.data.currentPageId;
         that.currentLayerList = result.data.scene[result.data.currentSceneId].layer;
+        if(that.selectedLayerId) {
+          const layer = result.data.scene[result.data.currentSceneId].layer.find(item => item.id == that.selectedLayerId);
+          that.layerObj = layer;
+          that.outsideLayerObj = Object.assign(that.outsideLayerObj, layer);
+        }
         that.$nextTick(() => {
           that.currentLayerList.map(item => {
             if(!item.freeze) {
@@ -1013,7 +1018,6 @@ export default {
           const signalFormat = $(ui.draggable[0]).attr('format');
           const cropW = that.layerCropConversation(Number(signalFormat)).cropW;
           const cropH = that.layerCropConversation(Number(signalFormat)).cropH;
-
           const params = {
             eventType: "setLayer",
             count: 1,
@@ -1032,7 +1036,7 @@ export default {
                 containerId: Number(dropContainerId),
                 index: createIndex,
                 layerAlpha: 128,
-                sceneId: that.sceneId,
+                sceneId: that.currentSceneId,
                 pageId: that.currentPageId
               }
             ],
@@ -1052,6 +1056,12 @@ export default {
       $('#layer' + layerId).draggable({
         scroll: false,
         zIndex: 100,
+        drag: function(event, ui) {
+          that.layerObj.scalePosX = Math.round(ui.position.left * 10);
+          that.layerObj.scalePosY = Math.round(ui.position.top * 10);
+          that.outsideLayerObj.scalePosX = Math.round(ui.position.left * 10);
+          that.outsideLayerObj.scalePosY = Math.round(ui.position.top * 10);
+        },
         stop: function(event, ui) {
           // 被移动的图层
           const layerId = $(this).attr('layerId');
@@ -1097,10 +1107,10 @@ export default {
         minWidth: 32,
         minHeight: 32,
         resize: function(event, ui) {
-          // console.log(layerId);
-          // const scaleLayer = that.currentLayerList.find(item => item.id == layerId);
-          // that.layerObj = scaleLayer;
-          // that.outsideLayerObj = scaleLayer;
+          that.layerObj.scaleSizeW = Math.round(ui.size.width * 10);
+          that.layerObj.scaleSizeH = Math.round(ui.size.height * 10);
+          that.outsideLayerObj.scaleSizeW = Math.round(ui.size.width * 10);
+          that.outsideLayerObj.scaleSizeH = Math.round(ui.size.height * 10);
         },
         stop: function(event, ui) {
           const id = $(this).attr('layerId');
@@ -1125,7 +1135,7 @@ export default {
                 containerId: scaleLayer.containerId,
                 layerAlpha: scaleLayer.alpha,
                 index: scaleLayer.index,
-                sceneId: that.sceneId,
+                sceneId: that.currentSceneId,
                 pageId: that.currentPageId
               }
             ],
@@ -1643,7 +1653,6 @@ export default {
     layerObj: {
       deep: true,
       handler(value) {
-        this.outsideLayerObj = value;
         this.layerObj = value;
       }
     },

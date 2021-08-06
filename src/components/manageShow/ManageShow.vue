@@ -104,16 +104,22 @@
               <div
                 class="system-info"
                 v-for="(item, index) in containerList"
-                :key="item.id"
+                :key="item.containerId"
               >
                 <div class="sys-name">
                   <div class="left-view">
                     <span>{{index + 1}}</span>
                     <span class="text-view">{{item.name ? item.name : '显示容器'+ (index + 1)}}</span>
-                    <input type="text" v-model="containerName" class="name-input">
+                    <input type="text" v-model="item.name" class="name-input">
                   </div>
-                  <div class="right-view" @click="clickEdit"><i class="iconfont iconedit_name_icon" /></div>
-                  <div class="right-view-sure" @click="(e) => sureEdit(e, item)"><i class="iconfont iconsure_edit" /></div>
+                  <div class="right-view" @click="clickEdit">
+                    <img src="../../assets/edit_name_icon.png" alt="" class="iconedit_name_icon">
+                    <!-- <i class="iconfont iconedit_name_icon" /> -->
+                  </div>
+                  <div class="right-view-sure" @click="(e) => sureEdit(e, item)">
+                    <img src="../../assets/sure_edit.png" alt="" class="iconsure_edit">
+                    <!-- <i class="iconfont iconsure_edit" /> -->
+                  </div>
                 </div>
                 <div class="info-box">
                   <span>X:{{item.posX}}</span>
@@ -413,6 +419,11 @@ export default {
       if((result.code == 200) && (result.data.eventType == 'rmOutputFromContainer')) {
         // 重新读取输出口列表
         that.readOutputList();
+      }
+      // 修改容器名
+      if((result.code == 200) && (result.data.eventType == 'setContainerName')) {
+        // 重新读取容器列表
+        that.readContainerMsg();
       }
     }
   },
@@ -731,21 +742,28 @@ export default {
     clickEdit(e) {
       $(e.target).parents('.system-info').find('.name-input').show();
       $(e.target).parents('.system-info').find('.text-view').hide();
-      $(e.target).parents('.system-info').find('.right-view-sure').show();
+      $(e.target).parents('.system-info').find('.right-view-sure').css('display', 'flex');
       $(e.target).parents('.system-info').find('.right-view').hide();
     },
     // 点击显示系统确认编辑图标
-    sureEdit(e, cObj) {
+    sureEdit(e, containerObj) {
       $(e.target).parents('.system-info').find('.name-input').hide();
       $(e.target).parents('.system-info').find('.text-view').show();
       $(e.target).parents('.system-info').find('.right-view-sure').hide();
       $(e.target).parents('.system-info').find('.right-view').show();
-      // if (this.containerName) {
-      //   let container = dataFormat.getWidget(cObj.id);
-      //   container.name = this.containerName;
-      //   dataFormat.setWidget(container);
-      //   this.$store.dispatch('setContainerList', dataFormat.getWidgetType('windows', true));
-      // }
+      const params = {
+        eventType: "setContainerName",
+        count: 1,
+        container: [{
+          id: containerObj.containerId,
+          name: containerObj.name
+        }],
+        sessionID: this.sessionId,
+        checkKey: this.getcheckKey()
+      }
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
+      }
     },
     // 点击显示器
     displayerClick(obj) {
@@ -1205,11 +1223,16 @@ export default {
               .right-view-sure {
                 width: 20px;
                 height: 20px;
-                line-height: 20px;
-                text-align: center;
+                display: flex;
+                justify-content: center;
+                align-items: center;
                 background: rgb(0,196,172);
                 border-radius: 4px;
                 cursor: pointer;
+                img {
+                  width: 12px;
+                  height: 12px;
+                }
                 i {
                   color: #fff;
                   font-size: 12px;

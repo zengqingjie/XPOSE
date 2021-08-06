@@ -3,7 +3,7 @@
     class="signal-layer-item"
     v-if="layer"
     :style="setStyle"
-    :class="selectedLayerId == layer.id ? 'blue' : ''"
+    :class="selectedLayerId === layer.id ? 'blue' : ''"
     :containerId="layer.containerId"
     :id="'layer'+layer.id"
     :layerId="layer.id"
@@ -20,7 +20,7 @@
       >
       <!-- <img src="../../assets/layer_tile.png" alt="" v-if="!layer.freeze"> -->
       <img src="../../assets/layer_maximize.png" alt="" v-if="!layer.freeze" @click="fullScreen(layer)">
-      <img src="../../assets/layer_delete.png" alt="" v-if="!layer.freeze" @click="deleteLayer(layer)">
+      <img src="../../assets/layer_delete.png" alt="" v-if="!layer.freeze" @click.stop="deleteLayer(layer)">
     </div>
     <div>信号 {{layer.inputPort + 1}}</div>
     <div>
@@ -78,6 +78,7 @@ export default {
     }
   },
   mounted() {
+
   },
   methods: {
     lockEvent(layer) {

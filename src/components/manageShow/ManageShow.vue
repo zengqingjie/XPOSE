@@ -517,7 +517,9 @@ export default {
             }
             const createOutputNum = containerRow * containerCol; // 显示器填充的个数
             // 过滤出所选分辨率的输出口
-            const conformOutputPortList = that.outputList.filter(item => that.separation == 10 ? (item.sizeW == 1920) : (item.sizeW == 3840) && item.status == false);
+            const conformOutputPortList = that.outputList.filter(item => (that.separation == 10 ? (item.sizeW == 1920) : (item.sizeW == 3840)) && item.status == false);
+            console.log(conformOutputPortList);
+            // return;
             const conformLen = conformOutputPortList.length > createOutputNum ? createOutputNum : conformOutputPortList.length;
             let createOutputList = [];
             for(let i = 0; i < conformLen; i++) {

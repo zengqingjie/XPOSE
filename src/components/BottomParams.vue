@@ -19,7 +19,6 @@
         <input type="text" placeholder="100-65..." maxlength="5" :value="dHeight" @input="(e) => changInput(e, 'hei')">
       </div>
       <div class="btn-item" @click="setDisplay">确定</div>
-      <div class="btn-item">重置</div>
     </div>
   </div>
 </template>
@@ -56,13 +55,18 @@ export default {
         this.dHeight = this.display.sizeH;
         this.hNum = this.display.posX;
         this.vNum = this.display.posY;
-      }
-      if (this.layer) {
-        this.devideName = '信号' + this.layer.inputPort;
+      } else if (this.layer) {
+        this.devideName = '信号' + (this.layer.inputPort + 1);
         this.dWidth = this.layer.scaleSizeW;
         this.dHeight = this.layer.scaleSizeH;
         this.hNum = this.layer.scalePosX;
         this.vNum = this.layer.scalePosY;
+      } else {
+        this.devideName = '';
+        this.dWidth = '';
+        this.dHeight = '';
+        this.hNum = '';
+        this.vNum = '';
       }
     },
     changInput(e, type) {

@@ -104,7 +104,7 @@
               :class="index % 2 ? '' : 'deep'"
             >
               <span class="xl">{{conversationBoardType(item.communicationType)}}</span>
-              <span class="xl">{{item.fpga ? item.fpga : item.mcu}}</span>
+              <span class="xl">{{item.mcu ? item.mcu : '--'}}</span>
               <span>{{item.hardware || ''}}</span>
             </div>
           </div>
@@ -122,7 +122,7 @@
               :class="index % 2 ? '' : 'deep'"
             >
               <span class="xl">{{item.hasInputBoard ? (index + 1 + ' ') + conversationInputType(item.inputType) : (index + 1)}}</span>
-              <span class="xl">{{item.hasInputBoard ? (item.fpga ? item.fpga : item.mcu) : '--'}}</span>
+              <span class="xl">{{item.hasInputBoard ? (item.mcu ? item.mcu : '--') : '--'}}</span>
               <span>{{item.hasInputBoard  ? item.hardware : '--'}}</span>
             </div>
           </div>
@@ -139,8 +139,8 @@
               :key="index"
               :class="index % 2 ? '' : 'deep'"
             >
-              <span class="xl">{{item.hasOutputBoard ? item.outputType : (index + 1)}}</span>
-              <span class="xl">{{item.hasOutputBoard ? (item.fpga ? item.fpga : item.mcu) : '--'}}</span>
+              <span class="xl">{{item.hasOutputBoard ? (index + 1 + ' ') + conversationOnputType(item.outputTypeEnum) : (index + 1)}}</span>
+              <span class="xl">{{item.hasOutputBoard ? (item.mcu ? item.mcu : '--') : '--'}}</span>
               <span>{{item.hasOutputBoard ? item.hardware : '--'}}</span>
             </div>
           </div>
@@ -1244,8 +1244,8 @@ export default {
         case 21:
         case 22:
         case 23:
-        case 24:
-          return '4K60';
+        case 53:
+          return 'HDMI2.0';
           break;
       }
     },
@@ -1258,7 +1258,7 @@ export default {
         case 22:
           return 'HDMI1.4';
           break;
-        case 23:
+        case 29:
           return 'HDMI2.0';
           break;
         case 24:

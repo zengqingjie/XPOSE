@@ -605,8 +605,8 @@ export default {
       return {
         'width': item.sizeW / 100 + 'px',
         'height': item.sizeH / 100 + 'px',
-        'top': item.posX / 10 + 'px',
-        'left': item.posY / 10 + 'px'
+        'top': item.posY / 10 + 'px',
+        'left': item.posX / 10 + 'px'
       }
     },
     // 设置bank内显示区域样式
@@ -644,7 +644,7 @@ export default {
       })
       const params = {
         eventType: 'setTakeSetting',
-        sceneId: scene.id,
+        sceneId: this.currentSceneId,
         fadeTime: this.sliderTime * 1000,
         display: this.copyContainer,
         keepSwap: this.copyContainer ? false : this.keepReplace,

@@ -33,18 +33,6 @@
       >
       </SignalLayer>
     </div>
-    <!-- <div class="signal-model" v-if="signalModelShow">
-      <SignalModel
-        v-for="displayer in cItem.content"
-        :key="displayer.id"
-        :dMsg="displayer"
-        :deviceId="deviceId"
-        :size="setDisplayerItem"
-        :positionZoom="cItem.positionZoom"
-        pisition="true"
-      />
-      <slot></slot>
-    </div> -->
   </div>
 </template>
 

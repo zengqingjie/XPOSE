@@ -45,7 +45,7 @@
               >
                 <span><img src="../../assets/layer_icon.png" alt="">{{index + 1}}</span>
                 <span>序号{{96 - item.index}}</span>
-                <span>信号{{item.inputPort}}</span>
+                <span>信号{{item.inputPort + 1}}</span>
               </div>
             </template>
           </div>
@@ -115,11 +115,11 @@
           <div v-if="typeIndex == 0">
             <div class="params-obj">
               <span>信号源</span>
-              <div>信号 16</div>
+              <div>信号 {{layerObj ? (layerObj.inputPort + 1) : ''}}</div>
             </div>
             <div class="params-obj">
               <span>图层序号</span>
-              <div>图层 9</div>
+              <div>图层 {{layerObj ? (96 - layerObj.index) : ''}}</div>
             </div>
             <div class="params-style-input">
               <span>透明度</span>
@@ -147,7 +147,7 @@
           <div v-if="typeIndex == 1">
             <div class="params-obj">
               <span>图层序号</span>
-              <div>图层 9</div>
+              <div>图层 {{layerObj ? (96 - layerObj.index) : ''}}</div>
             </div>
             <hr style="border: 1px solid #000;margin:0 0 8px 0">
             <div class="params-style">显示</div>
@@ -513,7 +513,6 @@ export default {
       animationSignal: [], // 信号动画id集合
       animationLayer: [], // 图层动画id集合
       animationScene: [], // 场景动画集合
-      selectedLayerId: '',
       sessionId: ''
     }
   },
@@ -611,6 +610,7 @@ export default {
     this.cjyj = this.$store.state.sceneSwitch;
     this.h264 = this.$store.state.ctrolSwitch;
 
+
     this.init();
     this.readContainerMsg(); // 读取容器配置信息
     this.getSignalList();
@@ -678,7 +678,7 @@ export default {
       if((result.code == 200) && (result.data.eventType == 'setLayer')) {
         new Promise(resolve => {
           setTimeout(() => {
-            that.readLayerMsg();
+            resolve(that.readLayerMsg());
           }, 500);
         })
       }
@@ -686,7 +686,7 @@ export default {
       if((result.code == 200) && (result.data.eventType == 'rmLayer')) {
         new Promise(resolve => {
           setTimeout(() => {
-            that.readLayerMsg();
+            resolve(that.readLayerMsg());
           }, 500);
         })
         that.layerObj = null;
@@ -695,7 +695,7 @@ export default {
       if((result.code == 200) && (result.data.eventType == 'setLayerFreeze')) {
         new Promise(resolve => {
           setTimeout(() => {
-            that.readLayerMsg();
+            resolve(that.readLayerMsg());
           }, 500);
         })
       }
@@ -707,6 +707,7 @@ export default {
       'bankList',
       'bankIndex',
       'outputModelInfo',
+      'selectedLayerId'
     ]),
   },
   methods: {
@@ -721,7 +722,7 @@ export default {
       this.$root.bus.$on('getlayer', (layer) => {
         this.layerObj = layer;
         this.$store.commit('setSelectedLayerId', layer.id);
-        this.outsideLayerObj = layer;
+        this.outsideLayerObj = Object.assign(this.outsideLayerObj, layer);
       });
       // 信号全屏
       this.$root.bus.$off('fullScreen');
@@ -1092,14 +1093,14 @@ export default {
     // 信号图层缩放
     layerResize(layerId) {
       const that = this;
-      const scaleLayer = that.currentLayerList.find(item => item.id == layerId);
-      this.layerObj = scaleLayer;
-      this.outsideLayerObj = scaleLayer;
       $('#layer' + layerId).resizable({
         minWidth: 32,
         minHeight: 32,
         resize: function(event, ui) {
-
+          // console.log(layerId);
+          // const scaleLayer = that.currentLayerList.find(item => item.id == layerId);
+          // that.layerObj = scaleLayer;
+          // that.outsideLayerObj = scaleLayer;
         },
         stop: function(event, ui) {
           const id = $(this).attr('layerId');
@@ -1118,8 +1119,8 @@ export default {
                 cropSizeH: scaleLayer.cropSizeH,
                 scalePosX: scaleLayer.scalePosX,
                 scalePosY: scaleLayer.scalePosY,
-                scaleSizeW: ui.size.width * 10,
-                scaleSizeH: ui.size.height * 10, 
+                scaleSizeW: Math.round(ui.size.width * 10),
+                scaleSizeH: Math.round(ui.size.height * 10), 
                 inputPort:  scaleLayer.inputPort,
                 containerId: scaleLayer.containerId,
                 layerAlpha: scaleLayer.alpha,
@@ -1136,6 +1137,33 @@ export default {
           }
         }
       })
+    },
+    changeInput(e, type) {
+      let val = e.target.value.trim().replace(/\D/ig, '');
+      if(type == 'layerPosX') {
+        this.outsideLayerObj.scalePosX = val; 
+      }
+      if(type == 'layerPosY') {
+        this.outsideLayerObj.scalePosY = val; 
+      }
+      if(type == 'layerWidth') {
+        this.outsideLayerObj.scaleSizeW = val; 
+      }
+      if(type == 'layerHeight') {
+        this.outsideLayerObj.scaleSizeH = val; 
+      }
+      if(type == 'layerCropX') {
+        this.outsideLayerObj.cropPosX = val; 
+      }
+      if(type == 'layerCropY') {
+        this.outsideLayerObj.cropPosY = val; 
+      }
+      if(type == 'layerCropW') {
+        this.outsideLayerObj.cropSizeW = val; 
+      }
+      if(type == 'layerCropH') {
+        this.outsideLayerObj.cropSizeH = val; 
+      }
     },
      // 右侧设置按钮事件
     setData() {
@@ -1366,8 +1394,8 @@ export default {
       return {
         'width': item.sizeW / 100 + 'px',
         'height': item.sizeH / 100 + 'px',
-        'top': item.posX / 10 + 'px',
-        'left': item.posY / 10 + 'px'
+        'top': item.posY / 10 + 'px',
+        'left': item.posX / 10 + 'px'
       }
     },
     setSignalStyle(item) {
@@ -1616,14 +1644,15 @@ export default {
       deep: true,
       handler(value) {
         this.outsideLayerObj = value;
-      }
-    },
-    outsideLayerObj: {
-      deep: true,
-      handler(value) {
         this.layerObj = value;
       }
     },
+    // outsideLayerObj: {
+    //   deep: true,
+    //   handler(value) {
+    //     this.layerObj = value;
+    //   }
+    // },
     h264(val) {
       this.$store.commit('setCtrolSwitch', val);
     },

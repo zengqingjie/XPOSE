@@ -35,7 +35,20 @@
               </div>
             </div>
           </div>
-          <div v-show="leftIndex == 1"></div>
+          <div v-show="leftIndex == 1">
+            <template
+              v-for="(item, index) in currentLayerList"
+            >
+              <div
+                :key="item.id"
+                class="layer-list-item"
+              >
+                <span><img src="../../assets/layer_icon.png" alt="">{{index + 1}}</span>
+                <span>序号{{96 - item.index}}</span>
+                <span>信号{{item.inputPort}}</span>
+              </div>
+            </template>
+          </div>
           <div v-show="leftIndex == 2">
             <div class="signal-box">
               <div
@@ -51,7 +64,7 @@
                   :format="item.format"
                   v-if="item.format != 127"
                 >
-                  <span class="order">{{item.inputPort}}</span>
+                  <span class="order">{{item.inputPort + 1}}</span>
                   <div class="signal-icon">
                     <img src="../../assets/default/HDMI.png" alt="" v-if="(item.inputType == 53 || item.inputType == 11)">
                     <img src="../../assets/default/HDBaseT.png" alt="" v-if="item.inputType == 32">
@@ -500,6 +513,7 @@ export default {
       animationSignal: [], // 信号动画id集合
       animationLayer: [], // 图层动画id集合
       animationScene: [], // 场景动画集合
+      selectedLayerId: '',
       sessionId: ''
     }
   },
@@ -592,11 +606,13 @@ export default {
   },
   mounted() {
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
+    this.sryj = this.$store.state.signalSwitch;
+    this.tcyj = this.$store.state.layerSwitch;
+    this.cjyj = this.$store.state.sceneSwitch;
+    this.h264 = this.$store.state.ctrolSwitch;
+
     this.init();
     this.readContainerMsg(); // 读取容器配置信息
-    this.readLayerMsg(); // 读取图层列表
-    this.readOutputList(); // 读取输出口列表
-
     this.getSignalList();
 
     this.draggableInit(); // 容器区域拖拽
@@ -611,6 +627,7 @@ export default {
       if((result.code == 200) && (result.data.eventType == 'readContainerMsg')) {
         if (result.data.count > 0) {
           that.containerList = result.data.container;
+          that.readOutputList(); // 读取输出口列表
         } else {
           that.containerList = [];
         }
@@ -618,6 +635,7 @@ export default {
       // 获取显示器（输出口）列表
       if((result.code == 200) && (result.data.eventType == 'readOutputList')) {
         that.outputList = result.data.output;
+        that.readLayerMsg(); // 读取图层列表
         // 可设置图层id集合
         that.layerIdList();
         that.$nextTick(() => {
@@ -641,6 +659,8 @@ export default {
                 $('.signal-layer-item canvas').each(function() {
                   layerCanvas.push($(this)[0]);
                 });
+                that.animationLayer.map(fram => cancelAnimationFrame(fram));
+                that.animationLayer = [];
                 that.renderImg(layerCanvas, 'layer');
               }
             }
@@ -656,16 +676,28 @@ export default {
       }
       // 设置图层成功回调
       if((result.code == 200) && (result.data.eventType == 'setLayer')) {
-        that.readLayerMsg();
+        new Promise(resolve => {
+          setTimeout(() => {
+            that.readLayerMsg();
+          }, 500);
+        })
       }
       // 删除图层成功回调
       if((result.code == 200) && (result.data.eventType == 'rmLayer')) {
-        that.readLayerMsg();
+        new Promise(resolve => {
+          setTimeout(() => {
+            that.readLayerMsg();
+          }, 500);
+        })
         that.layerObj = null;
       }
       // 图层冻结操作
       if((result.code == 200) && (result.data.eventType == 'setLayerFreeze')) {
-        that.readLayerMsg();
+        new Promise(resolve => {
+          setTimeout(() => {
+            that.readLayerMsg();
+          }, 500);
+        })
       }
     }
     
@@ -674,7 +706,7 @@ export default {
     ...mapState([
       'bankList',
       'bankIndex',
-      'outputModelInfo'
+      'outputModelInfo',
     ]),
   },
   methods: {
@@ -688,6 +720,7 @@ export default {
       this.$root.bus.$off('getlayer');
       this.$root.bus.$on('getlayer', (layer) => {
         this.layerObj = layer;
+        this.$store.commit('setSelectedLayerId', layer.id);
         this.outsideLayerObj = layer;
       });
       // 信号全屏
@@ -1035,12 +1068,12 @@ export default {
                 cropSizeW: mvLayer.cropSizeW,
                 cropSizeH: mvLayer.cropSizeH,
                 scalePosX: Math.round(ui.position.left * 10),
-                scalePosY: ui.position.top * 10,
+                scalePosY: Math.round(ui.position.top * 10),
                 scaleSizeW: mvLayer.scaleSizeW,
                 scaleSizeH: mvLayer.scaleSizeH, 
                 inputPort:  mvLayer.inputPort,
                 containerId: mvLayer.containerId,
-                layerAlpha: mvLayer.layerAlpha,
+                layerAlpha: mvLayer.alpha,
                 index: mvLayer.index,
                 sceneId: that.currentSceneId,
                 pageId: that.currentPageId
@@ -1225,7 +1258,10 @@ export default {
         });
         this.animationScene.map(item => {
           cancelAnimationFrame(item);
-        })
+        });
+        this.animationSignal = [];
+        this.animationLayer = [];
+        this.animationScene = [];
       }
     },
     // 画面绘制函数
@@ -1348,11 +1384,20 @@ export default {
     changeBank (scene, index){
       this.currentSceneId = scene.id;
       this.currentLayerList = scene.layer;
+      this.animationLayer.map(item => cancelAnimationFrame(item));
+      this.animationLayer = [];
       this.$nextTick(() => {
         this.currentLayerList.map(item => {
           if(!item.freeze) {
             this.layerDraggable(item.id); // 图层拖拽初始化
             this.layerResize(item.id); // 图层缩放初始化
+          }
+          let layerCanvas = [];
+          if(this.tcyj && this.h264) {
+            $('.signal-layer-item canvas').each(function() {
+              layerCanvas.push($(this)[0]);
+            });
+            this.renderImg(layerCanvas, 'layer');
           }
         })
       });
@@ -1552,6 +1597,20 @@ export default {
         return true;
     }
   },
+  destroyed() {
+    this.animationSignal.map(item => {
+      cancelAnimationFrame(item);
+    });
+    this.animationLayer.map(item => {
+      cancelAnimationFrame(item);
+    });
+    this.animationScene.map(item => {
+      cancelAnimationFrame(item);
+    });
+    this.animationSignal = [];
+    this.animationLayer = [];
+    this.animationScene = [];
+  },
   watch: {
     layerObj: {
       deep: true,
@@ -1564,6 +1623,18 @@ export default {
       handler(value) {
         this.layerObj = value;
       }
+    },
+    h264(val) {
+      this.$store.commit('setCtrolSwitch', val);
+    },
+    sryj(val) {
+      this.$store.commit('setSignalSwitch', val);
+    },
+    tcyj(val) {
+      this.$store.commit('setLayerSwitch', val);
+    },
+    cjyj(val) {
+      this.$store.commit('setSceneSwitch', val);
     }
   }
 }
@@ -1669,6 +1740,24 @@ export default {
             width: 16px;
             height: 16px;
             cursor: pointer;
+          }
+        }
+        .layer-list-item {
+          display: flex;
+          height: 24px;
+          align-items: center;
+          span {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            padding-left: 8px;
+            color: rgb(153,153,153);
+            font-size: 12px;
+            img {
+              width: 16px;
+              height: 16px;
+              margin-right: 5px;
+            }
           }
         }
         

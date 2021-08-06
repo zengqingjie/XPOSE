@@ -54,6 +54,12 @@ export default {
     }
   },
   mounted() {
+    document.onkeydown = (e) => {
+      const key = window.event ? window.event.keyCode : e.keyCode;
+      if(key == 13) {
+        this.loginEvent();
+      }
+    }
     // 获取mac,ip信息
     Api.getMacAddress().then(res => {
       if(res.code == 200) {
@@ -71,6 +77,7 @@ export default {
       this.userName = params.account;
       this.pwd = params.passwd;
     }
+
   },
   methods: {
     loginEvent() {

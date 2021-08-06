@@ -144,6 +144,10 @@
               <span>{{item.hasOutputBoard ? item.hardware : '--'}}</span>
             </div>
           </div>
+          <div
+            class="blue-text"
+             v-if="deviceInfo.costomInfo.mainBoard"
+          >webserver版本：<span class="white-text">{{deviceInfo.costomInfo.mainBoard[0].web}}</span></div>
         </div>
         <div v-if="typeIndex == 1 && rightView == 'device'">
           <div class="check-view">
@@ -1463,6 +1467,9 @@ export default {
             padding: 6px 10px;
             color: rgb(0,180,234);
             font-size: 12px;
+            .white-text {
+              color: #fff;
+            }
           }
           .info-view {
             padding: 0 10px;

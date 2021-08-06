@@ -3,6 +3,7 @@
     class="signal-layer-item"
     v-if="layer"
     :style="setStyle"
+    :class="selectedLayerId == layer.id ? 'blue' : ''"
     :containerId="layer.containerId"
     :id="'layer'+layer.id"
     :layerId="layer.id"
@@ -21,7 +22,7 @@
       <img src="../../assets/layer_maximize.png" alt="" v-if="!layer.freeze" @click="fullScreen(layer)">
       <img src="../../assets/layer_delete.png" alt="" v-if="!layer.freeze" @click="deleteLayer(layer)">
     </div>
-    <div>信号 {{layer.inputPort}}</div>
+    <div>信号 {{layer.inputPort + 1}}</div>
     <div>
       <span>x:{{layer.scalePosX}}</span>
       <span>y:{{layer.scalePosY}}</span>
@@ -41,6 +42,7 @@
 
 <script>
 import $ from "jquery";
+import { mapState } from 'vuex';
 export default {
   props: {
     layer: {
@@ -72,10 +74,11 @@ export default {
         "#80e5bbd8", "#80a117d8", "#802208d8", "#80764dd8",
         "#80fadad8", "#800326d8", "#80b3a8d8", "#80de7dd8",
         "#805a0dd8", "#80172cd8", "#809850d8", "#80da69d8",
-        "#80f744d8", "#805760d8", "#80adc3d8", "#80b3c5d8"]
+        "#80f744d8", "#805760d8", "#80adc3d8", "#80b3c5d8"],
     }
   },
-  mounted() { },
+  mounted() {
+  },
   methods: {
     lockEvent(layer) {
       this.$root.bus.$emit('layerActive', layer);
@@ -106,6 +109,9 @@ export default {
     // }
   },
   computed: {
+    ...mapState([
+      'selectedLayerId'
+    ]),
     setStyle() {
       return {
         width: this.layer.scaleSizeW / 10+ 'px',
@@ -162,5 +168,8 @@ export default {
       width: 100%;
       height: 100%;
     }
+  }
+  .blue {
+    border: 2px solid blue;
   }
 </style>

@@ -81,7 +81,11 @@ export default new Vuex.Store({
       }
     ],
     bankIndex: 0,
-    h264: false
+    layerSwitch: false,
+    signalSwitch: false,
+    sceneSwitch: false,
+    ctrolSwitch: false,
+    selectedLayerId: '',
   },
   mutations: {
     // 设置拖出的设备列表
@@ -108,9 +112,25 @@ export default new Vuex.Store({
     setBankIndex(state, num) {
       state.bankIndex = num;
     },
-    // h264
-    setBankIndex(state, boolean) {
-      state.h264 = boolean;
+    // layer
+    setLayerSwitch(state, boolean) {
+      state.layerSwitch = boolean;
+    },
+    // signal
+    setSignalSwitch(state, boolean) {
+      state.signalSwitch = boolean;
+    },
+    // scene
+    setSceneSwitch(state, boolean) {
+      state.sceneSwitch = boolean;
+    },
+    // ctrol
+    setCtrolSwitch(state, boolean) {
+      state.ctrolSwitch = boolean;
+    },
+    // selectedLayerId
+    setSelectedLayerId(state, id) {
+      state.selectedLayerId = id;
     },
   },
   actions: {

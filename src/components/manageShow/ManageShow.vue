@@ -768,8 +768,8 @@ export default {
             container: [ 
               {
                 id: Number(containerId), // 容器id
-                posX: ui.position.left, // 容器左上角横坐标
-                posY: ui.position.top, // 容器左上角纵坐标
+                posX: Math.round(ui.position.left), // 容器左上角横坐标
+                posY: Math.round(ui.position.top), // 容器左上角纵坐标
                 sizeW: container.sizeW, // 容器总宽
                 sizeH: container.sizeH, // 容器总高
                 mode: container.mode, // 容器类型
@@ -888,7 +888,7 @@ export default {
           const outputId = $(this).attr('id'); // 被拖拽显示器id
           let outputObj =that.outputList.find(dItem => dItem.id == outputId);
           outputObj.posX = Math.round(ui.position.left * 10);
-          outputObj.posY = ui.position.top * 10;
+          outputObj.posY = Math.round(ui.position.top * 10);
           
           // 下发显示器参数
           const display = {

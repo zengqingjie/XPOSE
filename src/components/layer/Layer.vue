@@ -1057,10 +1057,13 @@ export default {
         scroll: false,
         zIndex: 100,
         drag: function(event, ui) {
-          that.layerObj.scalePosX = Math.round(ui.position.left * 10);
-          that.layerObj.scalePosY = Math.round(ui.position.top * 10);
-          that.outsideLayerObj.scalePosX = Math.round(ui.position.left * 10);
-          that.outsideLayerObj.scalePosY = Math.round(ui.position.top * 10);
+          // console.log($(this).attr('layerId'));
+          // if(that.layerObj) {
+          //   that.layerObj.scalePosX = Math.round(ui.position.left * 10);
+          //   that.layerObj.scalePosY = Math.round(ui.position.top * 10);
+          // }
+          // that.outsideLayerObj.scalePosX = Math.round(ui.position.left * 10);
+          // that.outsideLayerObj.scalePosY = Math.round(ui.position.top * 10);
         },
         stop: function(event, ui) {
           // 被移动的图层

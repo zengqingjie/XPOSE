@@ -969,22 +969,7 @@ export default {
       $(".displayer-view").droppable({
         accept: '.signal-item',
         drop: function(event, ui) {
-          // 设置当前创建图层id
-          let usedLayerIds = []; // 使用过的图层id
-          let layerId = null;
-          that.currentLayerList.map(item => {
-            usedLayerIds.push(item.id);
-          });
-          if(usedLayerIds.length > 0) {
-            that.layerIds.some(id => {
-              if(!usedLayerIds.includes(id)) {
-                layerId = id;
-                return true;
-              }
-            })
-          } else {
-            layerId = that.layerIds[0];
-          }
+          
           // 图层index设置: 
           let layerIndexList = [];
           that.currentLayerList.map(item => {
@@ -1012,41 +997,79 @@ export default {
             createIndex = 95;
           }
 
+          // 设置当前创建图层id
+          let usedLayerIds = []; // 使用过的图层id
+          let layerId = null;
+          that.currentLayerList.map(item => {
+            usedLayerIds.push(item.id);
+          });
+          // if(usedLayerIds.length > 0) {
+          //   that.layerIds.some(id => {
+          //     if(!usedLayerIds.includes(id)) {
+          //       layerId = id;
+          //       return true;
+          //     }
+          //   })
+          // } else {
+          //   layerId = that.layerIds[0];
+          // }
+          
+
           const dropOutputId = $(this).attr('id'); // 放置输出口id
           const dropContainerId = $(this).attr('containerId'); // 放置容器id
           const dropOutput = that.outputList.find(item => item.id == dropOutputId); // 放置输出口
+          const dropContainerOutputs = that.outputList.filter(item => item.status == true && item.containerId == dropContainerId);// 放置容器输出口集合
           const signalFormat = $(ui.draggable[0]).attr('format');
-          const cropW = that.layerCropConversation(Number(signalFormat)).cropW;
-          const cropH = that.layerCropConversation(Number(signalFormat)).cropH;
-          const params = {
-            eventType: "setLayer",
-            count: 1,
-            layer: [
-              {
-                id: layerId,
-                cropPosX: 0,
-                cropPosY: 0,
-                cropSizeW: cropW,
-                cropSizeH: cropH,
-                scalePosX: dropOutput.posX,
-                scalePosY: dropOutput.posY,
-                scaleSizeW: dropOutput.sizeW,
-                scaleSizeH: dropOutput.sizeH, 
-                inputPort:  Number($(ui.draggable[0]).attr('id')),
-                containerId: Number(dropContainerId),
-                index: createIndex,
-                layerAlpha: 128,
-                sceneId: that.currentSceneId,
-                pageId: that.currentPageId
+          // 根据输出口id设置图层id
+          let dropContainerLayerIds = []; // 放置容器可设置图层id集合
+          // let dropOutputLayerIds = []; // 放置输出口可设置图层id集合
+          dropContainerOutputs.map(item => {
+            let cLayerId = (item.id + 1) * 4;
+            for(let i = cLayerId - 4; i < cLayerId; i++) {
+              dropContainerLayerIds.push(i);
+            }
+          });
+          // let oLayerId = (Number(dropOutputId) + 1) * 4 - 1;
+          // for(let i = 0; i < 4; i++) {
+          //   dropOutputLayerIds.push(oLayerId--);
+          // }
+          
+          dropContainerLayerIds.some(item => {
+            if(!usedLayerIds.includes(item)){
+              const cropW = that.layerCropConversation(Number(signalFormat)).cropW;
+              const cropH = that.layerCropConversation(Number(signalFormat)).cropH;
+              const params = {
+                eventType: "setLayer",
+                count: 1,
+                layer: [
+                  {
+                    id: item,
+                    cropPosX: 0,
+                    cropPosY: 0,
+                    cropSizeW: cropW,
+                    cropSizeH: cropH,
+                    scalePosX: dropOutput.posX,
+                    scalePosY: dropOutput.posY,
+                    scaleSizeW: dropOutput.sizeW,
+                    scaleSizeH: dropOutput.sizeH, 
+                    inputPort:  Number($(ui.draggable[0]).attr('id')),
+                    containerId: Number(dropContainerId),
+                    index: createIndex,
+                    layerAlpha: 128,
+                    sceneId: that.currentSceneId,
+                    pageId: that.currentPageId
+                  }
+                ],
+                sessionID: that.sessionId,
+                checkKey: that.getcheckKey()
               }
-            ],
-            sessionID: that.sessionId,
-            checkKey: that.getcheckKey()
-          }
-          // websocket 准备
-          if (window.webSocket && window.webSocket.readyState == 1) {
-            window.webSocket.send(JSON.stringify(params));
-          }
+              // websocket 准备
+              if (window.webSocket && window.webSocket.readyState == 1) {
+                window.webSocket.send(JSON.stringify(params));
+              }
+              return true;
+            }
+          });
         }
       })
     },

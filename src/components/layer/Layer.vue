@@ -1035,7 +1035,7 @@ export default {
           //   dropOutputLayerIds.push(oLayerId--);
           // }
           
-          dropContainerLayerIds.map(item => {
+          dropContainerLayerIds.some(item => {
             if(!usedLayerIds.includes(item)){
               const cropW = that.layerCropConversation(Number(signalFormat)).cropW;
               const cropH = that.layerCropConversation(Number(signalFormat)).cropH;

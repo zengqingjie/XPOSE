@@ -999,21 +999,9 @@ export default {
 
           // 设置当前创建图层id
           let usedLayerIds = []; // 使用过的图层id
-          let layerId = null;
           that.currentLayerList.map(item => {
             usedLayerIds.push(item.id);
           });
-          // if(usedLayerIds.length > 0) {
-          //   that.layerIds.some(id => {
-          //     if(!usedLayerIds.includes(id)) {
-          //       layerId = id;
-          //       return true;
-          //     }
-          //   })
-          // } else {
-          //   layerId = that.layerIds[0];
-          // }
-          
 
           const dropOutputId = $(this).attr('id'); // 放置输出口id
           const dropContainerId = $(this).attr('containerId'); // 放置容器id
@@ -1022,17 +1010,12 @@ export default {
           const signalFormat = $(ui.draggable[0]).attr('format');
           // 根据输出口id设置图层id
           let dropContainerLayerIds = []; // 放置容器可设置图层id集合
-          // let dropOutputLayerIds = []; // 放置输出口可设置图层id集合
           dropContainerOutputs.map(item => {
             let cLayerId = (item.id + 1) * 4;
             for(let i = cLayerId - 4; i < cLayerId; i++) {
               dropContainerLayerIds.push(i);
             }
           });
-          // let oLayerId = (Number(dropOutputId) + 1) * 4 - 1;
-          // for(let i = 0; i < 4; i++) {
-          //   dropOutputLayerIds.push(oLayerId--);
-          // }
           
           dropContainerLayerIds.some(item => {
             if(!usedLayerIds.includes(item)){
@@ -1132,6 +1115,13 @@ export default {
       $('#layer' + layerId).resizable({
         minWidth: 32,
         minHeight: 32,
+        start: function(event, ui) {
+          console.log('???');
+          const id = $(this).attr('layerId');
+          const scaleLayer = that.currentLayerList.find(item => item.id == id);
+          that.layerObj = scaleLayer;
+          that.$store.commit('setSelectedLayerId', scaleLayer.id);
+        },
         resize: function(event, ui) {
           that.layerObj.scaleSizeW = Math.round(ui.size.width * 10);
           that.layerObj.scaleSizeH = Math.round(ui.size.height * 10);

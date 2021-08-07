@@ -1024,12 +1024,11 @@ export default {
           let dropContainerLayerIds = []; // 放置容器可设置图层id集合
           // let dropOutputLayerIds = []; // 放置输出口可设置图层id集合
           dropContainerOutputs.map(item => {
-            let cLayerId = (item.id + 1) * 4 - 1;
-            for(let i = 0; i < 4; i++) {
-              dropContainerLayerIds.push(cLayerId--);
+            let cLayerId = (item.id + 1) * 4;
+            for(let i = cLayerId - 4; i < cLayerId; i++) {
+              dropContainerLayerIds.push(i);
             }
           });
-
           // let oLayerId = (Number(dropOutputId) + 1) * 4 - 1;
           // for(let i = 0; i < 4; i++) {
           //   dropOutputLayerIds.push(oLayerId--);

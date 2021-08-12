@@ -814,7 +814,7 @@ export default {
       this.detection = false;
     });
     // ws接收消息
-    this.websocket.ws.onmessage = function(res) {
+    window.webSocket.onmessage = function(res) {
       const result = JSON.parse(res.data);
       // 获取设备sn
       if((result.code == 200) && (result.data.eventType == 'getDeviceSN')) {
@@ -908,8 +908,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 读取输出口列表
@@ -920,8 +920,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 隐藏右侧功能区
@@ -977,8 +977,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         }
-        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-          this.websocket.ws.send(JSON.stringify(params));
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
         }
       }
     },
@@ -1045,8 +1045,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(getDeviceSNParams));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(getDeviceSNParams));
       }
     },
     // 获取设备概况信息
@@ -1057,8 +1057,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(getDeviceInfoParams));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(getDeviceInfoParams));
       }
     },
     // 检测
@@ -1068,8 +1068,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 获取输入口信息
@@ -1081,8 +1081,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 获取输出口信息
@@ -1094,8 +1094,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 设置输入 || 输出口信息
@@ -1125,8 +1125,8 @@ export default {
         checkKey: this.getcheckKey()
       }
       params[type]=  this.inputPortInfo[type];
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 设置输出
@@ -1161,8 +1161,8 @@ export default {
           freq: this.userFreq
         }
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 主板类型

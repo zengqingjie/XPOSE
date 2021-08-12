@@ -390,7 +390,7 @@ export default {
 
     // websocket接收到的消息
     const that = this;
-    this.websocket.ws.onmessage = function(res) {
+    window.webSocket.onmessage = function(res) {
       const result = JSON.parse(res.data);
       // 获取容器
       if((result.code == 200) && (result.data.eventType == 'readContainerMsg')) {
@@ -422,8 +422,8 @@ export default {
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 获取显示器列表
@@ -434,8 +434,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: randoms
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 读取图层列表
@@ -446,8 +446,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: randoms
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 容器中所填充显示器
@@ -476,8 +476,8 @@ export default {
           checkKey: this.getcheckKey(),
           sessionID: this.sessionId
         }
-        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-          this.websocket.ws.send(JSON.stringify(params));
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
         }
       }
     },
@@ -521,8 +521,8 @@ export default {
           sessionID: this.sessionId
         }
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 操作杆发生滑动
@@ -627,8 +627,8 @@ export default {
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     setTakeSetting() {
@@ -655,8 +655,8 @@ export default {
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId,
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
   },

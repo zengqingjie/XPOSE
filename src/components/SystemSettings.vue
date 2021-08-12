@@ -480,7 +480,7 @@ export default {
     this.getUserRight();
 
     // ws信息处理
-    this.websocket.ws.onmessage = function(res) {
+    window.webSocket.onmessage = function(res) {
       const result = JSON.parse(res.data);
       // 获取管理员权限信息
       if((result.code == 200) && (result.data.eventType == 'getUserRight')) {
@@ -561,8 +561,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 生成随机随机checkKey
@@ -611,8 +611,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         }
-        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-          this.websocket.ws.send(JSON.stringify(params));
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
         }
     },
     // 用户登录
@@ -625,8 +625,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         }
-        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-          this.websocket.ws.send(JSON.stringify(params));
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
         }
       } else {
         this.$message.error('用户名或密码错误');
@@ -640,8 +640,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 信息提示change事件
@@ -653,8 +653,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 图层管理change事件
@@ -665,8 +665,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 搜索设备change事件
@@ -683,8 +683,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 容器参数类型切换
@@ -708,8 +708,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 断开所有连接
@@ -752,8 +752,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 取消删除
@@ -840,8 +840,8 @@ export default {
               sessionID: this.sessionId,
               checkKey: this.getcheckKey()
             }
-            if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-              this.websocket.ws.send(JSON.stringify(params));
+            if (window.webSocket && window.webSocket.readyState == 1) {
+              window.webSocket.send(JSON.stringify(params));
             }
           }
         });
@@ -868,8 +868,8 @@ export default {
                 sessionID: this.sessionId,
                 checkKey: this.getcheckKey()
               }
-              if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-                this.websocket.ws.send(JSON.stringify(params));
+              if (window.webSocket && window.webSocket.readyState == 1) {
+                window.webSocket.send(JSON.stringify(params));
               }
               
             } else {

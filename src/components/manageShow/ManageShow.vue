@@ -359,7 +359,7 @@ export default {
     this.sortableInit(); // 显示器在容器内拖拽
     // websocket 接收到的消息
     const that = this;
-    this.websocket.ws.onmessage = function(res) {
+    window.webSocket.onmessage = function(res) {
       const result = JSON.parse(res.data);
       // 获取容器
       if((result.code == 200) && (result.data.eventType == 'readContainerMsg')) {
@@ -557,14 +557,14 @@ export default {
               sessionID: that.sessionId,
               checkKey: that.getcheckKey()
             }
-            if (that.websocket.ws && that.websocket.ws.readyState == 1) {
-              that.websocket.ws.send(JSON.stringify(params));
-              that.websocket.ws.send(JSON.stringify(outputParams));
+            if (window.webSocket && window.webSocket.readyState == 1) {
+              window.webSocket.send(JSON.stringify(params));
+              window.webSocket.send(JSON.stringify(outputParams));
             }
           } else {
             //websocket 准备
-            if (that.websocket.ws && that.websocket.ws.readyState == 1) {
-              that.websocket.ws.send(JSON.stringify(params));
+            if (window.webSocket && window.webSocket.readyState == 1) {
+              window.webSocket.send(JSON.stringify(params));
             }
           }
         }
@@ -582,8 +582,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey('rmContainer')
         }
-        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-          this.websocket.ws.send(JSON.stringify(params));
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
         }
       });
       // 删除显示器
@@ -598,8 +598,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey('rmOutputFromContainer')
         }
-        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-          this.websocket.ws.send(JSON.stringify(params));
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
           that.displayObj = null;
         }
       });
@@ -642,8 +642,8 @@ export default {
           sessionID: that.sessionId,
           checkKey: that.getcheckKey()
         }
-        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-          this.websocket.ws.send(JSON.stringify(params));
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
         }
       });
     },
@@ -655,8 +655,8 @@ export default {
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 获取显示器列表
@@ -667,8 +667,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: randoms
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 容器中所填充显示器
@@ -703,8 +703,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         }
-        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-          this.websocket.ws.send(JSON.stringify(params));
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
         }
       }
     },
@@ -765,8 +765,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 点击显示器
@@ -803,8 +803,8 @@ export default {
             sessionID: that.sessionId,
             checkKey: that.getcheckKey()
           }
-          if (that.websocket.ws && that.websocket.ws.readyState == 1) {
-            that.websocket.ws.send(JSON.stringify(params));
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(params));
           }
         }
       })
@@ -845,8 +845,8 @@ export default {
               checkKey: that.getcheckKey()
             }
 
-            if (that.websocket.ws && that.websocket.ws.readyState == 1) {
-              that.websocket.ws.send(JSON.stringify(params));
+            if (window.webSocket && window.webSocket.readyState == 1) {
+              window.webSocket.send(JSON.stringify(params));
             }
           }
           // 放置在显示器上，替换显示器
@@ -887,8 +887,8 @@ export default {
                 sessionID: that.sessionId,
                 checkKey: that.getcheckKey()
               }
-              if (that.websocket.ws && that.websocket.ws.readyState == 1) {
-                that.websocket.ws.send(JSON.stringify(params));
+              if (window.webSocket && window.webSocket.readyState == 1) {
+                window.webSocket.send(JSON.stringify(params));
               }
             } else {
               console.log('范围外');
@@ -938,8 +938,8 @@ export default {
             sessionID: that.sessionId,
             checkKey: that.getcheckKey()
           }
-          if (that.websocket.ws && that.websocket.ws.readyState == 1) {
-            that.websocket.ws.send(JSON.stringify(params));
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(params));
           }
         }
       })

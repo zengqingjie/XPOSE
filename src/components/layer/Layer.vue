@@ -552,7 +552,7 @@ export default {
     
     // websocket接收到的消息
     const that = this;
-    this.websocket.ws.onmessage = function(res) {
+    window.webSocket.onmessage = function(res) {
       const result = JSON.parse(res.data);
       // 获取容器
       if((result.code == 200) && (result.data.eventType == 'readContainerMsg')) {
@@ -688,8 +688,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         } 
-        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-          this.websocket.ws.send(JSON.stringify(params));
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
         }
       });
       // 信号图层删除
@@ -704,8 +704,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         }
-        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-          this.websocket.ws.send(JSON.stringify(params));
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
         }
       });
 
@@ -730,8 +730,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         }
-        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-          this.websocket.ws.send(JSON.stringify(params));
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
         }
       });
 
@@ -813,8 +813,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         } 
-        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-          this.websocket.ws.send(JSON.stringify(params));
+        if (window.webSocket && window.webSocket.readyState == 1) {
+          window.webSocket.send(JSON.stringify(params));
         }
       });
     },
@@ -826,8 +826,8 @@ export default {
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 获取显示器列表
@@ -838,8 +838,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: randoms
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 读取图层列表
@@ -850,8 +850,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: randoms
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 读取左侧信号列表
@@ -861,8 +861,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey('readInputSignalList')
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 容器中所填充显示器
@@ -974,8 +974,8 @@ export default {
                 checkKey: that.getcheckKey()
               }
               // websocket 准备
-              if (that.websocket.ws && that.websocket.ws.readyState == 1) {
-                that.websocket.ws.send(JSON.stringify(params));
+              if (window.webSocket && window.webSocket.readyState == 1) {
+                window.webSocket.send(JSON.stringify(params));
               }
               return true;
             }
@@ -1029,8 +1029,8 @@ export default {
             sessionID: that.sessionId,
             checkKey: that.getcheckKey()
           } 
-          if (that.websocket.ws && that.websocket.ws.readyState == 1) {
-            that.websocket.ws.send(JSON.stringify(params));
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(params));
           }
         }
       });
@@ -1085,8 +1085,8 @@ export default {
             sessionID: that.sessionId,
             checkKey: that.getcheckKey()
           }
-          if (that.websocket.ws && that.websocket.ws.readyState == 1) {
-            that.websocket.ws.send(JSON.stringify(params));
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(params));
           }
         }
       })
@@ -1149,8 +1149,8 @@ export default {
             sessionID: this.sessionId,
             checkKey: this.getcheckKey()
           } 
-          if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-            this.websocket.ws.send(JSON.stringify(params));
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(params));
           }
         }
       }
@@ -1312,8 +1312,8 @@ export default {
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 顶部图层移动操作
@@ -1463,10 +1463,10 @@ export default {
         //     checkKey: that.getcheckKey('setLayer')
         //   }
         //   // websocket 准备
-        //   if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        //     this.websocket.ws.send(JSON.stringify(setLayerParams));
+        //   if (window.webSocket && window.webSocket.readyState == 1) {
+        //     window.webSocket.send(JSON.stringify(setLayerParams));
         //   }
-        //   this.websocket.ws.onmessage = function(res) {
+        //   window.webSocket.onmessage = function(res) {
         //     const resData = JSON.parse(res.data);
         //     if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == that.setLayerCheckKey) {
         //       that.$nextTick(() => {
@@ -1530,10 +1530,10 @@ export default {
           //   checkKey: that.getcheckKey('setLayer')
           // }
           // // websocket 准备
-          // if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-          //   this.websocket.ws.send(JSON.stringify(setLayerParams));
+          // if (window.webSocket && window.webSocket.readyState == 1) {
+          //   window.webSocket.send(JSON.stringify(setLayerParams));
           // }
-          // this.websocket.ws.onmessage = function(res) {
+          // window.webSocket.onmessage = function(res) {
           //   const resData = JSON.parse(res.data);
           //   if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == that.setLayerCheckKey) {
               

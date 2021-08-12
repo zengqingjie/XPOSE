@@ -89,7 +89,7 @@ export default {
         Api.login(data).then(res => {
           if(res.code == 200) {
             // 登录成功创建websocket
-            this.connectSocket();
+            this.creactWebsocket(this.ip);
             window.sessionStorage.setItem("sessionId", JSON.stringify(res.data.sessionID));
             window.sessionStorage.setItem("isLogin", JSON.stringify(true));
             window.sessionStorage.setItem("account", JSON.stringify(this.userName));
@@ -105,32 +105,14 @@ export default {
     goRegisterPage() {
       this.$router.push({path: '/register'});
     },
-    connectSocket() {
-      let that = this;
-      console.log("WebSocket" in window, window);
-      if ("WebSocket" in window) {
-        // console.log("您的浏览器支持 WebSocket!");
-        // location.host
-        that.ws = new WebSocket("ws://"+that.ip+":8800");
-        globalWs.setWs(that.ws);
-        that.ws.onopen = function () {
-          console.log('连接成功');
-          that.$message.success('连接成功');
-        };
-
-        that.ws.onclose = function () {
-          // 关闭 websocket
-          console.log("连接已关闭...");
-          that.$message.error('断开连接, 尝试重连');
-          //断线重新连接
-          setTimeout(() => {
-              that.connectSocket(that.ip);
-          }, 10000);
-        };
-      } else {
-        // 浏览器不支持 WebSocket
-        console.log("您的浏览器不支持 WebSocket!");
-        this.openNotificationWithIcon('error', '浏览器', '您的浏览器不支持显示消息请更换', 1,1)
+    creactWebsocket(ip) {
+      //socket 准备
+      if(window.WebSocket){
+        const wsUrl = process.env.VUE_APP_TITLE !== 'production' ? "ws://"+ip+":8800" : "ws://"+ip+":8800";
+        globalWs.connectSocket(wsUrl);
+        
+      }else{
+        alert("error");
       }
     }
   }

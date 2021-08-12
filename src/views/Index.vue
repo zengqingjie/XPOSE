@@ -99,8 +99,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
      // 获取设备概况信息
@@ -111,8 +111,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
-        this.websocket.ws.send(JSON.stringify(params));
+      if (window.webSocket && window.webSocket.readyState == 1) {
+        window.webSocket.send(JSON.stringify(params));
       }
     },
     // 生成随机checkKey

@@ -7,7 +7,7 @@
     :style="setContainerStyle"
   >
     <div class="container-header">
-      <span>{{ cItem.containerId + 1 }}--(W:{{ cItem.sizeW }} H:{{ cItem.sizeH }})</span>
+      <span>{{ cItem.containerId + 1 }}{{cItem.name ? `-${cItem.name}-` : ''}}--(W:{{ cItem.sizeW }} H:{{ cItem.sizeH }})</span>
       <div class="right-view">
         <!-- <div @click="zoom(cItem, -1)">-</div>
         <div @click="zoom(cItem, 1)">+</div> -->

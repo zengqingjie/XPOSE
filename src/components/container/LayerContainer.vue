@@ -7,7 +7,7 @@
   >
     <div class="container-header">
       <span
-        >{{ cItem.containerId + 1 }}--(W:{{ cItem.sizeW }} H:{{ cItem.sizeH }})</span
+        >{{ cItem.containerId + 1 }}{{cItem.name ? `-${cItem.name}-` : ''}}--(W:{{ cItem.sizeW }} H:{{ cItem.sizeH }})</span
       >
     </div>
     <div

@@ -62,22 +62,26 @@
       </div>
     </div>
     <div class="right-view" v-if="!showInfo && nowMenuId == '002'">
-      <div class="params-type" v-dragscroll>
-        <div class="flex-box" v-if="rightView == 'device'">
-          <div :class="typeIndex == 0 ? 'show' : ''" @click="typeSelect(0)">概况</div>
-          <div :class="typeIndex == 1 ? 'show' : ''" @click="typeSelect(1)">IP</div>
-          <div :class="typeIndex == 2 ? 'show' : ''" @click="typeSelect(2)">风扇控制</div>
-          <div :class="typeIndex == 3 ? 'show' : ''" @click="typeSelect(3)">热备份</div>
-          <div :class="typeIndex == 4 ? 'show' : ''" @click="typeSelect(4)">延时开机</div>
-          <div :class="typeIndex == 5 ? 'show' : ''" @click="typeSelect(5)">系统检测</div>
-          <div :class="typeIndex == 6 ? 'show' : ''" @click="typeSelect(6)">出厂设置</div>
-        </div>
-        <div class="flex-box" v-if="rightView == 'port'">
-          <div v-if="rightView == 'port' && port == 'inputPort'" :class="typeIndex == 7 ? 'show' : ''" @click="typeSelect(7)">属性</div>
-          <div v-if="rightView == 'port' && port == 'inputPort'" :class="typeIndex == 8 ? 'show' : ''" @click="typeSelect(8)">4K</div>
-          <div v-if="rightView == 'port' && port == 'inputPort'" :class="typeIndex == 9 ? 'show' : ''" @click="typeSelect(9)">EDID</div>
-          <div v-if="rightView == 'port' && port == 'outputPort'" :class="typeIndex == 10 ? 'show' : ''" @click="typeSelect(10)">分辨率</div>
-        </div>
+      <div class="params-type">
+        <template v-if="rightView == 'device'">
+          <el-scrollbar>
+            <div :class="typeIndex == 0 ? 'show' : ''" @click="typeSelect(0)">概况</div>
+            <div :class="typeIndex == 1 ? 'show' : ''" @click="typeSelect(1)">IP</div>
+            <div :class="typeIndex == 2 ? 'show' : ''" @click="typeSelect(2)">风扇控制</div>
+            <div :class="typeIndex == 3 ? 'show' : ''" @click="typeSelect(3)">热备份</div>
+            <div :class="typeIndex == 4 ? 'show' : ''" @click="typeSelect(4)">延时开机</div>
+            <div :class="typeIndex == 5 ? 'show' : ''" @click="typeSelect(5)">系统检测</div>
+            <div :class="typeIndex == 6 ? 'show' : ''" @click="typeSelect(6)">出厂设置</div>
+          </el-scrollbar>
+        </template>
+        <template v-if="rightView == 'port'">
+          <el-scrollbar>
+            <div v-if="rightView == 'port' && port == 'inputPort'" :class="typeIndex == 7 ? 'show' : ''" @click="typeSelect(7)">属性</div>
+            <!-- <div v-if="rightView == 'port' && port == 'inputPort'" :class="typeIndex == 8 ? 'show' : ''" @click="typeSelect(8)">4K</div> -->
+            <div v-if="rightView == 'port' && port == 'inputPort'" :class="typeIndex == 9 ? 'show' : ''" @click="typeSelect(9)">EDID</div>
+            <div v-if="rightView == 'port' && port == 'outputPort'" :class="typeIndex == 10 ? 'show' : ''" @click="typeSelect(10)">分辨率</div>
+          </el-scrollbar>
+        </template>
       </div>
       <div class="params-conts">
         <div v-if="typeIndex == 0 && rightView == 'device'">
@@ -95,7 +99,7 @@
             <div class="head">
               <span class="xl">名称</span>
               <span class="xl">软件版本</span>
-              <span>硬件版本</span>
+              <span></span>
             </div>
             <div
               class="tr-item"
@@ -105,15 +109,15 @@
             >
               <span class="xl">{{conversationBoardType(item.communicationType)}}</span>
               <span class="xl">{{item.mcu ? item.mcu : '--'}}</span>
-              <span>{{item.hardware || ''}}</span>
+              <span></span>
             </div>
           </div>
           <div class="blue-text">输入模块信息</div>
           <div class="lines-table bottom">
             <div class="head">
-              <span class="xl">名称</span>
-              <span class="xl">软件版本</span>
-              <span>硬件版本</span>
+              <span class="xl">序号</span>
+              <span class="xl">模块名称</span>
+              <span class="mcu">MCU</span>
             </div>
             <div
               class="tr-item"
@@ -121,17 +125,17 @@
               :key="index"
               :class="index % 2 ? '' : 'deep'"
             >
-              <span class="xl">{{item.hasInputBoard ? (index + 1 + ' ') + conversationInputType(item.inputType) : (index + 1)}}</span>
-              <span class="xl">{{item.hasInputBoard ? (item.mcu ? item.mcu : '--') : '--'}}</span>
-              <span>{{item.hasInputBoard  ? item.hardware : '--'}}</span>
+              <span class="xl">{{(index + 1)}}</span>
+              <span class="xl">{{item.hasInputBoard  ? conversationInputType(item.inputType) : '----'}}</span>
+              <span class="mcu">{{item.hasInputBoard ? (item.mcu ? item.mcu : '----') : '----'}}</span>
             </div>
           </div>
           <div class="blue-text">输出模块信息</div>
           <div class="lines-table">
             <div class="head">
-              <span class="xl">名称</span>
-              <span class="xl">软件版本</span>
-              <span>硬件版本</span>
+              <span class="xl">序号</span>
+              <span class="xl">模块名称</span>
+              <span class="mcu">MCU</span>
             </div>
             <div
               class="tr-item"
@@ -139,15 +143,11 @@
               :key="index"
               :class="index % 2 ? '' : 'deep'"
             >
-              <span class="xl">{{item.hasOutputBoard ? (index + 1 + ' ') + conversationOnputType(item.outputTypeEnum) : (index + 1)}}</span>
-              <span class="xl">{{item.hasOutputBoard ? (item.mcu ? item.mcu : '--') : '--'}}</span>
-              <span>{{item.hasOutputBoard ? item.hardware : '--'}}</span>
+              <span class="xl">{{(index + 1)}}</span>
+              <span class="xl">{{item.hasOutputBoard ? conversationOnputType(item.outputTypeEnum) : '----'}}</span>
+              <span class="mcu">{{item.hasOutputBoard ? (item.mcu ? item.mcu : '----') : '----'}}</span>
             </div>
           </div>
-          <div
-            class="blue-text"
-             v-if="deviceInfo.costomInfo.mainBoard"
-          >webserver版本：<span class="white-text">{{deviceInfo.costomInfo.mainBoard[0].web}}</span></div>
         </div>
         <div v-if="typeIndex == 1 && rightView == 'device'">
           <div class="check-view">
@@ -301,7 +301,7 @@
             <input type="text" v-model="deviceInfo.delayOn.delayOnTime">
             <em>秒</em>
           </div>
-          <div class="params-style-input">
+          <!-- <div class="params-style-input">
             <span>前面板灯</span>
             <div class="input-select">
               <el-select v-model="deviceInfo.delayOn.frontPanellightType">
@@ -313,7 +313,7 @@
                 </el-option>
               </el-select>
             </div>
-          </div>
+          </div> -->
         </div>
         <div v-if="typeIndex == 5 && rightView == 'device'">
           <div class="params-style-input">
@@ -351,39 +351,39 @@
           <div class="blue-text">缩放</div>
           <div class="params-style-input">
             <span>起始点X</span>
-            <input type="text" v-model="inputPortInfo.props.scale.scalePosX">
+            <input type="text" v-model="inputPortInfo.props.scale.scalePosX" disabled>
           </div>
           <div class="params-style-input">
             <span>起始点Y</span>
-            <input type="text" v-model="inputPortInfo.props.scale.scalePosY">
+            <input type="text" v-model="inputPortInfo.props.scale.scalePosY" disabled>
           </div>
           <div class="params-style-input">
             <span>宽度</span>
-            <input type="text" v-model="inputPortInfo.props.scale.scaleSizeW">
+            <input type="text" v-model="inputPortInfo.props.scale.scaleSizeW" disabled>
           </div>
           <div class="params-style-input">
             <span>高度</span>
-            <input type="text" v-model="inputPortInfo.props.scale.scaleSizeH">
+            <input type="text" v-model="inputPortInfo.props.scale.scaleSizeH" disabled>
           </div>
           <hr style="border: 1px solid #000"/>
           <div class="blue-text">裁剪</div>
           <div class="params-style-input">
             <span>横坐标</span>
-            <input type="text" v-model="inputPortInfo.props.crop.cropPosX">
+            <input type="text" v-model="inputPortInfo.props.crop.cropPosX" disabled>
           </div>
           <div class="params-style-input">
             <span>纵坐标</span>
-            <input type="text" v-model="inputPortInfo.props.crop.cropPosY">
+            <input type="text" v-model="inputPortInfo.props.crop.cropPosY" disabled>
           </div>
           <div class="params-style-input">
             <span>宽度</span>
-            <input type="text" v-model="inputPortInfo.props.crop.cropSizeW">
+            <input type="text" v-model="inputPortInfo.props.crop.cropSizeW" disabled>
           </div>
           <div class="params-style-input">
             <span>高度</span>
-            <input type="text" v-model="inputPortInfo.props.crop.cropSizeH">
+            <input type="text" v-model="inputPortInfo.props.crop.cropSizeH" disabled>
           </div>
-          <hr style="border: 1px solid #000"/>
+          <!-- <hr style="border: 1px solid #000"/>
           <div class="blue-text">画面调节</div>
           <div class="params-style-input">
             <span>亮度</span>
@@ -469,9 +469,9 @@
               >
               </el-slider>
             </div>
-          </div>
+          </div> -->
         </div>
-        <div v-if="typeIndex == 8 && rightView == 'port' && port == 'inputPort' && inputPortInfo">
+        <!-- <div v-if="typeIndex == 8 && rightView == 'port' && port == 'inputPort' && inputPortInfo">
           <div class="info-view">
             <div class="label">输入模块</div>
             <div class="green-text">inputModel {{inputPortInfo['4k'].inputModel}}</div>
@@ -521,7 +521,7 @@
             <span>拼接高度</span>
             <input type="text" v-model="jointH">
           </div>
-        </div>
+        </div> -->
         <div v-if="typeIndex == 9 && rightView == 'port' && port == 'inputPort' && inputPortInfo">
           <div class="info-view">
             <div class="label">输入口</div>
@@ -678,6 +678,7 @@
 <script>
 import Settings from '@/components/settings/Settings';
 import Detection from '@/components/dialog/Detection';
+import format from '@/utils/formatList';
 export default {
   props: ['showInfo', 'nowMenuId'],
   data() {
@@ -771,69 +772,7 @@ export default {
       frequencyRange: false,
       frequencyType: true,
       HDMIListVal: 1,
-      HDMIList: [
-        { id:1, label: "720x480@60p" },
-        { id:2, label: "720x576@50p" },
-
-        { id:3, label: "1024x1280@60"},
-        { id:4, label: "1152x864@75" },
-
-        { id:5, label: "1280x720@25"},
-        { id:6, label: "1280x720@29.97"},
-        { id:7, label: "1280x720@30"},
-        { id:8, label: "1280x720@50"},
-        { id:9, label: "1280x720@59.94"},
-        { id:29, label: "1280x720@60" },
-        { id:11, label: "1280x768@60"},
-        { id:12, label: "1280x800@60"},
-        { id:13, label: "1280x960@85" },
-        { id:14, label: "1280x1024@60" },
-        { id:15, label: "1280x1024@75" },
-        { id:16, label: "1280x1024@85" },
-
-        { id:17, label: "1360x768@60" },
-        { id:18, label: "1366x768@60" },
-        { id:19, label: "1400x1050@60"  },
-        { id:20, label: "1440x900@60" },
-        { id:21, label: "1680x1050@60" },
-
-        { id:22, label: "1920x1080@23.98" },
-        { id:23, label: "1920x1080@24" },
-        { id:24, label: "1920x1080@25" },
-        { id:25, label: "1920x1080@29.97" },
-        { id:26, label: "1920x1080@30" },
-        { id:27, label: "1920x1080@59.94" },
-        { id:28, label: "1920x1080@50" },
-        { id:10, label: "1920x1080@60" },
-        { id:30, label: "1920x1200@60" },
-
-        { id:31, label: "2048x1152@60" },
-
-        { id:32, label: "2560x812@60" },
-
-        { id:33, label: "3840x2160@23.98" },
-        { id:34, label: "3840x2160@24" },
-        { id:35, label: "3840x2160@25" },
-        { id:36, label: "3840x2160@29.97" },
-        { id:37, label: "3840x2160@30" },
-        { id:38, label: "3840x2160@50" },
-        { id:39, label: "3840x2160@59.94" },
-        { id:76, label: "3840x2160@60" },
-        
-        { id:41, label: "4096x2160@23.98" },
-        { id:42, label: "4096x2160@24" },
-        { id:43, label: "4096x2160@25" },
-        { id:44, label: "4096x2160@29.97" },
-        { id:45, label: "4096x2160@30" },
-        { id:46, label: "4096x2160@50" },
-        { id:47, label: "4096x2160@59.94" },
-        { id:48, label: "4096x2160@60" },
-
-        { id:49, label: "7680x1080@60" },
-
-        { id:50, label: "Custom" },
-        { id:51, label: "N / A" }
-      ],
+      HDMIList: [],
       outAsyncStatus: false,
       outAsyncInputFormat: '',
       outAsyncOutputFormat: '',
@@ -858,7 +797,9 @@ export default {
     Settings,
     Detection
   },
- 
+  created() {
+    this.HDMIList = format.formatList;
+  },
   mounted() {
     const that = this;
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
@@ -873,7 +814,7 @@ export default {
       this.detection = false;
     });
     // ws接收消息
-    window.webSocket.onmessage = function(res) {
+    this.websocket.ws.onmessage = function(res) {
       const result = JSON.parse(res.data);
       // 获取设备sn
       if((result.code == 200) && (result.data.eventType == 'getDeviceSN')) {
@@ -883,11 +824,11 @@ export default {
       }
       // 获取设备概况
       if((result.code == 200) && (result.data.eventType == 'getDeviceInfo')) {
-        console.log('概况',result);
         that.deviceInfo = result.data;
         that.getSignalList(); // 获取输入口列表
         that.readOutList();
         that.$store.commit('setOutputModelInfo', result.data.costomInfo.outputModelInfo);
+        window.sessionStorage.setItem("deviceInfo", JSON.stringify(result.data));
       }
       // 输入口列表
       if((result.code == 200) && (result.data.eventType == 'readInputSignalList')) {
@@ -967,8 +908,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 读取输出口列表
@@ -979,8 +920,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 隐藏右侧功能区
@@ -1036,8 +977,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         }
-        if (window.webSocket && window.webSocket.readyState == 1) {
-          window.webSocket.send(JSON.stringify(params));
+        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+          this.websocket.ws.send(JSON.stringify(params));
         }
       }
     },
@@ -1104,8 +1045,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(getDeviceSNParams));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(getDeviceSNParams));
       }
     },
     // 获取设备概况信息
@@ -1116,8 +1057,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(getDeviceInfoParams));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(getDeviceInfoParams));
       }
     },
     // 检测
@@ -1127,8 +1068,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 获取输入口信息
@@ -1140,8 +1081,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 获取输出口信息
@@ -1153,8 +1094,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 设置输入 || 输出口信息
@@ -1184,8 +1125,8 @@ export default {
         checkKey: this.getcheckKey()
       }
       params[type]=  this.inputPortInfo[type];
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 设置输出
@@ -1220,8 +1161,8 @@ export default {
           freq: this.userFreq
         }
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 主板类型
@@ -1292,7 +1233,7 @@ export default {
           break;
         case 11:
         case 53:
-          return format == 127 ? require('../../assets/inputPort/Xport_hdmi2.0_hdr.png') : require('../../assets/inputPort/Xport_hdmi2.0_hdr_G.png');
+          return format == 127 ? require('../../assets/output_HDMI2.png') : require('../../assets/input_HDMI2.png');
           break;
         case 24:
           return require('../../assets/Xport_DP_G.png');
@@ -1319,22 +1260,21 @@ export default {
       .plan-cont {
         display: flex;
         justify-content: space-between;
-        width: 1098px;
-        height: 706px;
-        padding: 146px 68px 132px 140px ;
+        width: 950px;
+        height: 945px;
+        padding: 296px 18px 286px 86px;
         border-radius: 10px;
-        background: url(../../assets/newx.png) no-repeat;
+        background: url(../../assets/backboard_X8.png) no-repeat;
         background-size: 100% 100%;
         box-sizing: border-box;
         .input-section {
-          width: 408px;
+          width: 390px;
           display: flex;
           .board {
             display: flex;
             flex: 1;
             .slot {
               flex: 1;
-              padding: 36px 0;
               display: flex;
               flex-direction: column;
               justify-content: space-around;
@@ -1349,9 +1289,8 @@ export default {
                 box-sizing: border-box;
                 img {
                   display: block;
-                  width: 72px;
-                  height: 20px;
-                  transform: rotate(-90deg);
+                  width: 15px;
+                  height: 38px;
                 }
               }
               .show {
@@ -1366,7 +1305,7 @@ export default {
           }
         }
         .output-section {
-          width: 408px;
+          width: 390px;
           display: flex;
           .board {
             display: flex;
@@ -1402,7 +1341,7 @@ export default {
       }
       .sn-view {
         position: absolute;
-        bottom: 30px;
+        top: 25px;
         div {
           margin-bottom: 5px;
         }
@@ -1423,41 +1362,45 @@ export default {
       }
       .params-type {
         position: relative;
-        overflow: hidden;
         width: 320px;
         height: 32px;
         border-top: 1px solid #000;
-        .flex-box {
-          position: absolute;
-          display: flex;
-          div {
-            display: inline-block;
-            width: 100px;
-            height: 32px;
-            line-height: 32px;
-            flex-shrink: 0;
-            border-right: 1px solid #000;
-            border-bottom: 1px solid #000;
-            text-align: center;
-            color: #999;
-            font-size: 12px;
-            box-sizing: border-box;
-            background: rgb(24,30,44);
-          }
-          .show {
-            position: relative;
-            background: rgb(22,28,44);
-            color: #fff;
-            border-bottom: none;
-          }
-          .show::before {
-            display: block;
-            content: '';
-            position: absolute;
-            width: 100px;
-            height: 1px;
-            top: 0;
-            background: rgb(26,188,156);
+        white-space: nowrap;
+        /deep/.el-scrollbar {
+          height: 100%;
+          .el-scrollbar__wrap {
+            overflow-x: hidden;
+            overflow-y: hidden;
+            width: 100%;
+            div {
+              display: inline-block;
+              width: 100px;
+              height: 32px;
+              line-height: 32px;
+              flex-shrink: 0;
+              border-right: 1px solid #000;
+              border-bottom: 1px solid #000;
+              text-align: center;
+              color: #999;
+              font-size: 12px;
+              box-sizing: border-box;
+              background: rgb(24,30,44);
+            }
+            .show {
+              position: relative;
+              background: rgb(22,28,44);
+              color: #fff;
+              border-bottom: none;
+            }
+            .show::before {
+              display: block;
+              content: '';
+              position: absolute;
+              width: 100px;
+              height: 1px;
+              top: 0;
+              background: rgb(26,188,156);
+            }
           }
         }
       }
@@ -1488,33 +1431,45 @@ export default {
             .head {
               display: flex;
               height: 24px;
+              justify-content: space-between;
               background: rgb(44,56,79);
               padding: 0 10px;
               font-size: 12px;
               span {
                 display: flex;
-                flex: 1;
                 height: 24px;
+                flex: 1.5;
+                justify-content: center;
                 align-items: center;
               }
-              .xl {
-                flex: 2;
+              span:first-child {
+                flex: 0.5;
+                justify-content: flex-start;
+              }
+              span:last-child {
+                flex: 0.5;
               }
             }
             .tr-item {
               display: flex;
               height: 24px;
+              justify-content: space-between;
               background: rgb(22,28,44);
               padding: 0 10px;
               font-size: 12px;
               span {
                 display: flex;
-                flex: 1;
                 height: 24px;
+                flex: 1.5;
+                justify-content: center;
                 align-items: center;
               }
-              .xl {
-                flex: 2;
+              span:first-child {
+                flex: 0.5;
+                justify-content: flex-start;
+              }
+              span:last-child {
+                flex: 0.5;
               }
             }
             .deep {

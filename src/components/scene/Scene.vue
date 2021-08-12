@@ -1,6 +1,6 @@
 <template>
   <div class="scene-wrap">
-    <div class="scene-cont">
+    <div class="scene-cont" :class="!showInfo && nowMenuId == '005' ? 'cancelPadding' : ''">
       <div class="container-view">
         <LayerContainer
           v-for="(item, index) in containerList" :key="index"
@@ -40,16 +40,15 @@
       </div>
     </div>
     <div class="right-view" v-if="!showInfo && nowMenuId == '005'">
-      <div class="params-type" v-dragscroll>
-        <div class="flex-box">
+      <div class="params-type">
+        <el-scrollbar>
           <div :class="typeIndex == 0 ? 'show' : ''" @click="typeSelect(0)">切换设置</div>
           <div :class="typeIndex == 1 ? 'show' : ''" @click="typeSelect(1)">保存|加载</div>
           <div :class="typeIndex == 2 ? 'show' : ''" @click="typeSelect(2)">脚本</div>
           <div :class="typeIndex == 3 ? 'show' : ''" @click="typeSelect(3)">容器</div>
           <div :class="typeIndex == 4 ? 'show' : ''" @click="typeSelect(4)">场景名</div>
           <div :class="typeIndex == 5 ? 'show' : ''" @click="typeSelect(5)">热键</div>
-
-        </div>
+        </el-scrollbar>
       </div>
       <div class="params-conts">
         <div v-if="typeIndex == 0">
@@ -387,11 +386,11 @@ export default {
 
     this.readContainerMsg(); // 读取容器配置信息
     this.readOutputList(); // 读取输出口列表
-    this.readLayerMsg(); // 读取图层列表
+    this.readSceneMsg(); // 读取图层列表
 
     // websocket接收到的消息
     const that = this;
-    window.webSocket.onmessage = function(res) {
+    this.websocket.ws.onmessage = function(res) {
       const result = JSON.parse(res.data);
       // 获取容器
       if((result.code == 200) && (result.data.eventType == 'readContainerMsg')) {
@@ -406,7 +405,7 @@ export default {
         that.outputList = result.data.output;
       }
       // 获取图层列表数据
-      if((result.code == 200) && (result.data.eventType == 'readLayerMsg')) {
+      if((result.code == 200) && (result.data.eventType == 'readSceneMsg')) {
         that.sceneList = result.data.scene;
         that.currentSceneId = result.data.currentSceneId;
         that.currentPageId = result.data.currentPageId;
@@ -423,8 +422,8 @@ export default {
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 获取显示器列表
@@ -435,20 +434,20 @@ export default {
         sessionID: this.sessionId,
         checkKey: randoms
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 读取图层列表
-    readLayerMsg() {
+    readSceneMsg() {
       const randoms = this.getcheckKey();
       const params = {
-        eventType: "readLayerMsg",
+        eventType: "readSceneMsg",
         sessionID: this.sessionId,
         checkKey: randoms
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 容器中所填充显示器
@@ -477,8 +476,8 @@ export default {
           checkKey: this.getcheckKey(),
           sessionID: this.sessionId
         }
-        if (window.webSocket && window.webSocket.readyState == 1) {
-          window.webSocket.send(JSON.stringify(params));
+        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+          this.websocket.ws.send(JSON.stringify(params));
         }
       }
     },
@@ -522,8 +521,8 @@ export default {
           sessionID: this.sessionId
         }
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 操作杆发生滑动
@@ -628,8 +627,8 @@ export default {
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     setTakeSetting() {
@@ -656,8 +655,8 @@ export default {
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId,
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
   },
@@ -690,6 +689,9 @@ export default {
         border: 2px solid #008000;
       }
     }
+    .cancelPadding {
+      padding: 20px;
+    }
     .right-view {
       position: relative;
       width: 320px;
@@ -698,41 +700,45 @@ export default {
       border-left: 1px solid #000;
       .params-type {
         position: relative;
-        overflow: hidden;
         width: 320px;
         height: 32px;
         border-top: 1px solid #000;
-        .flex-box {
-          position: absolute;
-          display: flex;
-          div {
-            display: inline-block;
-            width: 100px;
-            height: 32px;
-            line-height: 32px;
-            flex-shrink: 0;
-            border-right: 1px solid #000;
-            border-bottom: 1px solid #000;
-            text-align: center;
-            color: #999;
-            font-size: 12px;
-            box-sizing: border-box;
-            background: rgb(24,30,44);
-          }
-          .show {
-            position: relative;
-            background: rbg(22,28,44);
-            color: #fff;
-            border-bottom: none;
-          }
-          .show::before {
-            display: block;
-            content: '';
-            position: absolute;
-            width: 100px;
-            height: 1px;
-            top: 0;
-            background: rgb(26,188,156);
+        white-space: nowrap;
+        /deep/.el-scrollbar {
+          height: 100%;
+          .el-scrollbar__wrap {
+            overflow-x: hidden;
+            overflow-y: hidden;
+            width: 100%;
+            div {
+              display: inline-block;
+              width: 100px;
+              height: 32px;
+              line-height: 32px;
+              flex-shrink: 0;
+              border-right: 1px solid #000;
+              border-bottom: 1px solid #000;
+              text-align: center;
+              color: #999;
+              font-size: 12px;
+              box-sizing: border-box;
+              background: rgb(24,30,44);
+            }
+            .show {
+              position: relative;
+              background: rgb(22,28,44);
+              color: #fff;
+              border-bottom: none;
+            }
+            .show::before {
+              display: block;
+              content: '';
+              position: absolute;
+              width: 100px;
+              height: 1px;
+              top: 0;
+              background: rgb(26,188,156);
+            }
           }
         }
       }

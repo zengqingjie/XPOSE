@@ -9,12 +9,12 @@
     </div> -->
     <div class="section">
       <div class="left-view">
-        <div class="params-type" v-dragscroll>
-          <div class="flex-box">
+        <div class="params-type">
+          <el-scrollbar>
             <div style="border-left:none" :class="leftIndex == 0 ? 'show' : ''" @click="paramsEvent(0)">容器</div>
             <div :class="leftIndex == 1 ? 'show' : ''" @click="paramsEvent(1)">图层</div>
             <div :class="leftIndex == 2 ? 'show' : ''" @click="paramsEvent(2)">信号</div>
-          </div>
+          </el-scrollbar>
         </div>
         <div class="params-conts">
           <div v-show="leftIndex == 0">
@@ -62,17 +62,26 @@
                   :type="item.inputType"
                   :index="index"
                   :format="item.format"
-                  v-if="item.format != 127"
+                  v-if="item.inputType != 0"
                 >
                   <span class="order">{{item.inputPort + 1}}</span>
-                  <div class="signal-icon">
-                    <img src="../../assets/default/HDMI.png" alt="" v-if="(item.inputType == 53 || item.inputType == 11)">
+                  <div class="signal-icon" v-if="item.format == 127">
+                    <img src="../../assets/default/HDMI2.0.png" alt="" v-if="(item.inputType == 53 || item.inputType == 11)">
                     <img src="../../assets/default/HDBaseT.png" alt="" v-if="item.inputType == 32">
                     <img src="../../assets/default/SDI_12G.png" alt="" v-if="item.inputType == 25">
                     <img src="../../assets/default/DVI.png" alt="" v-if="(item.inputType == 1) || (item.inputType == 16) || (item.inputType == 21)">
                     <img src="../../assets/default/HDMI1.4.png" alt="" v-if="item.inputType == 22">
                     <img src="../../assets/default/HDMI2.0.png" alt="" v-if="item.inputType == 24">
                     <img src="../../assets/default/DP1.2.png" alt="" v-if="(item.inputType == 23) || (item.inputType == 35)">
+                  </div>
+                  <div class="signal-icon" v-if="item.format != 127">
+                    <img src="../../assets/green/greenHDMI2.0.png" alt="" v-if="(item.inputType == 53 || item.inputType == 11)">
+                    <img src="../../assets/green/greenHDBaseT.png" alt="" v-if="item.inputType == 32">
+                    <img src="../../assets/green/greenSDI_12G.png" alt="" v-if="item.inputType == 25">
+                    <img src="../../assets/green/greenDVI.png" alt="" v-if="(item.inputType == 1) || (item.inputType == 16) || (item.inputType == 21)">
+                    <img src="../../assets/green/greenHDMI1.4.png" alt="" v-if="item.inputType == 22">
+                    <img src="../../assets/green/greenHDMI2.0.png" alt="" v-if="item.inputType == 24">
+                    <img src="../../assets/green/greenDP1.2.png" alt="" v-if="(item.inputType == 23) || (item.inputType == 35)">
                   </div>
                   <span :class="item.format != 127 ? 'green-text' : ''">{{conversationFormate(item.format)}}</span>
                 </div>
@@ -82,7 +91,7 @@
                   class="movie"
                   :format="item.format"
                   :inputPort="item.inputPort"
-                  v-if="sryj && h264 && item.format != 127"
+                  v-if="sryj && h264 && item.format != 0"
                 ></canvas>
               </div>
             </div>
@@ -95,7 +104,7 @@
             v-for="(item, index) in containerList" :key="index"
             :cItem="item"
             :output="setOutputList(item.containerId)"
-            :layerList="setLayerList(item.containerId)"
+            :layerList="setLayerList(currentLayerList, item.containerId)"
             :switchLayer="tcyj"
             :switchVal="h264"
           >
@@ -103,13 +112,13 @@
         </div>
       </div>
       <div class="right-view" v-if="!showInfo && nowMenuId == '004'">
-        <div class="params-type" v-dragscroll>
-          <div class="flex-box">
+        <div class="params-type">
+          <el-scrollbar>
             <div :class="typeIndex == 0 ? 'show' : ''" @click="typeSelect(0)">缩放</div>
             <div :class="typeIndex == 1 ? 'show' : ''" @click="typeSelect(1)">裁剪</div>
             <div :class="typeIndex == 2 ? 'show' : ''" @click="typeSelect(2)">H264 Demo</div>
             <div :class="typeIndex == 3 ? 'show' : ''" @click="typeSelect(3)">流媒体</div>
-          </div>
+          </el-scrollbar>
         </div>
         <div class="params-conts">
           <div v-if="typeIndex == 0">
@@ -414,7 +423,7 @@
               >
                 <div
                   class="signal-layer"
-                  v-for="layer in item.layer"
+                  v-for="layer in setLayerList(item.layer, cItem.containerId)"
                   :key="layer.id"
                   :style="setSignalStyle(layer)"
                 ></div>
@@ -441,6 +450,7 @@ import LayerContainer from '@/components/container/LayerContainer';
 import Aoi from '@/components/displayer/Aoi';
 import { mapState } from 'vuex';
 import BottomParams from '@/components/BottomParams';
+import format from '@/utils/formatList';
 export default {
   props: ['showInfo', 'nowMenuId'],
   data() {
@@ -522,86 +532,7 @@ export default {
     BottomParams
   },
   created() {
-    // const ip = JSON.parse(window.sessionStorage.getItem("ip"));
-    // // this.streamMedia = `http://${ip}:5005/?action=stream`;
-    // this.streamMedia = 'http://192.168.0.117:5005/?action=stream';
-    // let img = new Image();
-    // // img.src = `http://${ip}:5005/?action=stream`;
-    // img.src = 'http://192.168.0.204:5005/?action=stream';
-    // this.imgObj = img;
-    // // 分割流媒体（4行6列）
-    // this.clipMedia(2, 2);
-    
-    // this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
-    // this.getSignalList();
-    // const bankListData = this.$store.state.bankList;
-    // const bankStoreVal = this.$store.state.bankIndex;
-    // const instanceData = this.$store.state.showVessels;
-    // bankListData.some((item, index) => {
-    //   if(item.containers) { // 存在拷贝容器
-    //     item.containers.forEach((containerInfo, containerIndex) => {
-    //       // 是否存在显示管理已删除容器，如果存在则删除
-    //       const havedContainer = instanceData.find(showCitem => showCitem.containerId == containerInfo.containerId);
-    //       if(!havedContainer) {
-    //         item.containers.splice(containerIndex, 1);
-    //       }
-    //       // 是否删除容器中的显示器
-    //       containerInfo.content.map((disInfo, disIndex) => {
-    //         const referContainer = instanceData.find(item => item.containerId == containerInfo.containerId);
-    //         if(referContainer) {
-    //           const disObj = referContainer.content.find(dItem => dItem.displayId == disInfo.displayId);
-    //           if(!disObj) {
-    //             containerInfo.content.splice(disIndex, 1);
-    //           }
-    //         }
-    //       });
-    //     });
-        
-    //     // 显示管理可能修改容器数据，重新拷贝
-    //     instanceData.forEach((showCitem) => {
-    //       const copyObj = item.containers.find(copyCitem => copyCitem.containerId == showCitem.containerId);
-    //       if(copyObj) { // 重新拷贝已存在容器信息
-    //         copyObj.signalList.forEach(sItem => {
-    //           Object.assign(sItem.customFeature, showCitem.customFeature);
-    //           sItem.aoi.width = showCitem.customFeature.wBase;
-    //           sItem.aoi.height = showCitem.customFeature.hBase;
-    //         });
-    //         Object.assign(copyObj, {position: showCitem.position}, {customFeature: showCitem.customFeature});
-    //         Object.assign(copyObj.content, showCitem.content); // 拷贝显示器数据
-    //         copyObj.content.map(dItem => dItem.intersectList = []);
-    //       }else { // 拷贝显示管理新添加容器
-    //         item.containers.push(this.deepCopy(showCitem))
-    //       }
-    //     });
-    //   } else { // 初次拷贝显示管理容器数据
-    //     item.containers = this.deepCopy(instanceData);
-    //   }
-    // });
-    // this.containerList = bankListData[bankStoreVal].containers;
-    // this.containerList.map(item => {
-    //   if(item.signalList.length > 0) {
-    //     item.signalList.map(sItem => {
-    //       sItem.aoi.status = false;
-    //       item.content.map(dItem => {
-    //         if (this.isOverlap(sItem, dItem)) {
-    //           dItem.signalNum = dItem.signalNum - 1;
-    //           dItem.intersectList.push(sItem);
-    //         }
-    //       });
-    //     });
-    //   } else {
-    //     item.content.map(dItem => {
-    //       dItem.intersectList = [];
-    //     });
-    //   }
-    // })
-
-    // this.$store.dispatch('setBankList', bankListData);
-
-    // this.$nextTick(() => {
-    //   this.layerDraggable();
-    //   this.layerResize();
-    // });
+   
   },
   mounted() {
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
@@ -615,19 +546,19 @@ export default {
     this.readContainerMsg(); // 读取容器配置信息
     this.getSignalList();
 
-    this.draggableInit(); // 容器区域拖拽
+    // this.draggableInit(); // 容器区域拖拽
     this.signalInitDraggable(); // 信号列表拖拽
     this.signalInitDroppable(); // 信号放置
     
     // websocket接收到的消息
     const that = this;
-    window.webSocket.onmessage = function(res) {
+    this.websocket.ws.onmessage = function(res) {
       const result = JSON.parse(res.data);
       // 获取容器
       if((result.code == 200) && (result.data.eventType == 'readContainerMsg')) {
+        that.readOutputList(); // 读取输出口列表
         if (result.data.count > 0) {
           that.containerList = result.data.container;
-          that.readOutputList(); // 读取输出口列表
         } else {
           that.containerList = [];
         }
@@ -635,7 +566,7 @@ export default {
       // 获取显示器（输出口）列表
       if((result.code == 200) && (result.data.eventType == 'readOutputList')) {
         that.outputList = result.data.output;
-        that.readLayerMsg(); // 读取图层列表
+        that.readSceneMsg(); // 读取图层列表
         // 可设置图层id集合
         that.layerIdList();
         that.$nextTick(() => {
@@ -643,7 +574,7 @@ export default {
         });
       }
       // 获取图层列表数据
-      if((result.code == 200) && (result.data.eventType == 'readLayerMsg')) {
+      if((result.code == 200) && (result.data.eventType == 'readSceneMsg')) {
         that.sceneList = result.data.scene;
         that.currentSceneId = result.data.currentSceneId;
         that.currentPageId = result.data.currentPageId;
@@ -658,16 +589,15 @@ export default {
             if(!item.freeze) {
               that.layerDraggable(item.id); // 图层拖拽初始化
               that.layerResize(item.id); // 图层缩放初始化
-
-              let layerCanvas = [];
-              if(that.tcyj && that.h264) {
-                $('.signal-layer-item canvas').each(function() {
-                  layerCanvas.push($(this)[0]);
-                });
-                that.animationLayer.map(fram => cancelAnimationFrame(fram));
-                that.animationLayer = [];
-                that.renderImg(layerCanvas, 'layer');
-              }
+            }
+            let layerCanvas = [];
+            if(that.tcyj && that.h264) {
+              $('.signal-layer-item canvas').each(function() {
+                layerCanvas.push($(this)[0]);
+              });
+              that.animationLayer.map(fram => cancelAnimationFrame(fram));
+              that.animationLayer = [];
+              that.renderImg(layerCanvas, 'layer');
             }
           })
         })
@@ -683,7 +613,7 @@ export default {
       if((result.code == 200) && (result.data.eventType == 'setLayer')) {
         new Promise(resolve => {
           setTimeout(() => {
-            resolve(that.readLayerMsg());
+            resolve(that.readSceneMsg());
           }, 500);
         })
       }
@@ -691,7 +621,7 @@ export default {
       if((result.code == 200) && (result.data.eventType == 'rmLayer')) {
         new Promise(resolve => {
           setTimeout(() => {
-            resolve(that.readLayerMsg());
+            resolve(that.readSceneMsg());
           }, 500);
         })
         that.layerObj = null;
@@ -700,7 +630,7 @@ export default {
       if((result.code == 200) && (result.data.eventType == 'setLayerFreeze')) {
         new Promise(resolve => {
           setTimeout(() => {
-            resolve(that.readLayerMsg());
+            resolve(that.readSceneMsg());
           }, 500);
         })
       }
@@ -758,8 +688,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         } 
-        if (window.webSocket && window.webSocket.readyState == 1) {
-          window.webSocket.send(JSON.stringify(params));
+        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+          this.websocket.ws.send(JSON.stringify(params));
         }
       });
       // 信号图层删除
@@ -769,15 +699,13 @@ export default {
           eventType: "rmLayer",
           count: 1,
           layer: [
-            { id: data.id }
+            { id: data.id, sceneId: data.sceneId, pageId: this.currentPageId,}
           ],
-          sceneId: data.sceneId,
-          pageId: this.currentPageId,
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         }
-        if (window.webSocket && window.webSocket.readyState == 1) {
-          window.webSocket.send(JSON.stringify(params));
+        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+          this.websocket.ws.send(JSON.stringify(params));
         }
       });
 
@@ -802,8 +730,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         }
-        if (window.webSocket && window.webSocket.readyState == 1) {
-          window.webSocket.send(JSON.stringify(params));
+        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+          this.websocket.ws.send(JSON.stringify(params));
         }
       });
 
@@ -885,8 +813,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         } 
-        if (window.webSocket && window.webSocket.readyState == 1) {
-          window.webSocket.send(JSON.stringify(params));
+        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+          this.websocket.ws.send(JSON.stringify(params));
         }
       });
     },
@@ -898,8 +826,8 @@ export default {
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 获取显示器列表
@@ -910,20 +838,20 @@ export default {
         sessionID: this.sessionId,
         checkKey: randoms
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 读取图层列表
-    readLayerMsg() {
+    readSceneMsg() {
       const randoms = this.getcheckKey();
       const params = {
-        eventType: "readLayerMsg",
+        eventType: "readSceneMsg",
         sessionID: this.sessionId,
         checkKey: randoms
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 读取左侧信号列表
@@ -933,8 +861,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey('readInputSignalList')
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 容器中所填充显示器
@@ -943,13 +871,12 @@ export default {
       return list;
     },
     // 容器中对应的图层
-    setLayerList(containerId) {
-      const list = this.currentLayerList.filter(item => item.containerId == containerId);
+    setLayerList(layerList, containerId) {
+      const list = layerList.filter(item => item.containerId == containerId);
       return list;
     },
     // 可设置图层id
     layerIdList() {
-
       let existDisplays = []; // 已创建显示器
       const existContainers = this.containerList; // 已创建容器
       existContainers.map(cItem => {
@@ -1047,8 +974,8 @@ export default {
                 checkKey: that.getcheckKey()
               }
               // websocket 准备
-              if (window.webSocket && window.webSocket.readyState == 1) {
-                window.webSocket.send(JSON.stringify(params));
+              if (that.websocket.ws && that.websocket.ws.readyState == 1) {
+                that.websocket.ws.send(JSON.stringify(params));
               }
               return true;
             }
@@ -1102,8 +1029,8 @@ export default {
             sessionID: that.sessionId,
             checkKey: that.getcheckKey()
           } 
-          if (window.webSocket && window.webSocket.readyState == 1) {
-            window.webSocket.send(JSON.stringify(params));
+          if (that.websocket.ws && that.websocket.ws.readyState == 1) {
+            that.websocket.ws.send(JSON.stringify(params));
           }
         }
       });
@@ -1158,8 +1085,8 @@ export default {
             sessionID: that.sessionId,
             checkKey: that.getcheckKey()
           }
-          if (window.webSocket && window.webSocket.readyState == 1) {
-            window.webSocket.send(JSON.stringify(params));
+          if (that.websocket.ws && that.websocket.ws.readyState == 1) {
+            that.websocket.ws.send(JSON.stringify(params));
           }
         }
       })
@@ -1222,8 +1149,8 @@ export default {
             sessionID: this.sessionId,
             checkKey: this.getcheckKey()
           } 
-          if (window.webSocket && window.webSocket.readyState == 1) {
-            window.webSocket.send(JSON.stringify(params));
+          if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+            this.websocket.ws.send(JSON.stringify(params));
           }
         }
       }
@@ -1345,6 +1272,50 @@ export default {
         }
       }
     },
+    // 场景切换
+    changeBank (scene, index){
+      this.currentSceneId = scene.id;
+      this.currentLayerList = scene.layer;
+      this.animationLayer.map(item => cancelAnimationFrame(item));
+      this.animationLayer = [];
+      this.$nextTick(() => {
+        this.currentLayerList.map(item => {
+          if(!item.freeze) {
+            this.layerDraggable(item.id); // 图层拖拽初始化
+            this.layerResize(item.id); // 图层缩放初始化
+          }
+          let layerCanvas = [];
+          if(this.tcyj && this.h264) {
+            $('.signal-layer-item canvas').each(function() {
+              layerCanvas.push($(this)[0]);
+            });
+            this.renderImg(layerCanvas, 'layer');
+          }
+        })
+      });
+      // 直切场景
+      let containers = [];
+      this.containerList.map(item => {
+        const sceneC = {
+          id: item.containerId,
+          takeType: 2,
+          alpha: 128
+        }
+        containers.push(sceneC);
+      })
+      const params = {
+        eventType: 'setTakeSetting',
+        sceneId: scene.id,
+        container: containers,
+        count: containers.length,
+        pageId: this.currentPageId,
+        checkKey: this.getcheckKey(),
+        sessionID: this.sessionId
+      }
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
+      }
+    },
     // 顶部图层移动操作
     layerOrderEvent(type) {
       // 置前
@@ -1386,21 +1357,10 @@ export default {
       return parseInt(nonceStr);
     },
     // 分辨率转换
-    conversationFormate(formate) {
-      switch (formate) {
-        case 0:
-          return '720x480@60';
-          break;
-        case 10:
-          return '1920x1080@60';
-          break;
-        case 76:
-          return '3840x2160@60';
-          break;
-        case 127:
-          return 'Not Input';
-          break;
-      }
+    conversationFormate(id) {
+      const list = format.formatList;
+      const formatObj = list.find(item => item.id == id);
+      return formatObj.label;
     },
     // 克隆
     deepCopy(obj) {
@@ -1434,49 +1394,6 @@ export default {
     },
     hideRightView() {
       this.$root.bus.$emit('hideRightView');
-    },
-    changeBank (scene, index){
-      this.currentSceneId = scene.id;
-      this.currentLayerList = scene.layer;
-      this.animationLayer.map(item => cancelAnimationFrame(item));
-      this.animationLayer = [];
-      this.$nextTick(() => {
-        this.currentLayerList.map(item => {
-          if(!item.freeze) {
-            this.layerDraggable(item.id); // 图层拖拽初始化
-            this.layerResize(item.id); // 图层缩放初始化
-          }
-          let layerCanvas = [];
-          if(this.tcyj && this.h264) {
-            $('.signal-layer-item canvas').each(function() {
-              layerCanvas.push($(this)[0]);
-            });
-            this.renderImg(layerCanvas, 'layer');
-          }
-        })
-      });
-      // 直切场景
-      let containers = [];
-      this.containerList.map(item => {
-        const sceneC = {
-          id: item.containerId,
-          takeType: 2,
-          alpha: 128
-        }
-        containers.push(sceneC);
-      })
-      const params = {
-        eventType: 'setTakeSetting',
-        sceneId: scene.id,
-        container: containers,
-        count: containers.length,
-        pageId: this.currentPageId,
-        checkKey: this.getcheckKey(),
-        sessionID: this.sessionId
-      }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
-      }
     },
     // 容器显示与否
     eyeStatus(target) {
@@ -1546,10 +1463,10 @@ export default {
         //     checkKey: that.getcheckKey('setLayer')
         //   }
         //   // websocket 准备
-        //   if (window.webSocket && window.webSocket.readyState == 1) {
-        //     window.webSocket.send(JSON.stringify(setLayerParams));
+        //   if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        //     this.websocket.ws.send(JSON.stringify(setLayerParams));
         //   }
-        //   window.webSocket.onmessage = function(res) {
+        //   this.websocket.ws.onmessage = function(res) {
         //     const resData = JSON.parse(res.data);
         //     if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == that.setLayerCheckKey) {
         //       that.$nextTick(() => {
@@ -1613,10 +1530,10 @@ export default {
           //   checkKey: that.getcheckKey('setLayer')
           // }
           // // websocket 准备
-          // if (window.webSocket && window.webSocket.readyState == 1) {
-          //   window.webSocket.send(JSON.stringify(setLayerParams));
+          // if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+          //   this.websocket.ws.send(JSON.stringify(setLayerParams));
           // }
-          // window.webSocket.onmessage = function(res) {
+          // this.websocket.ws.onmessage = function(res) {
           //   const resData = JSON.parse(res.data);
           //   if(resData.code == 200 && resData.data.eventType == 'setLayer' && resData.checkKey == that.setLayerCheckKey) {
               
@@ -1734,36 +1651,42 @@ export default {
           width: 192px;
           height: 24px;
           border-top: 1px solid #000;
-          .flex-box {
-            display: flex;
-            div {
-              display: inline-block;
-              width: 33.3%;
-              height: 24px;
-              line-height: 24px;
-              flex-shrink: 0;
-              border-left: 1px solid #000;
-              border-bottom: 1px solid #000;
-              text-align: center;
-              color: #999;
-              font-size: 12px;
-              box-sizing: border-box;
-              background: rgb(24,30,44);
-            }
-            .show {
-              position: relative;
-              background: rbg(22,28,44);
-              color: #fff;
-              border-bottom: none;
-            }
-            .show::before {
-              display: block;
-              content: '';
-              position: absolute;
+          white-space: nowrap;
+          /deep/.el-scrollbar {
+            height: 100%;
+            .el-scrollbar__wrap {
+              overflow-x: hidden;
+              overflow-y: hidden;
               width: 100%;
-              height: 1px;
-              top: 0;
-              background: rgb(26,188,156);
+              div {
+                display: inline-block;
+                width: 64px;
+                height: 24px;
+                line-height: 24px;
+                flex-shrink: 0;
+                border-left: 1px solid #000;
+                border-bottom: 1px solid #000;
+                text-align: center;
+                color: #999;
+                font-size: 12px;
+                box-sizing: border-box;
+                background: rgb(24,30,44);
+              }
+              .show {
+                position: relative;
+                background: rbg(22,28,44);
+                color: #fff;
+                border-bottom: none;
+              }
+              .show::before {
+                display: block;
+                content: '';
+                position: absolute;
+                width: 100%;
+                height: 1px;
+                top: 0;
+                background: rgb(26,188,156);
+              }
             }
           }
         }
@@ -1866,41 +1789,45 @@ export default {
         border-left: 1px solid #000;
         .params-type {
           position: relative;
-          overflow: hidden;
           width: 320px;
           height: 32px;
           border-top: 1px solid #000;
-          .flex-box {
-            position: absolute;
-            display: flex;
-            div {
-              display: inline-block;
-              width: 100px;
-              height: 32px;
-              line-height: 32px;
-              flex-shrink: 0;
-              border-right: 1px solid #000;
-              border-bottom: 1px solid #000;
-              text-align: center;
-              color: #999;
-              font-size: 12px;
-              box-sizing: border-box;
-              background: rgb(24,30,44);
-            }
-            .show {
-              position: relative;
-              background: rbg(22,28,44);
-              color: #fff;
-              border-bottom: none;
-            }
-            .show::before {
-              display: block;
-              content: '';
-              position: absolute;
-              width: 100px;
-              height: 1px;
-              top: 0;
-              background: rgb(26,188,156);
+          white-space: nowrap;
+          /deep/.el-scrollbar {
+            height: 100%;
+            .el-scrollbar__wrap {
+              overflow-x: hidden;
+              overflow-y: hidden;
+              width: 100%;
+              div {
+                display: inline-block;
+                width: 100px;
+                height: 32px;
+                line-height: 32px;
+                flex-shrink: 0;
+                border-right: 1px solid #000;
+                border-bottom: 1px solid #000;
+                text-align: center;
+                color: #999;
+                font-size: 12px;
+                box-sizing: border-box;
+                background: rgb(24,30,44);
+              }
+              .show {
+                position: relative;
+                background: rgb(22,28,44);
+                color: #fff;
+                border-bottom: none;
+              }
+              .show::before {
+                display: block;
+                content: '';
+                position: absolute;
+                width: 100px;
+                height: 1px;
+                top: 0;
+                background: rgb(26,188,156);
+              }
             }
           }
         }

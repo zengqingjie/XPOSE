@@ -78,26 +78,6 @@ export default {
   created() {
     this.init();
   },
-  mounted() {
-    this.sessionId = JSON.parse(sessionStorage.getItem("sessionId"));
-    
-    // 获取设备sn
-    this.getDeviceSN();
-    // websocket接收信息
-    const that = this;
-    window.webSocket.onmessage = function(res) {
-      const result = JSON.parse(res.data);
-      // 获取设备sn
-      if((result.code == 200) && (result.data.eventType == 'getDeviceSN')) {
-        that.sn = result.data.sn;
-        that.getDeviceInfo();
-      }
-      // 获取设备概况
-      if((result.code == 200) && (result.data.eventType == 'getDeviceInfo')) {
-        that.$store.commit('setOutputModelInfo', result.data.costomInfo.outputModelInfo);
-      }
-    }
-  },
   methods: {
     // 初始化
     init() {
@@ -119,8 +99,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
      // 获取设备概况信息
@@ -131,8 +111,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 生成随机checkKey

@@ -32,13 +32,13 @@
 
       </div>
       <div class="right-view" v-show="!showInfo && nowMenuId == '003'">
-        <div class="params-type" v-dragscroll>
-          <div class="flex-box">
+        <div class="params-type">
+          <el-scrollbar>
             <div :class="typeIndex == 0 ? 'show' : ''" @click="typeSelect(0)">模板</div>
             <div :class="typeIndex == 1 ? 'show' : ''" @click="typeSelect(1)">显示器</div>
             <div :class="typeIndex == 2 ? 'show' : ''" @click="typeSelect(2)">显示系统</div>
             <div :class="typeIndex == 3 ? 'show' : ''" @click="typeSelect(3)">参数</div>
-          </div>
+          </el-scrollbar>
         </div>
         <div class="params-conts">
           <div v-show="typeIndex == 0">
@@ -70,7 +70,9 @@
             >
               <div class="template-item" v-for="(item, index) in templateList" :key="index" :id="item.id">
                 <span class="index-text">{{index + 1}}</span>
-                <div class="icon-view"></div>
+                <div class="icon-view">
+                  <img src="../../assets/selContainer.png" alt="">
+                </div>
                 <span>{{item.row}} x {{item.col}} ({{separation == 10 ? (1920 * item.col) : (3840 * item.col)}} x {{separation == 10 ? (1080 * item.row) : (2160 * item.row)}})</span>
               </div>
             </div>
@@ -87,7 +89,9 @@
               >
                 <div class="item-left">
                   <span class="id-text">{{item.id + 1}}</span>
-                  <div class="icon-view"></div>
+                  <div class="icon-view">
+                    <img :src="item.status ? require('../../assets/disable/disHDMI2.0.png') : require('../../assets/default/HDMI2.0.png')" alt="">
+                  </div>
                   <span>{{item.outputType}}</span>
                 </div>
                 <div class="item-right">
@@ -204,17 +208,17 @@ export default {
       typeIndex: 0, // 参数类型
       modelList: [
         { id: 0, label: '演示模式' , type: 'Presentation'},
-        { id: 1, label: '预监模式' , type: 'Preview'},
-        { id: 2, label: '矩阵模式' , type: 'Matrix'},
-        { id: 3, label: '旋转模式' , type: 'Rotation'},
-        { id: 4, label: '投影模式' , type: 'Blending'},
+        // { id: 1, label: '预监模式' , type: 'Preview'},
+        // { id: 2, label: '矩阵模式' , type: 'Matrix'},
+        // { id: 3, label: '旋转模式' , type: 'Rotation'},
+        // { id: 4, label: '投影模式' , type: 'Blending'},
       ],  // 模式列表
       modelVal: 0, // 模式
       separationList: [
-        { id: 10, label: '2k' },
+        // { id: 10, label: '2k' },
         { id: 82, label: '4k' }
       ], // 分辨率列表
-      separation: 10, // 分辨率
+      separation: 82, // 分辨率
       outputCheck: true, // 容器是否创建显示器
       templateList: [
         { 
@@ -355,7 +359,7 @@ export default {
     this.sortableInit(); // 显示器在容器内拖拽
     // websocket 接收到的消息
     const that = this;
-    window.webSocket.onmessage = function(res) {
+    this.websocket.ws.onmessage = function(res) {
       const result = JSON.parse(res.data);
       // 获取容器
       if((result.code == 200) && (result.data.eventType == 'readContainerMsg')) {
@@ -398,7 +402,7 @@ export default {
         that.$nextTick(() => {
           customActive.Draggable('.displayer .displayer-item', {
             connectToSortable : ".displayer-view",
-            handle: '.icon-view',
+            // handle: '.displayer-item',
             refreshPositions: true
           });
           that.droppableInit(); // 容器放置
@@ -432,7 +436,7 @@ export default {
       // 拉出输出口
       customActive.Draggable('.displayer .displayer-item', {
         connectToSortable : ".displayer-view",
-        handle: '.icon-view',
+        // handle: '.displayer-item',
         refreshPositions: true
       });
       // 拉出容器模板
@@ -553,14 +557,14 @@ export default {
               sessionID: that.sessionId,
               checkKey: that.getcheckKey()
             }
-            if (window.webSocket && window.webSocket.readyState == 1) {
-              window.webSocket.send(JSON.stringify(params));
-              window.webSocket.send(JSON.stringify(outputParams));
+            if (that.websocket.ws && that.websocket.ws.readyState == 1) {
+              that.websocket.ws.send(JSON.stringify(params));
+              that.websocket.ws.send(JSON.stringify(outputParams));
             }
           } else {
             //websocket 准备
-            if (window.webSocket && window.webSocket.readyState == 1) {
-              window.webSocket.send(JSON.stringify(params));
+            if (that.websocket.ws && that.websocket.ws.readyState == 1) {
+              that.websocket.ws.send(JSON.stringify(params));
             }
           }
         }
@@ -578,8 +582,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey('rmContainer')
         }
-        if (window.webSocket && window.webSocket.readyState == 1) {
-          window.webSocket.send(JSON.stringify(params));
+        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+          this.websocket.ws.send(JSON.stringify(params));
         }
       });
       // 删除显示器
@@ -594,8 +598,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey('rmOutputFromContainer')
         }
-        if (window.webSocket && window.webSocket.readyState == 1) {
-          window.webSocket.send(JSON.stringify(params));
+        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+          this.websocket.ws.send(JSON.stringify(params));
           that.displayObj = null;
         }
       });
@@ -638,8 +642,8 @@ export default {
           sessionID: that.sessionId,
           checkKey: that.getcheckKey()
         }
-        if (window.webSocket && window.webSocket.readyState == 1) {
-          window.webSocket.send(JSON.stringify(params));
+        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+          this.websocket.ws.send(JSON.stringify(params));
         }
       });
     },
@@ -651,8 +655,8 @@ export default {
         checkKey: this.getcheckKey(),
         sessionID: this.sessionId
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 获取显示器列表
@@ -663,8 +667,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: randoms
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 容器中所填充显示器
@@ -699,8 +703,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         }
-        if (window.webSocket && window.webSocket.readyState == 1) {
-          window.webSocket.send(JSON.stringify(params));
+        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+          this.websocket.ws.send(JSON.stringify(params));
         }
       }
     },
@@ -761,8 +765,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 点击显示器
@@ -799,8 +803,8 @@ export default {
             sessionID: that.sessionId,
             checkKey: that.getcheckKey()
           }
-          if (window.webSocket && window.webSocket.readyState == 1) {
-            window.webSocket.send(JSON.stringify(params));
+          if (that.websocket.ws && that.websocket.ws.readyState == 1) {
+            that.websocket.ws.send(JSON.stringify(params));
           }
         }
       })
@@ -841,8 +845,8 @@ export default {
               checkKey: that.getcheckKey()
             }
 
-            if (window.webSocket && window.webSocket.readyState == 1) {
-              window.webSocket.send(JSON.stringify(params));
+            if (that.websocket.ws && that.websocket.ws.readyState == 1) {
+              that.websocket.ws.send(JSON.stringify(params));
             }
           }
           // 放置在显示器上，替换显示器
@@ -883,8 +887,8 @@ export default {
                 sessionID: that.sessionId,
                 checkKey: that.getcheckKey()
               }
-              if (window.webSocket && window.webSocket.readyState == 1) {
-                window.webSocket.send(JSON.stringify(params));
+              if (that.websocket.ws && that.websocket.ws.readyState == 1) {
+                that.websocket.ws.send(JSON.stringify(params));
               }
             } else {
               console.log('范围外');
@@ -897,6 +901,7 @@ export default {
     sortableInit() {
       const that = this;
       $('.displayer-box .displayer-view').draggable({
+        // containment: 'parent',
         delay: 100,
         snap: ".displayer-box",
         snapMode: 'inner',
@@ -909,7 +914,11 @@ export default {
           let outputObj =that.outputList.find(dItem => dItem.id == outputId);
           outputObj.posX = Math.round(ui.position.left * 10);
           outputObj.posY = Math.round(ui.position.top * 10);
-          
+          // outputObj.posX = Math.round(ui.position.left * 10) < 0 ? 0 : Math.round(ui.position.left * 10);
+          // outputObj.posY = Math.round(ui.position.top * 10) < 0 ? 0 : Math.round(ui.position.top * 10);
+          // console.log(outputObj.posX, outputObj.posY);
+          // return;
+
           // 下发显示器参数
           const display = {
             id: outputObj.id,
@@ -929,8 +938,8 @@ export default {
             sessionID: that.sessionId,
             checkKey: that.getcheckKey()
           }
-          if (window.webSocket && window.webSocket.readyState == 1) {
-            window.webSocket.send(JSON.stringify(params));
+          if (that.websocket.ws && that.websocket.ws.readyState == 1) {
+            that.websocket.ws.send(JSON.stringify(params));
           }
         }
       })
@@ -1023,41 +1032,45 @@ export default {
         border-left: 1px solid #000;
         .params-type {
           position: relative;
-          overflow: hidden;
           width: 320px;
           height: 32px;
           border-top: 1px solid #000;
-          .flex-box {
-            position: absolute;
-            display: flex;
-            div {
-              display: inline-block;
-              width: 100px;
-              height: 32px;
-              line-height: 32px;
-              flex-shrink: 0;
-              border-right: 1px solid #000;
-              border-bottom: 1px solid #000;
-              text-align: center;
-              color: #999;
-              font-size: 12px;
-              box-sizing: border-box;
-              background: rgb(24,30,44);
-            }
-            .show {
-              position: relative;
-              background: rbg(22,28,44);
-              color: #fff;
-              border-bottom: none;
-            }
-            .show::before {
-              display: block;
-              content: '';
-              position: absolute;
-              width: 100px;
-              height: 1px;
-              top: 0;
-              background: rgb(26,188,156);
+          white-space: nowrap;
+          /deep/.el-scrollbar {
+            height: 100%;
+            .el-scrollbar__wrap {
+              overflow-x: hidden;
+              overflow-y: hidden;
+              width: 100%;
+              div {
+                display: inline-block;
+                width: 100px;
+                height: 32px;
+                line-height: 32px;
+                flex-shrink: 0;
+                border-right: 1px solid #000;
+                border-bottom: 1px solid #000;
+                text-align: center;
+                color: #999;
+                font-size: 12px;
+                box-sizing: border-box;
+                background: rgb(24,30,44);
+              }
+              .show {
+                position: relative;
+                background: rgb(22,28,44);
+                color: #fff;
+                border-bottom: none;
+              }
+              .show::before {
+                display: block;
+                content: '';
+                position: absolute;
+                width: 100px;
+                height: 1px;
+                top: 0;
+                background: rgb(26,188,156);
+              }
             }
           }
         }
@@ -1110,7 +1123,9 @@ export default {
               .icon-view {
                 width: 24px;
                 height: 24px;
-                background: #999;
+                display: flex;
+                justify-content: center;
+                align-items: center;
                 border-radius: 4px;
                 margin-left: 24px;
                 margin-right: 48px;
@@ -1142,10 +1157,17 @@ export default {
               .icon-view {
                 width: 42px;
                 height: 16px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
                 border-radius: 4px;
-                background: #999;
                 margin: 0 16px;
                 cursor: pointer;
+              }
+            }
+            .item-right {
+              span {
+                margin-left: 16px;
               }
             }
           }
@@ -1160,7 +1182,9 @@ export default {
             background: rgb(16,21,35);
             > div {
               .icon-view {
-                background: rgb(40,42,49);
+                display: flex;
+                justify-content: center;
+                align-items: center;
               }
             }
           }

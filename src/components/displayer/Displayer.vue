@@ -51,14 +51,16 @@ export default {
   mounted() {
     
   },
-  watch: {},
+  watch: {
+   
+  },
   computed: {
     setStyle() {
       return {
-        width: this.outputItem.sizeW / 10 + 'px',
-        height: this.outputItem.sizeH / 10 + 'px',
-        left: this.outputItem.posX / 10 + 'px',
-        top: this.outputItem.posY / 10 + 'px',
+        width: (this.outputItem.sizeW / 10) + 'px',
+        height: (this.outputItem.sizeH / 10) + 'px',
+        left: (this.outputItem.posX / 10) + 'px',
+        top: (this.outputItem.posY / 10) + 'px',
       }
     }
   },

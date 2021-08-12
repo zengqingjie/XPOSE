@@ -55,23 +55,15 @@ export default {
   },
   mounted() {
     document.onkeydown = (e) => {
-      const key = window.event ? window.event.keyCode : e.keyCode;
+      const key = window.event ? window.event.keyCode : e.code;
       if(key == 13) {
         this.loginEvent();
       }
     }
     // 获取mac,ip信息
-    Api.getMacAddress().then(res => {
-      if(res.code == 200) {
-        this.mac = res.data.mac;
-        this.id = res.data.id;
-        window.sessionStorage.setItem("ip", JSON.stringify(res.data.ip));
-        window.sessionStorage.setItem("mac", JSON.stringify(res.data.mac));
-      } else {
-        this.$message.error(res.message);
-      }
-    });
-
+    this.mac = JSON.parse(sessionStorage.getItem("mac"));
+    this.ip = JSON.parse(sessionStorage.getItem("ip"));
+    
     const params = this.$route.params;
     if(params) {
       this.userName = params.account;
@@ -89,7 +81,7 @@ export default {
         Api.login(data).then(res => {
           if(res.code == 200) {
             // 登录成功创建websocket
-            this.createWebsocket();
+            // this.connectSocket();
             window.sessionStorage.setItem("sessionId", JSON.stringify(res.data.sessionID));
             window.sessionStorage.setItem("isLogin", JSON.stringify(true));
             window.sessionStorage.setItem("account", JSON.stringify(this.userName));
@@ -105,41 +97,34 @@ export default {
     goRegisterPage() {
       this.$router.push({path: '/register'});
     },
-    createWebsocket() {
-      const _this = this;
-      const herartBeat = {
-        timeout: 20000, //20s
-        timeoutObj: null,
-        reset: function(){
-          clearInterval(this.timeoutObj);
-          this.start();
-        },
-        start: function(){
-          this.timeoutObj = setInterval(function(){
-            if(_this.socket.readyState==1){
-              const json = {
-                "eventType": "HEART_BEAT",
-                "deviceId": '123456'
-              };
-              _this.socket.send(JSON.stringify(json));
-            }
-          }, this.timeout);
-        }
-      };
-      if(!window.WebSocket){
-        window.WebSocket = window.MozWebSocket;
+    connectSocket() {
+      console.log(12);
+      let that = this;
+      if ("WebSocket" in window) {
+        // console.log("您的浏览器支持 WebSocket!");
+        // location.host
+        that.ws = new WebSocket("ws://"+that.ip+":8800");
+        globalWs.setWs(that.ws);
+        that.ws.onopen = function () {
+          console.log('连接成功');
+          that.$message.success('连接成功');
+        };
+
+        that.ws.onclose = function () {
+          // 关闭 websocket
+          console.log("连接已关闭...");
+          that.$message.error('断开连接, 尝试重连');
+          //断线重新连接
+          setTimeout(() => {
+              that.connectSocket(that.ip);
+          }, 10000);
+        };
+      } else {
+        // 浏览器不支持 WebSocket
+        console.log("您的浏览器不支持 WebSocket!");
+        this.openNotificationWithIcon('error', '浏览器', '您的浏览器不支持显示消息请更换', 1,1)
       }
-      //socket 准备
-      if(window.WebSocket){
-        const ip = JSON.parse(window.sessionStorage.getItem("ip"));
-        console.log(ip);
-        const wsUrl = process.env.VUE_APP_TITLE !== 'production' ? "ws://"+ip+":8800" : "ws://"+ip+":8800";
-        globalWs.connectSocket(wsUrl);
-        
-      }else{
-        alert("error");
-      }
-    },
+    }
   }
 }
 </script>

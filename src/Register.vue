@@ -1262,18 +1262,7 @@ export default {
   created() {},
   mounted() {
     this.mac = JSON.parse(window.sessionStorage.getItem("mac"));
-    this.id = JSON.parse(window.sessionStorage.getItem("id"));
-    console.log(this.mac, this.id);
-    // 获取mac,ip信息
-    // Api.getMacAddress().then(res => {
-    //   if(res.code == 200) {
-    //     this.mac = res.data.mac;
-    //     this.id = res.data.id;
-    //     window.sessionStorage.setItem("ip", JSON.stringify(res.data.ip));
-    //   } else {
-    //     this.$message.error(res.message);
-    //   }
-    // });
+    this.ip = JSON.parse(window.sessionStorage.getItem("ip"));
   },
   methods: {
     // 开始注册
@@ -1332,7 +1321,7 @@ export default {
     activateEvent() {
       const data = {
         firstName: this.surname,
-        lastName: this.name,
+        lastName: this.strCode(this.name),
         email: this.email,
         company: this.company,
         country: this.countryList[this.country].lanText,
@@ -1349,8 +1338,18 @@ export default {
               passwd: res.data.passwd,
             }
           });
+        } else {
+          this.$message.error(res.message);
         }
       })
+    },
+    strCode (str){
+      const reg = /^[\u4E00-\u9FA3]{1,}$/;
+      if(reg.test(str)) {
+        return 63;
+      } else {
+        return str;
+      }
     },
 
     // 生成二维码

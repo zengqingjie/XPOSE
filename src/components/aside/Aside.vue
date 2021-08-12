@@ -69,7 +69,7 @@ export default {
           usable_icon: require('../../assets/aside_mune/aside_set_usable.png')
         },
       ],
-      menuIndex: 0,
+      menuIndex: 1,
     };
   },
   computed: {
@@ -79,7 +79,7 @@ export default {
     },
   },
   mounted() {
-    this.$root.bus.$emit("titleInfo", this.asideMenuList[0]);
+    this.$root.bus.$emit("titleInfo", this.asideMenuList[1]);
   },
   methods: {
     muneSelect(item, index) {

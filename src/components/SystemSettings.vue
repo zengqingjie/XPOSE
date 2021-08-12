@@ -8,6 +8,10 @@
             <span>软件版本</span>
             <span class="green-text">{{userRightInfo.systemInfo.softwareVersion}}</span>
           </div>
+          <div class="mesg" v-if="deviceInfo && deviceInfo.costomInfo">
+            <span>webserver版本</span>
+            <span class="green-text">{{deviceInfo.costomInfo.mainBoard[0].web}}</span>
+          </div>
           <div class="mesg">
             <span>语言</span>
             <el-select v-model="userRightInfo.systemInfo.languageId">
@@ -133,11 +137,11 @@
       </div>
     </div>
     <div class="right-view" v-if="!showInfo && nowMenuId == '006'">
-      <div class="params-type" v-dragscroll>
-        <div class="flex-box">
+      <div class="params-type">
+        <el-scrollbar>
           <div :class="typeIndex == 0 ? 'show' : ''" @click="typeSelect(0)">多控配置</div>
           <div :class="typeIndex == 1 ? 'show' : ''" @click="typeSelect(1)">管理</div>
-        </div>
+        </el-scrollbar>
       </div>
       <div class="params-conts">
         <div v-if="typeIndex == 0">
@@ -330,6 +334,7 @@ export default {
   data() {
     return {
       typeIndex: 0,
+      deviceInfo: null,
       userRightInfo: null,
       // 设置设备数目
       deviceNum: 0,
@@ -460,7 +465,7 @@ export default {
   mounted() {
     const that = this;
     this.sessionId = JSON.parse(window.sessionStorage.getItem("sessionId"));
-
+    this.deviceInfo = JSON.parse(window.sessionStorage.getItem("deviceInfo"));
     const userName = JSON.parse(sessionStorage.getItem("account")) || 'Admin';
     this.account = userName;
     const pwd = JSON.parse(sessionStorage.getItem("passwd")) || 'admin';
@@ -475,7 +480,7 @@ export default {
     this.getUserRight();
 
     // ws信息处理
-    window.webSocket.onmessage = function(res) {
+    this.websocket.ws.onmessage = function(res) {
       const result = JSON.parse(res.data);
       // 获取管理员权限信息
       if((result.code == 200) && (result.data.eventType == 'getUserRight')) {
@@ -556,8 +561,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 生成随机随机checkKey
@@ -606,8 +611,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         }
-        if (window.webSocket && window.webSocket.readyState == 1) {
-          window.webSocket.send(JSON.stringify(params));
+        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+          this.websocket.ws.send(JSON.stringify(params));
         }
     },
     // 用户登录
@@ -620,8 +625,8 @@ export default {
           sessionID: this.sessionId,
           checkKey: this.getcheckKey()
         }
-        if (window.webSocket && window.webSocket.readyState == 1) {
-          window.webSocket.send(JSON.stringify(params));
+        if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+          this.websocket.ws.send(JSON.stringify(params));
         }
       } else {
         this.$message.error('用户名或密码错误');
@@ -635,8 +640,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 信息提示change事件
@@ -648,8 +653,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 图层管理change事件
@@ -660,8 +665,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 搜索设备change事件
@@ -678,8 +683,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 容器参数类型切换
@@ -703,8 +708,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 断开所有连接
@@ -747,8 +752,8 @@ export default {
         sessionID: this.sessionId,
         checkKey: this.getcheckKey()
       }
-      if (window.webSocket && window.webSocket.readyState == 1) {
-        window.webSocket.send(JSON.stringify(params));
+      if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+        this.websocket.ws.send(JSON.stringify(params));
       }
     },
     // 取消删除
@@ -835,8 +840,8 @@ export default {
               sessionID: this.sessionId,
               checkKey: this.getcheckKey()
             }
-            if (window.webSocket && window.webSocket.readyState == 1) {
-              window.webSocket.send(JSON.stringify(params));
+            if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+              this.websocket.ws.send(JSON.stringify(params));
             }
           }
         });
@@ -863,8 +868,8 @@ export default {
                 sessionID: this.sessionId,
                 checkKey: this.getcheckKey()
               }
-              if (window.webSocket && window.webSocket.readyState == 1) {
-                window.webSocket.send(JSON.stringify(params));
+              if (this.websocket.ws && this.websocket.ws.readyState == 1) {
+                this.websocket.ws.send(JSON.stringify(params));
               }
               
             } else {
@@ -1016,41 +1021,45 @@ export default {
       border-left: 1px solid #000;
       .params-type {
         position: relative;
-        overflow: hidden;
         width: 320px;
         height: 32px;
         border-top: 1px solid #000;
-        .flex-box {
-          position: absolute;
-          display: flex;
-          div {
-            display: inline-block;
-            width: 100px;
-            height: 32px;
-            line-height: 32px;
-            flex-shrink: 0;
-            border-right: 1px solid #000;
-            border-bottom: 1px solid #000;
-            text-align: center;
-            color: #999;
-            font-size: 12px;
-            box-sizing: border-box;
-            background: rgb(24,30,44);
-          }
-          .show {
-            position: relative;
-            background: rbg(22,28,44);
-            color: #fff;
-            border-bottom: none;
-          }
-          .show::before {
-            display: block;
-            content: '';
-            position: absolute;
-            width: 100px;
-            height: 1px;
-            top: 0;
-            background: rgb(26,188,156);
+        white-space: nowrap;
+        /deep/.el-scrollbar {
+          height: 100%;
+          .el-scrollbar__wrap {
+            overflow-x: hidden;
+            overflow-y: hidden;
+            width: 100%;
+            div {
+              display: inline-block;
+              width: 100px;
+              height: 32px;
+              line-height: 32px;
+              flex-shrink: 0;
+              border-right: 1px solid #000;
+              border-bottom: 1px solid #000;
+              text-align: center;
+              color: #999;
+              font-size: 12px;
+              box-sizing: border-box;
+              background: rgb(24,30,44);
+            }
+            .show {
+              position: relative;
+              background: rgb(22,28,44);
+              color: #fff;
+              border-bottom: none;
+            }
+            .show::before {
+              display: block;
+              content: '';
+              position: absolute;
+              width: 100px;
+              height: 1px;
+              top: 0;
+              background: rgb(26,188,156);
+            }
           }
         }
       }

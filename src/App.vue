@@ -30,7 +30,7 @@ export default {
           globalWs.setWs(that.ws);
           that.ws.onopen = function () {
             console.log('连接成功');
-            // that.$message.success('连接成功');
+            that.$message.success('连接成功');
           };
 
           that.ws.onclose = function () {

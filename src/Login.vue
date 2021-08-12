@@ -61,8 +61,16 @@ export default {
       }
     }
     // 获取mac,ip信息
-    this.mac = JSON.parse(sessionStorage.getItem("mac"));
-    this.ip = JSON.parse(sessionStorage.getItem("ip"));
+    Api.getMacAddress().then(res => {
+      if(res.code == 200) {
+        this.ip = res.data.ip;
+        this.macp = res.data.mac;
+        window.sessionStorage.setItem("ip", JSON.stringify(res.data.ip));
+        window.sessionStorage.setItem("mac", JSON.stringify(res.data.mac));
+      } else {
+        this.$message.error(res.message);
+      }
+    });
     
     const params = this.$route.params;
     if(params) {
@@ -81,7 +89,7 @@ export default {
         Api.login(data).then(res => {
           if(res.code == 200) {
             // 登录成功创建websocket
-            // this.connectSocket();
+            this.connectSocket();
             window.sessionStorage.setItem("sessionId", JSON.stringify(res.data.sessionID));
             window.sessionStorage.setItem("isLogin", JSON.stringify(true));
             window.sessionStorage.setItem("account", JSON.stringify(this.userName));
@@ -98,8 +106,8 @@ export default {
       this.$router.push({path: '/register'});
     },
     connectSocket() {
-      console.log(12);
       let that = this;
+      console.log("WebSocket" in window, window);
       if ("WebSocket" in window) {
         // console.log("您的浏览器支持 WebSocket!");
         // location.host

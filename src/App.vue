@@ -15,15 +15,10 @@ export default {
     }
   },
   created() {
-    Api.getMacAddress().then(res => {
-      if(res.code == 200) {
-        this.connectSocket(res.data.ip);
-        window.sessionStorage.setItem("ip", JSON.stringify(res.data.ip));
-        window.sessionStorage.setItem("mac", JSON.stringify(res.data.mac));
-      } else {
-        this.$message.error(res.message);
-      }
-    });
+    const ip = JSON.parse(sessionStorage.getItem("ip"));
+    if(ip) {
+      this.connectSocket(ip);
+    }
   },
   methods: {
     connectSocket(ip) {
@@ -35,7 +30,7 @@ export default {
           globalWs.setWs(that.ws);
           that.ws.onopen = function () {
             console.log('连接成功');
-            that.$message.success('连接成功');
+            // that.$message.success('连接成功');
           };
 
           that.ws.onclose = function () {

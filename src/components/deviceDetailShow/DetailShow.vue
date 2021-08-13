@@ -86,15 +86,25 @@
       <div class="params-conts">
         <div v-if="typeIndex == 0 && rightView == 'device'">
           <div class="blue-text">设备信息</div>
+          <div class="info-view" v-if="deviceInfo.costomInfo.mainBoard">
+            <div class="label">通讯板版本</div>
+            <template v-for="item in deviceInfo.costomInfo.mainBoard">
+              <div
+                class="green-text"
+                v-if="item.id == 0"
+                :key="item.id"
+              >{{deviceInfo.costomInfo.mainBoard[0].mcu || '----'}}</div>
+            </template>
+          </div>
           <div class="info-view">
             <div class="label">温度</div>
             <div class="green-text">{{deviceInfo.costomInfo.deviceInfo.temperature || ''}}</div>
           </div>
-          <div class="info-view">
+          <div class="info-view" style="margin-bottom: 28px">
             <div class="label">物理地址</div>
             <div class="green-text">{{deviceInfo.costomInfo.deviceInfo.macAddress || ''}}</div>
           </div>
-          <div class="blue-text">主板信息</div>
+          <!-- <div class="blue-text">主板信息</div>
           <div class="lines-table" v-if="deviceInfo.costomInfo.mainBoard">
             <div class="head">
               <span class="xl">名称</span>
@@ -111,7 +121,7 @@
               <span class="xl">{{item.mcu ? item.mcu : '--'}}</span>
               <span></span>
             </div>
-          </div>
+          </div> -->
           <div class="blue-text">输入模块信息</div>
           <div class="lines-table bottom">
             <div class="head">
@@ -194,11 +204,12 @@
           <div class="params-style-input">
             <span>自动调速</span>
             <el-switch
+              class="switch"
               v-model="deviceInfo.funCtrl.funAutoSpeed"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
               active-text="打开"
-              :width="100"
+              inactive-text="关闭"
             >
             </el-switch>
           </div>
@@ -211,6 +222,7 @@
           <div class="params-style-input">
             <span>热备份</span>
             <el-switch
+              class="switch"
               v-model="deviceInfo.hotBackup.hotBackupStatus"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
@@ -550,6 +562,7 @@
           <div class="params-style-input">
             <span>输出开关</span>
             <el-switch
+              class="switch"
               v-model="outputPortInfo.outputSwitch"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
@@ -562,6 +575,7 @@
           <div class="params-style-input">
             <span>分辨率范围</span>
             <el-switch
+              class="switch"
               v-model="outputPortInfo.formatRange"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
@@ -574,6 +588,7 @@
           <div class="params-style-input">
             <span>分辨率类型</span>
             <el-switch
+              class="switch"
               v-model="outputPortInfo.formatType"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
@@ -626,6 +641,7 @@
           <div class="params-style-input">
             <span>状态</span>
             <el-switch
+              class="switch"
               v-model="outputPortInfo.resolution.genlockSet.status"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
@@ -646,6 +662,7 @@
           <div class="params-style-input">
             <span>输入源</span>
             <el-switch
+              class="switch"
               v-model="outputPortInfo.resolution.genlockSet.inputSource"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
@@ -1560,12 +1577,12 @@ export default {
             }
             /deep/ .el-input__inner {
               width: 140px;
-              height: 32px;
+              height: 24px;
               padding: 0 12px;
               font-size: 12px;
             }
             /deep/ .el-input__icon {
-              line-height: 30px;
+              line-height: 24px;
             }
             /deep/ .el-select .el-input.is-focus .el-input__inner {
               border-color: rgb(26,188,156);

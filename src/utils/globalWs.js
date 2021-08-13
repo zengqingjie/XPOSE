@@ -14,12 +14,12 @@ export default {
     webSocket.onclose = evt => {
       console.log("服务关闭");
       Message({
-        message: "服务关闭，尝试重连中...",
+        message: "服务关闭",
         type: "error"
       });
-      setTimeout(() => {
-          this.connectSocket(host);
-      }, 10000);
+      // setTimeout(() => {
+      //     this.connectSocket(host);
+      // }, 10000);
     };
     webSocket.onerror = (evt,e) => {
       console.log(evt);

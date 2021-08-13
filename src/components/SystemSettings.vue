@@ -66,6 +66,7 @@
           <div class="mesg">
             <span>解锁提示</span>
             <el-switch
+              class="switch"
               v-model="userRightInfo.mesgTips.cancelLockTips"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
@@ -78,6 +79,7 @@
           <div class="mesg">
             <span>引导提示</span>
             <el-switch
+              class="switch"
               v-model="userRightInfo.mesgTips.guideTips"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
@@ -93,6 +95,7 @@
           <div class="mesg">
             <span>自动直切</span>
             <el-switch
+              class="switch"
               v-model="userRightInfo.layerManage.autoStraightCut"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
@@ -125,6 +128,7 @@
           <div class="mesg">
             <span>扩展状态</span>
             <el-switch
+              class="switch"
               v-model="extensionStatus"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
@@ -187,6 +191,7 @@
               </div>
               <div class="mid">
                 <el-switch
+                  class="switch"
                   v-model="item.connect"
                   active-color="#1ABC9C"
                   inactive-color="#2C384F"

@@ -64,7 +64,7 @@ export default {
     { id:54, label: "1680x1050@60r" },
     { id:55, label: "1400x1050@60r" },
     { id:56, label: "2176x544@60r" },
-    { id:57, label: "11152x1152@60" },
+    { id:57, label: "1152x1152@60" },
     { id:58, label: "1280x1280@60" },
     { id:59, label: "2560x812@60" },
     { id:60, label: "2560x816@60r" },

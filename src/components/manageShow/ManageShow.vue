@@ -52,8 +52,11 @@
                   :value="item.id">
                 </el-option>
               </el-select>
+              <div class="mar-left" v-if="userSetStatus">
+                <el-checkbox v-model="outputCheck">显示器</el-checkbox>
+              </div>
             </div>
-            <div class="input-view">
+            <div class="input-view" v-if="!userSetStatus">
               <span>分辨率</span>
               <el-select v-model="separation" placeholder="请选择">
                 <el-option
@@ -63,10 +66,13 @@
                   :value="item.id">
                 </el-option>
               </el-select>
-              <div class="mar-left"><el-checkbox v-model="outputCheck">显示器</el-checkbox></div>
+              <div class="mar-left">
+                <el-checkbox v-model="outputCheck">显示器</el-checkbox>
+              </div>
             </div>
             <div
               class="template-list"
+              v-if="!userSetStatus"
             >
               <div class="template-item" v-for="(item, index) in templateList" :key="index" :id="item.id">
                 <span class="index-text">{{index + 1}}</span>
@@ -75,6 +81,88 @@
                 </div>
                 <span>{{item.row}} x {{item.col}} ({{separation == 10 ? (1920 * item.col) : (3840 * item.col)}} x {{separation == 10 ? (1080 * item.row) : (2160 * item.row)}})</span>
               </div>
+            </div>
+            <div class="user-section" v-if="userSetStatus">
+              <div class="user-save-containers">
+                <el-scrollbar style="height: 100%"></el-scrollbar>
+              </div>
+              <div class="set-view">
+                <el-scrollbar style="height: 100%">
+                  <div class="mesg">
+                    <span>显示器类型</span>
+                    <el-switch
+                      class="switch"
+                      v-model="userSetData.outputType"
+                      active-color="#1ABC9C"
+                      inactive-color="#2C384F"
+                      active-text="LCD屏"
+                      inactive-text="LED屏"
+                    >
+                    </el-switch>
+                  </div>
+                  <div class="mesg">
+                    <span>显示器布局</span>
+                    <el-switch
+                      class="switch"
+                      v-model="userSetData.outputFlex"
+                      active-color="#1ABC9C"
+                      inactive-color="#2C384F"
+                      active-text="手动"
+                      inactive-text="自动"
+                    >
+                    </el-switch>
+                  </div>
+                  <div class="params-style-input">
+                    <span>总宽</span>
+                    <input type="text" :value="userSetData.allW" @input="(e) => changInput(e, 'userSetAllW')">
+                  </div>
+                  <div class="params-style-input">
+                    <span>总高</span>
+                    <input type="text" :value="userSetData.allH" @input="(e) => changInput(e, 'userSetAllH')">
+                  </div>
+                  <div class="params-style-input">
+                    <span>行</span>
+                    <input type="text" :value="userSetData.row" @input="(e) => changInput(e, 'userSetRow')">
+                  </div>
+                  <div class="params-style-input">
+                    <span>列</span>
+                    <input type="text" :value="userSetData.col" @input="(e) => changInput(e, 'userSetCol')">
+                  </div>
+                  <div class="params-style-input" v-if="userSetData.outputType">
+                    <span>顶边框</span>
+                    <input type="text" :value="userSetData.borderT" @input="(e) => changInput(e, 'userSetBorderT')">
+                  </div>
+                  <div class="params-style-input" v-if="userSetData.outputType">
+                    <span>底边框</span>
+                    <input type="text" :value="userSetData.borderB" @input="(e) => changInput(e, 'userSetBorderB')">
+                  </div>
+                  <div class="params-style-input" v-if="userSetData.outputType">
+                    <span>左边框</span>
+                    <input type="text" :value="userSetData.borderL" @input="(e) => changInput(e, 'userSetBorderL')">
+                  </div>
+                  <div class="params-style-input" v-if="userSetData.outputType">
+                    <span>右边框</span>
+                    <input type="text" :value="userSetData.borderR" @input="(e) => changInput(e, 'userSetBorderR')">
+                  </div>
+                  <div class="params-style-input">
+                    <span>宽1</span>
+                    <input type="text" :value="userSetData.itemW" @input="(e) => changInput(e, 'userSetItemW')">
+                  </div>
+                  <div class="params-style-input">
+                    <span>高1</span>
+                    <input type="text" :value="userSetData.itemH" @input="(e) => changInput(e, 'userSetItemH')">
+                  </div>
+                  <div class="btn-view">
+                    <div @click="userAddContainer">新增</div>
+                    <div>保存</div>
+                    <div>删除</div>
+                    <div>全部删除</div>
+                  </div>
+                </el-scrollbar>
+              </div>
+              <div class="user-footer">
+              <div @click="returnSys">返回</div>
+            </div>
             </div>
           </div>
           <div v-show="typeIndex == 1" class="box">
@@ -179,7 +267,7 @@
           </div>
         </div>
         <div class="params-footer">
-          <div v-if="typeIndex == 0">自定义</div>
+          <div v-if="typeIndex == 0" @click="userSetContainer">自定义</div>
           <div v-if="typeIndex == 2">清空全部</div>
           <div v-if="typeIndex == 3" @click="setDisplayProp">设置</div>
           <div @click="hideRightView">返回</div>
@@ -329,7 +417,22 @@ export default {
       displayerHeight: '',
       vBorder: '',
       hBorder: '',
-      inintPositionList: [],
+
+      userSetStatus: false, // 用户自定义容器状态
+      userSetData: {
+        outputType: false,
+        outputFlex: false,
+        allW: 3840,
+        allH: 2160,
+        row: 1,
+        col: 1,
+        borderT: 0,
+        borderR: 0,
+        borderB: 0,
+        borderL: 0,
+        itemW: 3840,
+        itemH: 2160
+      },
       sessionId: '',
       displayObj: null, // 点击显示器传递的显示器对象
     }
@@ -646,6 +749,79 @@ export default {
           window.webSocket.send(JSON.stringify(params));
         }
       });
+    },
+
+    // 模板模块自定义点击
+    userSetContainer() {
+      this.userSetStatus = true;
+    },
+    // 用户新增自定义容器
+    userAddContainer() {
+      const {allW, allH, row, col} = this.userSetData;
+      const dataW = Number(allW);
+      const dataH = Number(allH);
+      const dataRow = Number(row);
+      const dataCol = Number(col)
+      if(dataW && dataH && dataRow && dataCol) { // 容器宽高，显示器行列必填
+        // 创建容器参数
+        const params = {
+          eventType: "createContainer", // 设置1个或多个容器
+          count: 1, // 容器数量，最大不超过输出口数量，
+          container: [ 
+            {
+              id: this.$store.state.containerId, // 容器id
+              posX: 30, // 容器左上角横坐标
+              posY: 30, // 容器左上角纵坐标
+              sizeW: Number(this.userSetData.allW), // 容器总宽
+              sizeH: Number(this.userSetData.allWH), // 容器总高
+              mode, // 容器类型
+              modeEnum: this.modelVal, // 容器类型id
+            }
+          ],
+          sessionID: this.sessionId,
+          checkKey: this.getcheckKey()
+        }
+        if(!this.userSetData.outputFlex) {
+          let outputPosList = []; // 自动填充显示器的位置
+          for(let i = 0; i < dataRow; i++) {
+            for(let j = 0; j < dataCol; j++) {
+              outputPosList.push({posX: j * (dataW / dataCol), posY: i * (dataH / dataRow)});
+            }
+          }
+          const createOutputNum = dataRow * dataCol; // 显示器填充的个数
+          // 过滤出所选分辨率的输出口
+          const conformOutputPortList = this.outputList.filter(item.status == false);
+          const conformLen = conformOutputPortList.length > createOutputNum ? createOutputNum : conformOutputPortList.length;
+          let createOutputList = [];
+          for(let i = 0; i < conformLen; i++) {
+            const outputItem = {
+              id: conformOutputPortList[i].id,
+              posX: outputPosList[i].posX,
+              posY: outputPosList[i].posY,
+              sizeW: conformOutputPortList[i].sizeW,
+              sizeH: conformOutputPortList[i].sizeH,
+              outputType: conformOutputPortList[i].outputType,
+              outputTypeEnum: conformOutputPortList[i].outputTypeEnum,
+              containerId: this.$store.state.containerId
+            }
+            createOutputList.push(outputItem);
+          }
+          const outputParams = {
+            eventType: "setOutputMsg",
+            count: conformLen,
+            output: createOutputList,
+            sessionID: this.sessionId,
+            checkKey: this.getcheckKey()
+          }
+          if (window.webSocket && window.webSocket.readyState == 1) {
+            window.webSocket.send(JSON.stringify(params));
+            window.webSocket.send(JSON.stringify(outputParams));
+          }
+        }
+      }
+    },
+    returnSys() {
+      this.userSetStatus = false;
     },
 
     // 读取容器配置信息
@@ -1136,6 +1312,87 @@ export default {
                 border-radius: 4px;
                 background: rgb(26,188,156);
                 color: #fff;
+                cursor: pointer;
+              }
+            }
+          }
+          .user-section {
+            /deep/ .el-scrollbar__wrap{
+              overflow-x: hidden;
+            }
+            position: absolute;
+            bottom: 0;
+            top: 94px;
+            width: 100%;
+            background: rgb(22,28,44);
+            z-index: 99;
+            .user-save-containers {
+              height: 120px;
+              border-top: 1px solid #000;
+              border-bottom: 1px solid #000;
+            }
+            .set-view {
+              height: 500px;
+              .mesg {
+                display: flex;
+                height: 32px;
+                padding: 0 16px;
+                align-items: center;
+                font-size: 12px;
+                > span {
+                  width: 80px;
+                }
+              }
+              .params-style-input {
+                padding: 0 16px;
+              }
+              .btn-view {
+                margin-top: 10px;
+                height: 32px;
+                border-top: 1px solid #000;
+                display: flex;
+                align-items: center;
+                padding: 0 16px;
+                justify-content: space-between;
+                div {
+                  width: 64px;
+                  height: 24px;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  background: rgb(0,196,172);
+                  border-radius: 14px;
+                  color: #fff;
+                  font-size: 12px;
+                  cursor: pointer;
+                }
+              }
+            }
+            .blue-text {
+              padding-left: 10px;
+              color: rgb(2,163,211);
+              font-size: 12px;
+            }
+            .user-footer {
+              position: absolute;
+              bottom: 0;
+              border-top: 1px solid #000;
+              display: flex;
+              width: 100%;
+              height: 40px;
+              justify-content: flex-end;
+              align-items: center;
+              > div {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 78px;
+                height: 20px;
+                margin-right: 16px;
+                background: rgb(26,188,156);
+                border-radius: 10px;
+                color: #fff;
+                font-size: 12px;
                 cursor: pointer;
               }
             }

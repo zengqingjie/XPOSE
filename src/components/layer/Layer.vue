@@ -163,16 +163,22 @@
             <div class="params-style-input">
               <span>显示模式</span>
               <el-switch
+                class="switch"
                 v-model="showModel"
                 active-color="#1ABC9C"
+                active-text="打开"
+                inactive-text="关闭"
                 inactive-color="#2C384F">
               </el-switch>
             </div>
             <div class="params-style-input">
               <span>镜像</span>
               <el-switch
+                class="switch"
                 v-model="mirrorVal"
                 active-color="#1ABC9C"
+                active-text="打开"
+                inactive-text="关闭"
                 inactive-color="#2C384F">
               </el-switch>
             </div>
@@ -346,9 +352,12 @@
             <div class="params-style-input">
               <span>图层预监</span>
               <el-switch
+                class="switch"
                 v-model="tcyj"
                 active-color="#1ABC9C"
                 inactive-color="#2C384F"
+                active-text="打开"
+                inactive-text="关闭"
                 :width="100"
                 :disabled="h264"
               >
@@ -357,9 +366,12 @@
             <div class="params-style-input">
               <span>输入预监</span>
               <el-switch
+                class="switch"
                 v-model="sryj"
                 active-color="#1ABC9C"
                 inactive-color="#2C384F"
+                active-text="打开"
+                inactive-text="关闭"
                 :width="100"
                 :disabled="h264"
               >
@@ -368,9 +380,12 @@
             <div class="params-style-input">
               <span>场景预监</span>
               <el-switch
+                class="switch"
                 v-model="cjyj"
                 active-color="#1ABC9C"
                 inactive-color="#2C384F"
+                active-text="打开"
+                inactive-text="关闭"
                 :width="100"
                 :disabled="h264"
               >
@@ -379,9 +394,12 @@
             <div class="params-style-input">
               <span>扩展预监</span>
               <el-switch
+                class="switch"
                 v-model="kzyj"
                 active-color="#1ABC9C"
                 inactive-color="#2C384F"
+                active-text="打开"
+                inactive-text="关闭"
                 :width="100"
                 :disabled="h264"
               >
@@ -390,9 +408,12 @@
             <div class="params-style-input">
               <span>H.264</span>
               <el-switch
+                class="switch"
                 v-model="h264"
                 active-color="#1ABC9C"
                 inactive-color="#2C384F"
+                active-text="打开"
+                inactive-text="关闭"
                 :width="100"
                 @change="previewPictureEvent"
               >

@@ -67,9 +67,12 @@
           <div class="params-style-input">
             <span>分容器</span>
             <el-switch
+              class="switch"
               v-model="copyContainer"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
+              active-text="打开"
+              inactive-text="关闭"
               :width="100"
               @change="sceneParamsChange('display')"
             >
@@ -78,9 +81,12 @@
           <div class="params-style-input">
             <span>黑场</span>
             <el-switch
+              class="switch"
               v-model="darkScence"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
+              active-text="打开"
+              inactive-text="关闭"
               :width="100"
               @change="sceneParamsChange('blackOut')"
             >
@@ -89,18 +95,22 @@
           <div class="params-style-input">
             <span>保持|交换</span>
             <el-switch
+              class="switch"
               v-model="keepReplace"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
+              active-text="交换"
+              inactive-text="保持"
               :width="100"
               :disabled="copyContainer"
               @change="sceneParamsChange('keepSwap')"
             >
             </el-switch>
           </div>
-          <div class="params-style-input">
+          <!-- <div class="params-style-input">
             <span>预设场景</span>
             <el-switch
+              class="switch"
               v-model="presetScene"
               active-color="#1ABC9C"
               inactive-color="#2C384F"
@@ -108,7 +118,7 @@
               @change="sceneParamsChange('presetScene')"
             >
             </el-switch>
-          </div>
+          </div> -->
           <hr style="border: 1px solid #000;margin:8px auto">
           <div class="params-style-input">
             <span>{{opacityPercent}}%</span>

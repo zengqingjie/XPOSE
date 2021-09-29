@@ -12,10 +12,16 @@ export default {
   data() {
     return {
       ip: '',
+      ob: {
+        haha: 1
+      }
     }
   },
   created() {
     const ip = JSON.parse(sessionStorage.getItem("ip"));
+
+    console.log(this.ob?.haha);
+
     if(ip) {
       globalWs.connectSocket("ws://"+ip+":8800");
     }

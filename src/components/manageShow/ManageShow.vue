@@ -281,7 +281,6 @@
 </template>
 
 <script>
-import $ from "jquery";
 import Container from '@/components/container/Container';
 import { mapState } from 'vuex';
 import { dataFormat } from '../../utils/dataFormat';

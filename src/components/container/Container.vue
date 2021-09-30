@@ -34,7 +34,6 @@
 </template>
 
 <script>
-import $ from "jquery";
 import Displayer from "@/components/displayer/Displayer";
 export default {
   props: {

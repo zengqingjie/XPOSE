@@ -41,7 +41,6 @@
 </template>
 
 <script>
-import $ from "jquery";
 import { mapState } from 'vuex';
 export default {
   props: {

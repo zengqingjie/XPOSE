@@ -466,7 +466,6 @@
 </template>
 
 <script>
-import $ from "jquery";
 import LayerContainer from '@/components/container/LayerContainer';
 import Aoi from '@/components/displayer/Aoi';
 import { mapState } from 'vuex';

@@ -40,7 +40,6 @@
 import Displayer from "@/components/displayer/Displayer";
 import SignalModel from '@/components/displayer/SignalModel';
 import SignalLayer from '@/components/displayer/SignalLayer';
-import $ from "jquery";
 export default {
   props: {
     cItem: {

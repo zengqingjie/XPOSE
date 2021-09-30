@@ -233,7 +233,6 @@
 </template>
 
 <script>
-import $ from "jquery";
 import { mapState } from 'vuex';
 import LayerContainer from '@/components/container/LayerContainer';
 

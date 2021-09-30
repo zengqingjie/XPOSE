@@ -1,37 +1,37 @@
-// 当前环境，根据环境生成对应代理
-const curMode = process.env.NODE_ENV;
+const path = require('path')
+const {
+  publicPath,
+  assetsDir,
+  outputDir,
+  lintOnSave,
+  transpileDependencies,
+  title,
+  devPort,
+  providePlugin,
+} = require('./src/config')
+const { version, author } = require('./package.json')
+const Webpack = require('webpack')
+const dayjs = require('dayjs')
+const time = dayjs().format('YYYY-M-D HH:mm:ss')
 
+process.env.VUE_APP_TITLE = title || 'XPOST'
+process.env.VUE_APP_AUTHOR = author || 'zz'
+process.env.VUE_APP_UPDATE_TIME = time
+process.env.VUE_APP_VERSION = version
+
+const resolve = (dir) => path.join(__dirname, dir)
+console.log(process.env.NODE_ENV !== 'development');
 module.exports = {
-  // 部署应用包时的基本 URL,用法和 webpack 本身的 output.publicPath 一致
-  publicPath: './',
-  // 输出文件目录
-  outputDir: 'dist',
-  // eslint-loader 是否在保存的时候检查
-  lintOnSave: false,
-  // 是否使用包含运行时编译器的 Vue 构建版本
-  runtimeCompiler: false,
-  // 生产环境是否生成 sourceMap 文件
-  productionSourceMap: false,
-  // 生成的 HTML 中的 <link rel="stylesheet"> 和 <script> 标签上启用 Subresource Integrity (SRI)
-  integrity: false,
-  configureWebpack(config) {
-    //如果有更改devtool的行为，请先判断是否是production环境
-    //比如这样的 config.devtool="source-map";FF
-    //改为下面这样的
-    config.devtool = config.mode === "production" ? false : "source-map";
-  },
-  // 是否使用 thread-loader
-  parallel: require('os').cpus().length > 1,
-  // PWA 插件相关配置
-  pwa: {},
-  // webpack-dev-server 相关配置
+  publicPath,
+  assetsDir,
+  outputDir,
+  lintOnSave,
+  transpileDependencies,
   devServer: {
-    port: 8080, // 端口号
-    host: 'localhost',
-    https: false, // https:{type:Boolean}
-    open: true, //配置自动启动浏览器
-    hotOnly: true,
-    // proxy: 'http://localhost:4000' // 配置跨域处理,只有一个代理
+    hot: true,
+    port: devPort,
+    open: true,
+    noInfo: false,
     proxy: {
       "/api": {
         target: 'http://192.168.0.117/api',
@@ -54,16 +54,69 @@ module.exports = {
         secure: false,
         ws: true,
       }
-  }
-    // proxy: {
-    //     '/api': {
-    //         target: '<url>',
-    //         ws: true,
-    //         changeOrigin: true
-    //     },
-    //     '/foo': {
-    //         target: '<other_url>'
-    //     }
-    // },  // 配置多个代理
+    }
   },
+  configureWebpack() {
+    //如果有更改devtool的行为，请先判断是否是production环境
+    //比如这样的 config.devtool="source-map";FF
+    //改为下面这样的
+    // config.devtool = config.mode === "production" ? false : "source-map";
+    return {
+      resolve: {
+        alias: {
+          '@': resolve('src'),
+        },
+      },
+      plugins: [
+        new Webpack.ProvidePlugin(providePlugin)
+      ],
+    }
+  },
+  chainWebpack(config) {
+    config.when(process.env.NODE_ENV !== 'development', (config) => {
+      config.performance.set('hints', false)
+      config.devtool('none')
+      config.optimization.splitChunks({
+        automaticNameDelimiter: '-',
+        chunks: 'all',
+        cacheGroups: {
+          chunk: {
+            name: 'vab-chunk',
+            test: /[\\/]node_modules[\\/]/,
+            minSize: 131072,
+            maxSize: 524288,
+            chunks: 'async',
+            minChunks: 2,
+            priority: 10,
+          },
+          vue: {
+            name: 'vue',
+            test: /[\\/]node_modules[\\/](vue(.*)|core-js)[\\/]/,
+            chunks: 'initial',
+            priority: 20,
+          },
+          elementUI: {
+            name: 'element-ui',
+            test: /[\\/]node_modules[\\/]element-ui(.*)[\\/]/,
+            priority: 30,
+          },
+        },
+      })
+      config.module
+        .rule('images')
+        .use('image-webpack-loader')
+        .loader('image-webpack-loader')
+        .options({
+          bypassOnDebug: true,
+        })
+        .end()
+    })
+    config.when(process.env.NODE_ENV === 'development', (config) => {
+      config.devtool('source-map')
+    })
+  },
+  // 是否使用 thread-loader
+  parallel: require('os').cpus().length > 1,
+  // PWA 插件相关配置
+  pwa: {},
 }
